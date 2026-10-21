@@ -31,6 +31,7 @@ Both feed one **Document Processing Layer** and one **NLP Pipeline**.
 | `extension/` | Working MV3 demo (TypeScript + Vite, no ML). See `extension/README.md` for the file map. | TypeScript |
 | `docs/DEVIATIONS.md` | Where the demo intentionally differs from the plan, and why. | Vietnamese |
 | `docs/kiem-thu-demo.md` | Manual test checklist mapped to KS scenarios. | Vietnamese |
+| `docs/phien-lam-viec-tiep-theo.md` | Handoff for the next session: manual test results, open issues, fix plan. | Vietnamese |
 | `.github/workflows/ci.yml` | Quality gate: typecheck, lint, test, build. | YAML |
 
 > **All documentation is written in Vietnamese.** Keep new prose in Vietnamese unless explicitly told otherwise.

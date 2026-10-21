@@ -64,7 +64,8 @@ npm run build
 ├─ AGENTS.md                     # Hướng dẫn cho agent/contributor
 ├─ docs/
 │  ├─ DEVIATIONS.md              # Demo khác kế hoạch ở đâu và vì sao
-│  └─ kiem-thu-demo.md           # Checklist kiểm thử thủ công theo KS
+│  ├─ kiem-thu-demo.md           # Checklist kiểm thử thủ công theo KS
+│  └─ phien-lam-viec-tiep-theo.md # Bàn giao: việc còn lại + hướng sửa
 ├─ extension/                    # Mã nguồn demo
 │  ├─ src/shared/                # contracts.ts (Zod), messages.ts, constants.ts
 │  ├─ src/core/                  # Thuần TS: dates, events, profiles, forms, text

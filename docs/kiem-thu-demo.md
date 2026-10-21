@@ -1,6 +1,7 @@
 # Checklist kiểm thử demo (thủ công)
 
 Chạy trước khi demo/báo cáo. Mỗi mục ghi rõ kịch bản `script.md` tương ứng.
+Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./phien-lam-viec-tiep-theo.md).
 
 ## 0. Chuẩn bị
 
