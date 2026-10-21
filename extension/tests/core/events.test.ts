@@ -1,0 +1,104 @@
+import { describe, expect, it } from 'vitest';
+import {
+  countByStatus,
+  filterEvents,
+  isOverdue,
+  makeEvent,
+  nextStatusOptions,
+  setEventStatus,
+  sortEvents,
+  upcomingEvents,
+} from '../../src/core/events';
+import type { EventInput } from '../../src/core/events';
+
+const NOW = new Date(2026, 9, 21, 8, 0, 0);
+
+function input(patch: Partial<EventInput> = {}): EventInput {
+  return {
+    title: 'Họp nhóm đồ án',
+    label: 'công_vụ',
+    startValue: '2026-11-02T09:00',
+    endValue: '2026-11-02T10:30',
+    durationMinutesInput: null,
+    summary: ['Chủ đề: chốt đề cương'],
+    relatedProfiles: [],
+    sources: [],
+    ...patch,
+  };
+}
+
+describe('events', () => {
+  it('tạo sự kiện nháp, tính thời lượng từ start/end', () => {
+    const event = makeEvent(input(), NOW);
+    expect(event.status).toBe('nhap');
+    expect(event.durationMinutes).toBe(90);
+    expect(event.start.value).toBe('2026-11-02T09:00');
+    expect(event.end?.value).toBe('2026-11-02T10:30');
+  });
+
+  it('đánh dấu chưa rõ thời điểm thay vì bịa', () => {
+    const event = makeEvent(input({ startValue: null, endValue: null }), NOW);
+    expect(event.start.value).toBeNull();
+    expect(event.validation.uncertain).toContain('chua_ro_thoi_diem');
+    expect(event.durationMinutes).toBeNull();
+  });
+
+  it('lấy thời lượng nhập tay khi không có end', () => {
+    const event = makeEvent(
+      input({ endValue: null, durationMinutesInput: 45 }),
+      NOW,
+    );
+    expect(event.durationMinutes).toBe(45);
+    expect(event.validation.uncertain).not.toContain('chua_ro_ket_thuc');
+  });
+
+  it('chỉ cho phép chuyển trạng thái hợp lệ', () => {
+    const draft = makeEvent(input(), NOW);
+    const tracked = setEventStatus(draft, 'dang_theo_doi', NOW);
+    expect(tracked.status).toBe('dang_theo_doi');
+
+    const done = setEventStatus(tracked, 'hoan_thanh', NOW);
+    expect(done.status).toBe('hoan_thanh');
+    expect(done.completedAt).toBe(NOW.toISOString());
+
+    const back = setEventStatus(done, 'dang_theo_doi', NOW);
+    expect(back.completedAt).toBeUndefined();
+
+    const cancelled = setEventStatus(draft, 'huy', NOW);
+    expect(cancelled.status).toBe('huy');
+    expect(nextStatusOptions(cancelled)).toContain('nhap');
+  });
+
+  it('không đổi trạng thái nếu chuyển không hợp lệ', () => {
+    const draft = makeEvent(input(), NOW);
+    const result = setEventStatus(draft, 'hoan_thanh', NOW);
+    expect(result).toBe(draft);
+  });
+
+  it('sắp xếp sự kiện chưa có thời điểm xuống cuối', () => {
+    const later = makeEvent(input({ startValue: '2026-12-01T09:00' }), NOW);
+    const sooner = makeEvent(input({ title: 'Sự kiện sớm', startValue: '2026-10-25T09:00' }), NOW);
+    const unknown = makeEvent(input({ title: 'Chưa rõ', startValue: null, endValue: null }), NOW);
+    const sorted = sortEvents([unknown, later, sooner]);
+    expect(sorted.map((event) => event.title)).toEqual(['Sự kiện sớm', 'Họp nhóm đồ án', 'Chưa rõ']);
+  });
+
+  it('lọc theo trạng thái, nhãn và từ khoá', () => {
+    const work = makeEvent(input(), NOW);
+    const fun = makeEvent(input({ title: 'Đi xem phim', label: 'giải_trí' }), NOW);
+    const events = [work, fun];
+
+    expect(filterEvents(events, { status: 'nhap' })).toHaveLength(2);
+    expect(filterEvents(events, { label: 'giải_trí' })).toHaveLength(1);
+    expect(filterEvents(events, { query: 'đồ án' })[0]?.id).toBe(work.id);
+    expect(countByStatus(events).nhap).toBe(2);
+  });
+
+  it('nhận biết quá hạn và lọc sự kiện sắp tới', () => {
+    const past = setEventStatus(makeEvent(input({ startValue: '2026-10-20T09:00' }), NOW), 'dang_theo_doi', NOW);
+    const future = setEventStatus(makeEvent(input({ startValue: '2026-10-25T09:00' }), NOW), 'dang_theo_doi', NOW);
+    expect(isOverdue(past, NOW)).toBe(true);
+    expect(isOverdue(future, NOW)).toBe(false);
+    expect(upcomingEvents([past, future], NOW, 3).map((event) => event.id)).toEqual([future.id]);
+  });
+});
