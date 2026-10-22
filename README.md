@@ -19,6 +19,7 @@ Repo này chứa cả bộ tài liệu kế hoạch (gốc) và mã nguồn demo
 
 **Chưa có (đúng phạm vi demo):** classifier, LLM cục bộ, nhắc việc (`alarms`/`notifications`), Gmail/PDF/DOCX, tự động so khớp hồ sơ, tự động trích xuất sự kiện.
 Chi tiết lệch so với kế hoạch: [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md).
+Bảng đối chiếu đầy đủ chức năng chính thức vs. demo: [`docs/chuc-nang-demo-vs-chinh-thuc.md`](docs/chuc-nang-demo-vs-chinh-thuc.md).
 
 ---
 
@@ -65,6 +66,7 @@ npm run build
 ├─ AGENTS.md                     # Hướng dẫn cho agent/contributor
 ├─ docs/
 │  ├─ DEVIATIONS.md              # Demo khác kế hoạch ở đâu và vì sao
+│  ├─ chuc-nang-demo-vs-chinh-thuc.md # Đối chiếu chức năng kế hoạch vs demo
 │  ├─ kiem-thu-demo.md           # Checklist kiểm thử thủ công theo KS
 │  └─ phien-lam-viec-tiep-theo.md # Bàn giao: việc còn lại + hướng sửa
 ├─ extension/                    # Mã nguồn demo
