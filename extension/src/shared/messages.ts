@@ -20,6 +20,10 @@ export interface CapturePayload {
   url: string;
   title: string;
   selection: string;
+  /** Trang có dấu hiệu SPA chưa render xong nội dung chính. */
+  likelyDynamic?: boolean;
+  /** HTML sau lọc đã bị cắt do vượt giới hạn. */
+  htmlTruncated?: boolean;
 }
 
 /** Kết quả sau khi chạy Readability trong context có DOM. */

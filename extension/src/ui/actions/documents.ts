@@ -45,9 +45,16 @@ export async function captureCurrentPage(options: CaptureOptions = {}): Promise<
       : usedFallback
         ? ' (toàn trang dự phòng)'
         : '';
+    const sizeNote = captured.htmlTruncated
+      ? ' Trang quá lớn nên chỉ lấy phần nội dung chính.'
+      : '';
+    const dynamicNote =
+      captured.likelyDynamic || document.text.length < 200
+        ? ' Nếu thiếu nội dung, hãy cuộn đến phần cần đọc, chờ trang tải xong rồi quét lại — hoặc bôi đen/dán phần đó.'
+        : '';
     await persistDocument(
       document,
-      `Đã đọc ${formatCharCount(document.charCount)} trong ${elapsed} ms${methodNote}.`,
+      `Đã đọc ${formatCharCount(document.charCount)} trong ${elapsed} ms${methodNote}.${sizeNote}${dynamicNote}`,
     );
   } catch (error) {
     showToast('error', messageOf(error));
