@@ -18,18 +18,18 @@ Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./p
 
 - [x] Mở một bài báo tiếng Việt dài → popup → **Quét trang đang mở** → side panel mở, hiện tiêu đề + toàn văn.
 - [x] Badge phương thức = **Readability**; số ký tự hợp lý; nút “Xem toàn bộ” hoạt động.
-- [ ] Mở trang động (SPA) khó đọc → vẫn có nội dung, badge **DOM thô (dự phòng)**.
+- [x] Mở trang động (SPA) khó đọc → vẫn có nội dung, badge **DOM thô (dự phòng)**.
 - [x] Bôi đen một đoạn → quét → badge **Vùng bôi đen**, nội dung đúng đoạn bôi đen.
-- [ ] Bôi đen → chuột phải → **Quét sự kiện từ vùng chọn** → side panel mở, đọc đúng vùng chọn.
-- [ ] Document `raw_dom` hiện cảnh báo giải thích + nút **Dùng nội dung thô** tạo document mới.
+- [x] Bôi đen → chuột phải → **Quét sự kiện từ vùng chọn** → side panel mở, đọc đúng vùng chọn.
+- [x] Document `raw_dom` hiện cảnh báo giải thích + nút **Dùng nội dung thô** tạo document mới.
 - [x] Trang `chrome://extensions` → popup báo không đọc được, không crash.
 - [x] Quét lại lần 2 → danh sách nguồn gần đây có 2 mục, chọn qua lại được.
 - [x] Xoá nội dung → sự kiện đã tạo vẫn còn.
 
 ## 2. Dán văn bản (thay cho Gmail/PDF)
 
-- [ ] Khi đã có document, vẫn thấy nút **Dán văn bản** → mở form, dán email có ngày giờ → lưu → hiển thị đúng, badge **Văn bản dán**.
-- [ ] Bỏ trống nội dung → toast lỗi, không tạo bản ghi rác.
+- [x] Khi đã có document, vẫn thấy nút **Dán văn bản** → mở form, dán email có ngày giờ → lưu → hiển thị đúng, badge **Văn bản dán**.
+- [x] Bỏ trống nội dung → toast lỗi, không tạo bản ghi rác.
 
 ## 3. Hồ sơ (KS-02)
 
@@ -89,3 +89,17 @@ Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./p
 
 **Ghi chú:** các mục ✅ là thay đổi mã đã qua test tự động/build. Các kiểm tra cần Chrome thật
 (menu chuột phải, kéo side panel, vùng click) được liệt kê ở §1, §2, §7 và cần chạy lại thủ công.
+
+## Vấn đề tồn đọng
+
+- Trang web động (Gmail) vượt ngưỡng giới hạn của chức năng quét + raw DOM
+- Giao diện chọn ngày và chọn giờ chi tiết vẫn tràn khi UI hẹp
+
+## Gợi ý cải thiện
+
+- Ưu tiên hiển thị sự kiện gần nhất chưa diễn ra thay vì xếp toàn bộ sự kiện theo thời gian tuyệt đối.
+- Thêm context menu "Quét nội dung trên trang" khi chuột phải, kích hoạt chức năng tương tự nút "Quét trang đang mở" của UI nhỏ.
+- Cho phép người dùng tạo nhãn tuỳ chỉnh.
+- Tab "Tổng quan" hiển thị kế hoạch của từng hồ sơ theo dạng tab.
+- UI "Quét nội dung" nằm trong tab riêng.
+- Lược bỏ các chuỗi liên quan đến hệ thống (ví dụ: demo, trong IndexedDB,...) khỏi các phần UI thông thường, thêm mục "Về phiên bản này" trong tab "Cài đặt" cho các thông tin đó.

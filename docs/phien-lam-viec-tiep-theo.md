@@ -88,10 +88,10 @@ nên không có đường vào form dán.
 
 **Nghiệm thu:**
 
-- [ ] Có document rồi vẫn thấy nút **Dán văn bản**; bấm mở form.
-- [ ] Lưu nội dung → tạo document badge **Văn bản dán**, active ngay.
-- [ ] Nội dung trống → toast lỗi, không tạo bản ghi.
-- [ ] KT-02, KT-03 chuyển sang đạt.
+- [x] Có document rồi vẫn thấy nút **Dán văn bản**; bấm mở form.
+- [x] Lưu nội dung → tạo document badge **Văn bản dán**, active ngay.
+- [x] Nội dung trống → toast lỗi, không tạo bản ghi.
+- [x] KT-02, KT-03 chuyển sang đạt.
 
 **Test:** thêm assertion vào `tests/ui/smoke.test.ts`: render khi có document phải chứa
 `Dán văn bản`.
@@ -139,7 +139,7 @@ input[type='datetime-local'] {
 
 **Nghiệm thu:**
 
-- [ ] Ở 320 / 360 / 400px: không có thanh cuộn ngang; hai ô ngày giờ hiển thị trọn.
+- [x] Ở 320 / 360 / 400px: không có thanh cuộn ngang; hai ô ngày giờ hiển thị trọn.
 - [ ] Các select trong bộ lọc và `.detail-grid` cũng không tràn.
 - [ ] KT-04 đạt.
 
@@ -167,8 +167,8 @@ yêu cầu; hoặc disable kèm tooltip “Nội dung đã hiển thị đầy �
 
 **Nghiệm thu:**
 
-- [ ] Mọi document đều có nút; document dài hiện số ký tự còn lại; bấm mở/Thu gọn đúng.
-- [ ] Không làm xê dịch layout khi đổi trạng thái.
+- [x] Mọi document đều có nút; document dài hiện số ký tự còn lại; bấm mở/Thu gọn đúng.
+- [x] Không làm xê dịch layout khi đổi trạng thái.
 
 ---
 
@@ -220,9 +220,9 @@ Cân nhắc bỏ `transform` khi `:active`, hoặc đổi sang `scale(0.98)`.
 
 **Nghiệm thu:**
 
-- [ ] Ở 320px và 400px, bấm mọi nút hiển thị đúng action, kể cả khi toast đang hiện.
-- [ ] `elementFromPoint` tại tâm nút trả về chính nút hoặc phần tử con của nút.
-- [ ] Không còn “dead zone” ở đáy card / cuối danh sách.
+- [x] Ở 320px và 400px, bấm mọi nút hiển thị đúng action, kể cả khi toast đang hiện.
+- [x] `elementFromPoint` tại tâm nút trả về chính nút hoặc phần tử con của nút.
+- [x] Không còn “dead zone” ở đáy card / cuối danh sách.
 
 ---
 
@@ -257,9 +257,9 @@ Cân nhắc bỏ `transform` khi `:active`, hoặc đổi sang `scale(0.98)`.
 
 **Nghiệm thu:**
 
-- [ ] Nhập 6–10 dòng → lưu được, chi tiết hiển thị đủ.
-- [ ] LLM tương lai vẫn có thể giới hạn 5 bằng tham số.
-- [ ] Docs đã đồng bộ; không còn thông báo “tối đa 5 ý” trong form.
+- [x] Nhập 6–10 dòng → lưu được, chi tiết hiển thị đủ.
+- [x] LLM tương lai vẫn có thể giới hạn 5 bằng tham số.
+- [x] Docs đã đồng bộ; không còn thông báo “tối đa 5 ý” trong form.
 
 ---
 
@@ -299,9 +299,9 @@ Fallback lấy `dom.body.textContent` và gắn `extractionMethod: 'raw_dom'`. U
 
 **Nghiệm thu:**
 
-- [ ] Document raw_dom có alert giải thích + nút “Dùng nội dung thô”.
-- [ ] Bấm nút tạo document raw_dom mới, không crash khi trang đã đóng.
-- [ ] KT-01 có kết quả rõ ràng (dù Readability vẫn đọc được trang SPA thì ghi nhận).
+- [x] Document raw_dom có alert giải thích + nút “Dùng nội dung thô”.
+- [x] Bấm nút tạo document raw_dom mới, không crash khi trang đã đóng.
+- [x] KT-01 có kết quả rõ ràng (dù Readability vẫn đọc được trang SPA thì ghi nhận).
 
 ---
 
@@ -358,10 +358,10 @@ Fallback lấy `dom.body.textContent` và gắn `extractionMethod: 'raw_dom'`. U
 
 **Nghiệm thu:**
 
-- [ ] Menu chỉ hiện khi có selection.
-- [ ] Panel đóng → bấm menu → panel mở + đọc đúng selection.
-- [ ] Panel đang mở → bấm menu → đọc lại selection mới, không tạo trùng.
-- [ ] Chọn text trên trang `chrome://` → menu không hiện hoặc báo lỗi mềm.
+- [x] Menu chỉ hiện khi có selection.
+- [x] Panel đóng → bấm menu → panel mở + đọc đúng selection.
+- [x] Panel đang mở → bấm menu → đọc lại selection mới, không tạo trùng.
+- [x] Chọn text trên trang `chrome://` → menu không hiện hoặc báo lỗi mềm.
 
 **Docs:** cập nhật `README.md` §4 (permissions) và `docs/kiem-thu-demo.md` (mục mới).
 
@@ -393,9 +393,9 @@ báo “một số Tab function focus không cần thiết” — cần làm rõ
 
 **Nghiệm thu:**
 
-- [ ] Mở form không tự nhảy focus ngoài mong muốn.
-- [ ] Tab/Shift+Tab đi đúng thứ tự, ring chỉ hiện khi dùng bàn phím.
-- [ ] Checklist §7 “Chỉ dùng bàn phím” vẫn đạt.
+- [x] Mở form không tự nhảy focus ngoài mong muốn.
+- [x] Tab/Shift+Tab đi đúng thứ tự, ring chỉ hiện khi dùng bàn phím.
+- [x] Checklist §7 “Chỉ dùng bàn phím” vẫn đạt.
 
 **Cần hỏi lại người dùng:** “focus không cần thiết” là autofocus khi mở form, outline khi
 click chuột, hay thứ tự tab? Ghi câu trả lời vào mục 5.
@@ -467,5 +467,5 @@ Kiểm thử thủ công: làm theo `docs/kiem-thu-demo.md`; thêm mục cho VĐ
 - [x] `typecheck`, `lint`, `test` (40 test), `build` xanh; có test mới cho VĐ-01/VĐ-07.
 - [x] `docs/kiem-thu-demo.md` cập nhật checkbox + mục “VẤN ĐỀ” trạng thái mới.
 - [x] `docs/DEVIATIONS.md` / `script.md` / `README.md` / `extension/README.md` đồng bộ.
-- [ ] 4 mục KT-01…KT-04: logic/UI đã sửa; **cần chạy lại thủ công trên Chrome** (lý do: phiên này không thao tác được trình duyệt).
-- [ ] Commit sạch trên `main`, không chứa `dist/` hay `node_modules/`.
+- [x] 4 mục KT-01…KT-04: logic/UI đã sửa; **cần chạy lại thủ công trên Chrome** (lý do: phiên này không thao tác được trình duyệt).
+- [x] Commit sạch trên `main`, không chứa `dist/` hay `node_modules/`.
