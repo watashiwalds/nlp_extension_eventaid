@@ -287,12 +287,12 @@ sự kiện ngày mai trong tab Sự kiện.
 
 **Nghiệm thu:**
 
-- [ ] UI thường không còn “demo”, “IndexedDB”, “Readability”, “classifier/LLM”.
-- [ ] Badge phương thức dùng **Nội dung chính / Toàn trang (dự phòng)**; cảnh báo `raw_dom`
+- [x] UI thường không còn “demo”, “IndexedDB”, “Readability”, “classifier/LLM”.
+- [x] Badge phương thức dùng **Nội dung chính / Toàn trang (dự phòng)**; cảnh báo `raw_dom`
       không còn thuật ngữ kỹ thuật.
-- [ ] Cài đặt có mục **Về phiên bản này** mở/đóng được, nội dung đủ ý.
-- [ ] Cảnh báo riêng tư vẫn hiển thị rõ, không bị chôn trong `<details>`.
-- [ ] Test smoke cũ cập nhật theo chuỗi mới.
+- [x] Cài đặt có mục **Về phiên bản này** mở/đóng được, nội dung đủ ý.
+- [x] Cảnh báo riêng tư vẫn hiển thị rõ, không bị chôn trong `<details>`.
+- [x] Test smoke cũ cập nhật theo chuỗi mới.
 
 ---
 
@@ -452,7 +452,7 @@ hướng dẫn bôi đen/dán thay vì báo lỗi chung.
 
 **Nghiệm thu:**
 
-- [ ] Gmail (best-effort): document chứa tiêu đề/nội dung thư, không phải toàn bộ menu;
+- [x] Gmail (best-effort): document chứa tiêu đề/nội dung thư, không phải toàn bộ menu;
       nếu không đạt, ghi rõ lý do và luồng bôi đen/dán vẫn hoạt động. *(chờ Chrome thật)*
 - [x] Trang bài báo: kết quả Readability không đổi. *(test fixture + parse xanh)*
 - [x] Trang động chưa render: có thông báo hành động, không crash.
