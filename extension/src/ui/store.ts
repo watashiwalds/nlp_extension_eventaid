@@ -33,6 +33,8 @@ export interface Toast {
 export interface EventFilterState {
   status: EventStatus | 'all';
   label: Label | 'all';
+  /** Nhãn tuỳ chỉnh đang lọc; `'all'` = mọi nhãn. */
+  tag: string | 'all';
   query: string;
 }
 
@@ -40,6 +42,8 @@ export interface EventFilterState {
 export interface EventDraft {
   title: string;
   label: string;
+  /** Nhãn tuỳ chỉnh, chuỗi thô cách nhau bằng dấu phẩy. */
+  tags: string;
   /** Ngày và giờ tách riêng để form không tràn khi side panel hẹp. */
   startDate: string;
   startTime: string;
@@ -99,6 +103,7 @@ export interface AppState {
 export const EMPTY_EVENT_DRAFT: EventDraft = {
   title: '',
   label: 'công_vụ',
+  tags: '',
   startDate: '',
   startTime: '',
   endDate: '',
@@ -127,7 +132,7 @@ export const store = createStore<AppState>({
   activeDocumentId: null,
   profiles: [],
   events: [],
-  eventFilter: { status: 'all', label: 'all', query: '' },
+  eventFilter: { status: 'all', label: 'all', tag: 'all', query: '' },
   overviewProfileId: null,
   eventForm: {
     open: false,

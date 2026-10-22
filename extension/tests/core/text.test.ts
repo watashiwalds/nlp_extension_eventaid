@@ -4,6 +4,7 @@ import {
   normalizeWhitespace,
   parseListInput,
   parseSummaryInput,
+  parseTagsInput,
   truncateText,
 } from '../../src/core/text';
 
@@ -37,5 +38,19 @@ describe('text', () => {
     expect(parseSummaryInput('1\n2\n3\n4\n5\n6')).toHaveLength(6);
     expect(parseSummaryInput('1\n2\n3\n4\n5\n6', 5)).toHaveLength(5);
     expect(parseSummaryInput('   ')).toEqual([]);
+  });
+
+  it('tách nhãn tuỳ chỉnh và khử trùng không phân biệt hoa/thường', () => {
+    expect(parseTagsInput('đồ án, Họp nhóm; đồ án\nThư viện')).toEqual({
+      tags: ['đồ án', 'Họp nhóm', 'Thư viện'],
+      error: null,
+    });
+    expect(parseTagsInput('   ')).toEqual({ tags: [], error: null });
+  });
+
+  it('báo lỗi khi quá 5 nhãn hoặc nhãn quá dài', () => {
+    expect(parseTagsInput('a,b,c,d,e,f').error).toMatch(/Tối đa 5/);
+    expect(parseTagsInput('a'.repeat(25)).error).toMatch(/24 ký tự/);
+    expect(parseTagsInput('a'.repeat(24)).error).toBeNull();
   });
 });

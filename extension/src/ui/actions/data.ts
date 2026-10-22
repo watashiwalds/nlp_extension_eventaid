@@ -78,11 +78,14 @@ const LABEL_VALUES: Array<Label | 'all'> = ['công_vụ', 'giải_trí', 'cá_nh
 export function applyFilterFromForm(form: HTMLFormElement): void {
   const statusValue = valueOf(form, 'status');
   const labelValue = valueOf(form, 'label');
+  const tagValue = valueOf(form, 'tag').trim();
   const status = STATUS_VALUES.find((item) => item === statusValue) ?? 'all';
   const label = LABEL_VALUES.find((item) => item === labelValue) ?? 'all';
-  store.set({ eventFilter: { status, label, query: valueOf(form, 'query') } });
+  store.set({
+    eventFilter: { status, label, tag: tagValue || 'all', query: valueOf(form, 'query') },
+  });
 }
 
 export function clearFilter(): void {
-  store.set({ eventFilter: { status: 'all', label: 'all', query: '' } });
+  store.set({ eventFilter: { status: 'all', label: 'all', tag: 'all', query: '' } });
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  allEventTags,
   countByStatus,
   eventsForProfile,
   filterEvents,
@@ -125,6 +126,18 @@ describe('events', () => {
     expect(filterEvents(events, { label: 'giải_trí' })).toHaveLength(1);
     expect(filterEvents(events, { query: 'đồ án' })[0]?.id).toBe(work.id);
     expect(countByStatus(events).nhap).toBe(2);
+  });
+
+  it('lưu, lọc và tìm kiếm theo nhãn tuỳ chỉnh', () => {
+    const tagged = makeEvent(input({ tags: ['đồ án', 'họp nhóm'] }), NOW);
+    const other = makeEvent(input({ title: 'Đi xem phim', tags: ['giải trí'] }), NOW);
+    const events = [tagged, other];
+
+    expect(tagged.tags).toEqual(['đồ án', 'họp nhóm']);
+    expect(filterEvents(events, { tag: 'Đồ án' }).map((event) => event.id)).toEqual([tagged.id]);
+    expect(filterEvents(events, { tag: 'all' })).toHaveLength(2);
+    expect(filterEvents(events, { query: 'họp nhóm' })[0]?.id).toBe(tagged.id);
+    expect(allEventTags(events)).toEqual(['đồ án', 'giải trí', 'họp nhóm']);
   });
 
   it('nhận biết quá hạn và lọc sự kiện sắp tới', () => {

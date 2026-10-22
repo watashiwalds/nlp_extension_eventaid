@@ -8,6 +8,7 @@ function values(patch: Partial<EventFormValues> = {}): EventFormValues {
   return {
     title: 'Bảo vệ đồ án',
     label: 'công_vụ',
+    tags: '',
     start: '2026-11-20T08:00',
     end: '2026-11-20T10:00',
     duration: '',
@@ -73,6 +74,31 @@ describe('form sự kiện', () => {
     const updated = buildEventFromForm(values({ title: 'Bảo vệ đồ án (đổi giờ)' }), created ?? null, NOW);
     expect(updated.event?.id).toBe(created?.id);
     expect(updated.event?.status).toBe('nhap');
+  });
+
+  it('lưu nhãn tuỳ chỉnh, khử trùng và giữ thứ tự nhập', () => {
+    const result = buildEventFromForm(values({ tags: 'đồ án, Họp nhóm; đồ án' }), null, NOW);
+    expect(result.errors).toEqual({});
+    expect(result.event?.tags).toEqual(['đồ án', 'Họp nhóm']);
+  });
+
+  it('không lưu khi quá 5 nhãn hoặc nhãn quá 24 ký tự', () => {
+    const tooMany = buildEventFromForm(values({ tags: 'a,b,c,d,e,f' }), null, NOW);
+    expect(tooMany.event).toBeUndefined();
+    expect(tooMany.errors.tags).toMatch(/Tối đa 5/);
+
+    const tooLong = buildEventFromForm(values({ tags: `đồ án ${'x'.repeat(24)}` }), null, NOW);
+    expect(tooLong.event).toBeUndefined();
+    expect(tooLong.errors.tags).toMatch(/24 ký tự/);
+  });
+
+  it('sửa sự kiện giữ hoặc xoá được nhãn tuỳ chỉnh', () => {
+    const created = buildEventFromForm(values({ tags: 'đồ án' }), null, NOW).event;
+    const kept = buildEventFromForm(values({ tags: 'đồ án, thư viện' }), created ?? null, NOW);
+    expect(kept.event?.tags).toEqual(['đồ án', 'thư viện']);
+
+    const cleared = buildEventFromForm(values({ tags: '' }), kept.event ?? null, NOW);
+    expect(cleared.event?.tags).toEqual([]);
   });
 });
 

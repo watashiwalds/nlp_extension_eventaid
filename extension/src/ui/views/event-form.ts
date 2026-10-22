@@ -72,6 +72,13 @@ export function eventFormView(state: AppState): string {
         ${errors.label ? `<p class="field__error">${escapeHtml(errors.label)}</p>` : ''}
       </div>
 
+      <div class="field ${errors.tags ? 'field--error' : ''}">
+        <label class="field__label" for="event-tags">Nhãn tuỳ chỉnh</label>
+        <input class="input" id="event-tags" name="tags" value="${escapeAttr(values.tags)}" placeholder="Ví dụ: đồ án, họp nhóm">
+        <p class="field__hint">Tối đa 5 nhãn, cách nhau bằng dấu phẩy; mỗi nhãn tối đa 24 ký tự.</p>
+        ${errors.tags ? `<p class="field__error">${escapeHtml(errors.tags)}</p>` : ''}
+      </div>
+
       <div class="datetime-grid">
         <div class="field ${errors.start ? 'field--error' : ''}">
           <span class="field__label">Bắt đầu</span>

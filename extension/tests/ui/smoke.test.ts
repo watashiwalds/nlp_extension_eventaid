@@ -20,6 +20,7 @@ beforeEach(async () => {
     activeDocumentId: null,
     profiles: [],
     events: [],
+    eventFilter: { status: 'all', label: 'all', tag: 'all', query: '' },
     eventForm: { open: false, editingId: null, sourceDocumentId: null, values: EMPTY_EVENT_DRAFT, errors: {} },
     expandedEventId: null,
     toast: null,
@@ -95,6 +96,7 @@ describe('render side panel', () => {
         summary: ['Hội đồng: 3 giảng viên', 'Địa điểm: phòng B1-201'],
         relatedProfiles: [profile.id],
         sources: [{ documentId: document.documentId, kind: 'paste', title: document.title }],
+        tags: ['đồ án', 'họp nhóm'],
       },
       NOW,
     );
@@ -112,6 +114,32 @@ describe('render side panel', () => {
     expect(html).toContain('Hội đồng: 3 giảng viên');
     expect(html).toContain('Nguyễn Minh An');
     expect(html).toContain('Lịch bảo vệ');
+    expect(html).toContain('Nhãn tuỳ chỉnh');
+    expect(html).toContain('họp nhóm');
+  });
+
+  it('hiển thị chip nhãn và bộ lọc nhãn tuỳ chỉnh ở tab Sự kiện', () => {
+    const event = makeEvent(
+      {
+        title: 'Bảo vệ đồ án',
+        label: 'công_vụ',
+        tags: ['đồ án', 'thư viện'],
+        startValue: '2026-11-02T09:00',
+        endValue: null,
+        durationMinutesInput: 60,
+        summary: [],
+        relatedProfiles: [],
+        sources: [],
+      },
+      NOW,
+    );
+    store.set({ tab: 'events', events: [event] });
+
+    const html = renderApp(store.get());
+    expect(html).toContain('name="tag"');
+    expect(html).toContain('<option value="đồ án"');
+    expect(html).toContain('chip--label');
+    expect(html).toContain('thư viện');
   });
 
   it('render được tab hồ sơ và cài đặt', () => {
@@ -253,6 +281,7 @@ describe('luồng tạo sự kiện', () => {
     document.body.innerHTML = `<form id="event-form">
       <input name="title" value="Họp lớp">
       <select name="label"><option value="cá_nhân" selected>cá nhân</option></select>
+      <input name="tags" value="họp lớp, cuối kỳ">
       <input name="startDate" value="2026-11-02">
       <input name="startTime" value="09:00">
       <input name="endDate" value="">
@@ -289,6 +318,7 @@ describe('luồng tạo sự kiện', () => {
     expect(event?.label).toBe('cá_nhân');
     expect(event?.durationMinutes).toBe(60);
     expect(event?.relatedProfiles).toEqual([profile.id]);
+    expect(event?.tags).toEqual(['họp lớp', 'cuối kỳ']);
     expect(event?.sources[0]?.documentId).toBe(doc.documentId);
     expect(event?.status).toBe('nhap');
     expect(state.eventForm.open).toBe(false);

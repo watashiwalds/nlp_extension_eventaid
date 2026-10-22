@@ -1,7 +1,7 @@
 import { LABEL_TEXT, STATUS_TEXT, STATUS_TONE, UNCERTAIN_TEXT } from '../../shared/constants';
 import { LABELS } from '../../shared/contracts';
 import type { Event } from '../../shared/contracts';
-import { filterEvents, isOverdue, nextStatusOptions } from '../../core/events';
+import { allEventTags, filterEvents, isOverdue, nextStatusOptions } from '../../core/events';
 import { formatDateTimeLong, formatDuration, relativeLabel } from '../../core/dates';
 import type { AppState } from '../store';
 import {
@@ -53,6 +53,15 @@ function eventDetail(event: Event, state: AppState): string {
         event.summary.length > 0
           ? `<ul class="bullets">${event.summary.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>`
           : `<p class="muted small">Chưa có tóm tắt.</p>`
+      }
+    </div>
+
+    <div class="detail-block">
+      <h4>Nhãn tuỳ chỉnh</h4>
+      ${
+        event.tags.length > 0
+          ? `<div class="chips">${event.tags.map((tag) => chip(tag, 'label')).join('')}</div>`
+          : `<p class="muted small">Chưa có nhãn tuỳ chỉnh.</p>`
       }
     </div>
 
@@ -124,6 +133,7 @@ function eventCard(event: Event, state: AppState): string {
   const start = event.start.value;
   const firstSummary = event.summary[0];
   const missingTime = !start;
+  const hasChips = event.tags.length > 0 || names.length > 0 || missingTime;
 
   return `<article class="event-card ${expanded ? 'event-card--expanded' : ''} ${overdue ? 'event-card--overdue' : ''}">
     <button type="button" class="event-card__main" data-action="toggle-event" data-id="${escapeAttr(event.id)}" aria-expanded="${expanded}">
@@ -143,10 +153,10 @@ function eventCard(event: Event, state: AppState): string {
         </span>
         ${firstSummary ? `<span class="event-card__summary">${escapeHtml(shorten(firstSummary, 96))}</span>` : ''}
         ${
-          names.length > 0 || missingTime
-            ? `<span class="chips">${names.map((name) => chip(name)).join('')}${
-                missingTime ? chip('thiếu thời điểm') : ''
-              }</span>`
+          hasChips
+            ? `<span class="chips">${event.tags.map((tag) => chip(tag, 'label')).join('')}${names
+                .map((name) => chip(name))
+                .join('')}${missingTime ? chip('thiếu thời điểm') : ''}</span>`
             : ''
         }
       </span>
@@ -158,6 +168,7 @@ function eventCard(event: Event, state: AppState): string {
 
 function filterBar(state: AppState): string {
   const filter = state.eventFilter;
+  const tags = allEventTags(state.events);
   return `<form id="filter-form" class="filters">
     <div class="search">
       ${icon('search')}
@@ -179,6 +190,15 @@ function filterBar(state: AppState): string {
           (label) => `<option value="${label}" ${filter.label === label ? 'selected' : ''}>${LABEL_TEXT[label]}</option>`,
         ).join('')}
       </select>
+      <select class="select" name="tag" aria-label="Lọc theo nhãn tuỳ chỉnh">
+        <option value="all" ${filter.tag === 'all' ? 'selected' : ''}>Mọi nhãn tuỳ chỉnh</option>
+        ${tags
+          .map(
+            (tag) =>
+              `<option value="${escapeAttr(tag)}" ${filter.tag === tag ? 'selected' : ''}>${escapeHtml(tag)}</option>`,
+          )
+          .join('')}
+      </select>
     </div>
   </form>`;
 }
@@ -188,7 +208,10 @@ export function eventsView(state: AppState): string {
 
   const visible = filterEvents(state.events, state.eventFilter);
   const filtering =
-    state.eventFilter.status !== 'all' || state.eventFilter.label !== 'all' || state.eventFilter.query.trim() !== '';
+    state.eventFilter.status !== 'all' ||
+    state.eventFilter.label !== 'all' ||
+    state.eventFilter.tag !== 'all' ||
+    state.eventFilter.query.trim() !== '';
 
   return `<div class="stack">
     <div class="view-head">

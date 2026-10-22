@@ -31,6 +31,7 @@ export function openEventForm(
     ? {
         title: event.title,
         label: event.label,
+        tags: event.tags.join(', '),
         ...splitDraftDates(event.start.value ?? '', event.end?.value ?? ''),
         duration: event.end?.value ? '' : event.durationMinutes ? String(event.durationMinutes) : '',
         summary: event.summary.join('\n'),
@@ -75,6 +76,7 @@ export async function saveEventFromForm(form: HTMLFormElement): Promise<void> {
   const draft: EventDraft = {
     title: valueOf(form, 'title'),
     label: valueOf(form, 'label'),
+    tags: valueOf(form, 'tags'),
     startDate: valueOf(form, 'startDate'),
     startTime: valueOf(form, 'startTime'),
     endDate: valueOf(form, 'endDate'),
@@ -112,6 +114,7 @@ export async function saveEventFromForm(form: HTMLFormElement): Promise<void> {
     {
       title: draft.title,
       label: draft.label,
+      tags: draft.tags,
       start: start.value,
       end: end.value,
       duration: draft.duration,

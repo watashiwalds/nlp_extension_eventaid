@@ -65,11 +65,25 @@ export type DateTimeRef = z.infer<typeof DateTimeRefSchema>;
  */
 export const MAX_SUMMARY_ITEMS = 50;
 
+/**
+ * Nhãn tuỳ chỉnh (tags) — bổ sung ngoài `label` phân loại cố định.
+ * `.default([])` giữ tương thích với bản ghi/JSON cũ chưa có trường này.
+ */
+export const MAX_EVENT_TAGS = 5;
+export const MAX_EVENT_TAG_LENGTH = 24;
+export const EventTagSchema = z
+  .string()
+  .trim()
+  .min(1, 'Nhãn tuỳ chỉnh không được để trống')
+  .max(MAX_EVENT_TAG_LENGTH, `Mỗi nhãn tối đa ${MAX_EVENT_TAG_LENGTH} ký tự`);
+
 /** Sự kiện lịch trình — 7 trường trong base_idea.md. */
 export const EventSchema = z.object({
   id: z.string().min(1),
   title: z.string().trim().min(1, 'Tiêu đề không được để trống').max(120, 'Tiêu đề tối đa 120 ký tự'),
   label: LabelSchema,
+  /** Nhãn tuỳ chỉnh do người dùng nhập; không thay thế `label`. */
+  tags: z.array(EventTagSchema).max(MAX_EVENT_TAGS, `Tối đa ${MAX_EVENT_TAGS} nhãn tuỳ chỉnh`).default([]),
   start: DateTimeRefSchema,
   end: DateTimeRefSchema.nullable(),
   durationMinutes: z.number().int().positive().max(60 * 24 * 30).nullable(),

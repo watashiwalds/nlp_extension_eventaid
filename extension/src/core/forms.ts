@@ -5,7 +5,7 @@ import { makeEvent, updateEvent } from './events';
 import type { EventInput } from './events';
 import { makeProfile, updateProfile } from './profiles';
 import type { ProfileInput } from './profiles';
-import { parseSummaryInput } from './text';
+import { parseSummaryInput, parseTagsInput } from './text';
 
 export type FormErrors = Record<string, string>;
 
@@ -40,6 +40,8 @@ export function validateProfileInput(input: ProfileInput): FormResult<ProfileInp
 export interface EventFormValues {
   title: string;
   label: string;
+  /** Chuỗi thô người dùng nhập, phân tách bởi dấu phẩy; rỗng = không có tags. */
+  tags: string;
   start: string;
   end: string;
   duration: string;
@@ -71,6 +73,9 @@ export function buildEventFromForm(
   const labelParsed = LabelSchema.safeParse(values.label);
   if (!labelParsed.success) errors.label = 'Nhãn không hợp lệ';
 
+  const tagsParsed = parseTagsInput(values.tags);
+  if (tagsParsed.error) errors.tags = tagsParsed.error;
+
   const start = values.start.trim() || null;
   const end = values.end.trim() || null;
   if (start && Number.isNaN(new Date(start).getTime())) errors.start = 'Thời điểm bắt đầu không hợp lệ';
@@ -98,6 +103,7 @@ export function buildEventFromForm(
   const input: EventInput = {
     title: values.title,
     label: labelParsed.data as Label,
+    tags: tagsParsed.tags,
     startValue: start,
     endValue: end,
     durationMinutesInput: duration,

@@ -6,6 +6,8 @@ import { newId } from './ids';
 export interface EventInput {
   title: string;
   label: Label;
+  /** Nhãn tuỳ chỉnh; không truyền = không có nhãn (tương thích call-site cũ). */
+  tags?: string[];
   /** `YYYY-MM-DDTHH:mm` hoặc null khi chưa xác định. */
   startValue: string | null;
   endValue: string | null;
@@ -18,6 +20,8 @@ export interface EventInput {
 export interface EventFilter {
   status?: EventStatus | 'all';
   label?: Label | 'all';
+  /** Lọc đúng một nhãn tuỳ chỉnh; `'all'`/rỗng = không lọc. */
+  tag?: string | 'all';
   query?: string;
 }
 
@@ -53,6 +57,7 @@ function buildEvent(
     id: base.id,
     title: input.title,
     label: input.label,
+    tags: input.tags ?? [],
     start: { value: startValue, raw: input.startValue },
     end: endValue ? { value: endValue, raw: input.endValue } : null,
     durationMinutes: duration,
@@ -132,15 +137,34 @@ export function sortEvents(events: Event[], now: Date = new Date()): Event[] {
 
 export function filterEvents(events: Event[], filter: EventFilter, now: Date = new Date()): Event[] {
   const query = (filter.query ?? '').trim().toLowerCase();
+  const tag = (filter.tag ?? 'all').trim().toLowerCase();
   return sortEvents(events, now).filter((event) => {
     if (filter.status && filter.status !== 'all' && event.status !== filter.status) return false;
     if (filter.label && filter.label !== 'all' && event.label !== filter.label) return false;
+    if (tag && tag !== 'all' && !event.tags.some((item) => item.toLowerCase() === tag)) return false;
     if (!query) return true;
-    const haystack = [event.title, event.summary.join(' '), ...event.sources.map((s) => s.title)]
+    const haystack = [
+      event.title,
+      event.summary.join(' '),
+      event.tags.join(' '),
+      ...event.sources.map((s) => s.title),
+    ]
       .join(' ')
       .toLowerCase();
     return haystack.includes(query);
   });
+}
+
+/** Danh sách nhãn tuỳ chỉnh duy nhất, sắp xếp alphabet (không phân biệt hoa/thường). */
+export function allEventTags(events: Event[]): string[] {
+  const unique = new Map<string, string>();
+  for (const event of events) {
+    for (const tag of event.tags) {
+      const key = tag.toLowerCase();
+      if (!unique.has(key)) unique.set(key, tag);
+    }
+  }
+  return [...unique.values()].sort((a, b) => a.localeCompare(b, 'vi'));
 }
 
 /** Lọc sự kiện theo hồ sơ; `null` nghĩa là tất cả. */
