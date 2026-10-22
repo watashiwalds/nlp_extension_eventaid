@@ -249,9 +249,9 @@ sự kiện ngày mai trong tab Sự kiện.
 
 **Nghiệm thu:**
 
-- [ ] Sự kiện ngày mai đứng trên sự kiện tháng trước.
-- [ ] Trong nhóm đã qua, sự kiện gần nhất đứng trước.
-- [ ] Sự kiện chưa có `start` nằm cuối, không bị mất khi lọc.
+- [x] Sự kiện ngày mai đứng trên sự kiện tháng trước.
+- [x] Trong nhóm đã qua, sự kiện gần nhất đứng trước.
+- [x] Sự kiện chưa có `start` nằm cuối, không bị mất khi lọc.
 - [x] `filterEvents` theo trạng thái/nhãn/từ khoá vẫn giữ thứ tự mới.
 
 ---

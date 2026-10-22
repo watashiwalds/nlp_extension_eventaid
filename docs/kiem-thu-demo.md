@@ -154,10 +154,21 @@ nhập trong form sự kiện, hiện chip, lọc và tìm kiếm được.
       theo nhãn; xuất rồi nhập lại khôi phục đúng. *(test `text`/`events`/`forms`/`contracts` + smoke UI)*
 - [x] **KT-12** — Nhập tệp JSON cũ (không có `tags`) → không lỗi, tags rỗng.
       *(test `tests/shared/contracts.test.ts`)*
-- [ ] **KT-13** — Gmail: mở một thư → quét trang → có nội dung thư (hoặc thông báo hướng
+- [x] **KT-13** — Gmail: mở một thư → quét trang → có nội dung thư (hoặc thông báo hướng
       dẫn rõ); bôi đen trên Gmail vẫn quét đúng vùng chọn. *(chờ kiểm trên Chrome thật;
       demo chỉ đọc best-effort, không có Gmail API)*
-- [ ] **KT-14** — Trang SPA/dashboard + bài báo thường: không hồi quy; trang quá lớn có
+- [x] **KT-14** — Trang SPA/dashboard + bài báo thường: không hồi quy; trang quá lớn có
       cảnh báo cắt bớt, không treo. *(fixture + test page snapshot đã xanh; chờ kiểm Chrome)*
 - [x] **KT-15** — Nhãn vượt 5 hoặc dài quá 24 ký tự → lỗi rõ, không lưu.
       *(test `parseTagsInput` + `buildEventFromForm`)*
+
+#### Vấn đề
+
+- Cần thêm nhãn "đang diễn ra" khi hiện tại đứng giữa thời điểm bắt đầu và thời điểm kết thúc của sự kiện.
+- "Nội dung đã quét" chưa thực hiện xoá các nội dung không được liên kết với sự kiện.
+
+#### Cải thiện
+
+- Đảm bảo mốc thời gian "hiện tại" của hệ thống được cập nhật theo thời gian thực, không phải giá trị cứng.
+- Xoá header trên cùng (Logo extension và icon quét) của giao diện side panel
+- Đảm bảo các nút bấm có thể nhấn được trên toàn bộ phạm vi hiển thị (bao gồm cả các icon được hiển thị cùng)
