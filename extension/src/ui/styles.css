@@ -132,33 +132,44 @@ code {
 
 .tabs {
   display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 0 10px;
+  align-items: stretch;
+  padding: 0 6px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+  overflow: visible;
+}
+
+.tabs__scroll {
+  display: flex;
+  flex: 1;
+  min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-.tabs::-webkit-scrollbar {
+.tabs__scroll::-webkit-scrollbar {
   display: none;
 }
 
 .tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 9px;
+  gap: 5px;
+  flex: none;
+  padding: 10px 7px;
   border: 0;
   border-bottom: 2px solid transparent;
   background: none;
   color: var(--muted);
   font: inherit;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 550;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.tab__short {
+  display: none;
 }
 
 .tab:hover {
@@ -171,8 +182,13 @@ code {
 }
 
 .tab--icon {
-  margin-left: auto;
   padding: 10px 6px;
+}
+
+.tabs__settings {
+  flex: none;
+  margin-left: 2px;
+  border-left: 1px solid var(--border);
 }
 
 .tab__count {
@@ -207,6 +223,7 @@ code {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -267,6 +284,7 @@ code {
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
 }
 
@@ -1064,6 +1082,12 @@ input[type='datetime-local'] {
   color: #fff;
 }
 
+.profile-tab--active:hover {
+  background: var(--primary-strong);
+  border-color: var(--primary-strong);
+  color: #fff;
+}
+
 /* --------------------------------- stats ---------------------------------- */
 
 .stats {
@@ -1477,6 +1501,22 @@ input[type='datetime-local'] {
 .toast__close:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+@media (max-width: 400px) {
+  .tab__count {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .tab__full {
+    display: none;
+  }
+
+  .tab__short {
+    display: inline;
+  }
 }
 
 @media (max-width: 520px) {

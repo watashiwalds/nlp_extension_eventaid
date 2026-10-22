@@ -69,10 +69,11 @@ cho trang, tab hồ sơ ở Tổng quan, thứ tự sự kiện hợp lý và d�
 | 4 | S1-04 — tab hồ sơ ở Tổng quan | ✅ | `overviewProfileId` + `eventsForProfile`; thống kê vẫn toàn cục |
 | 5 | S1-05 — ưu tiên sự kiện sắp diễn ra | ✅ | `sortEvents(events, now)` chia 3 nhóm |
 | 6 | S1-06 — dọn chuỗi hệ thống | ✅ | Header “Cá nhân”; “Về phiên bản này” dạng `<details>`; badge **Nội dung chính / Toàn trang (dự phòng)** |
-| 7 | Quality gate | ✅ | `typecheck`, `lint`, `test` (47 test), `build` đều xanh — chờ kiểm thủ công trên Chrome |
+| 7 | Quality gate | ✅ | `typecheck`, `lint`, `test` (47 test), `build` đều xanh |
+| 8 | Nghiệm thu thủ công | ✅ | KT-05…KT-10 đã xác nhận trên Chrome (commit `70566e8`) |
+| 9 | Sửa vấn đề phát sinh | ✅ | Thanh tab ghim nút Cài đặt; nút không bẻ chữ; hover chip hồ sơ đúng màu |
 
-**Còn lại:** xác nhận lại KT-05…KT-10 trong [`kiem-thu-demo.md`](./kiem-thu-demo.md)
-ở 320/360/400px và với menu chuột phải thật. Sau khi xác nhận, mới bắt đầu phiên 2.
+**Trạng thái:** Phiên 1 đã đóng. Có thể bắt đầu **Phiên 2** (nhãn tuỳ chỉnh & trang động).
 
 ### Thứ tự thực hiện & commit
 
@@ -299,8 +300,8 @@ sự kiện ngày mai trong tab Sự kiện.
 
 - [x] S1-01…S1-06 hoàn tất (không cắt mục nào).
 - [x] `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` xanh.
-- [ ] Kiểm thủ công: 320/360/400px, menu chuột phải cấp trang, tab Quét nội dung,
-      tab hồ sơ, thứ tự sự kiện, chuỗi UI. *(chờ xác nhận trên Chrome)*
+- [x] Kiểm thủ công: 320/360/400px, menu chuột phải cấp trang, tab Quét nội dung,
+      tab hồ sơ, thứ tự sự kiện, chuỗi UI.
 - [x] `docs/kiem-thu-demo.md` cập nhật kết quả + mục kiểm thử mới.
 - [x] `README.md`, `extension/README.md`, `docs/chuc-nang-demo-vs-chinh-thuc.md` đồng bộ.
 - [x] Commit sạch trên `main`, không chứa `dist/`/`node_modules/`.

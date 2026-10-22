@@ -132,9 +132,12 @@ khi UI hẹp). Kế hoạch xử lý: [`phien-lam-viec-tiep-theo.md`](./phien-la
 
 #### Vấn đề phát sinh từ phiên 1
 
-- Kích thước mặc định của side panel không đủ để hiển thị chính xác thanh tab + cài đặt (icon cài đặt tràn ra ngoài)
-- Nút bấm đầy đủ (gồm icon và nhãn) cho các chức năng chính thường bị xuống dòng vì hẹp chiều rộng
-- Hover state của profile chip trong tab "Tổng quan" sai màu
+- ✅ Kích thước mặc định của side panel không đủ để hiển thị chính xác thanh tab + cài đặt (icon cài đặt tràn ra ngoài)
+  — đã tách vùng tab cuộn riêng, ghim nút **Cài đặt**; ở ≤ 400px ẩn số đếm, ≤ 360px dùng nhãn ngắn **Quét**.
+- ✅ Nút bấm đầy đủ (gồm icon và nhãn) cho các chức năng chính thường bị xuống dòng vì hẹp chiều rộng
+  — `.btn` không xuống dòng; `.view-head` tự wrap để nút xuống dòng nguyên khối thay vì bẻ chữ.
+- ✅ Hover state của profile chip trong tab "Tổng quan" sai màu
+  — chip đang chọn giữ nền xanh đậm và chữ trắng khi hover.
 
 ### Phiên 2
 

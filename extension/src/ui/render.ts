@@ -9,24 +9,27 @@ import { settingsView } from './views/settings';
 
 function tabs(state: AppState): string {
   const counts = countByStatus(state.events);
-  const items: { tab: AppState['tab']; label: string; count?: number }[] = [
-    { tab: 'overview', label: 'Tổng quan' },
-    { tab: 'capture', label: 'Quét nội dung' },
-    { tab: 'events', label: 'Sự kiện', count: counts.nhap + counts.dang_theo_doi },
-    { tab: 'profiles', label: 'Hồ sơ', count: state.profiles.length },
+  const items: { tab: AppState['tab']; label: string; short?: string; count?: number }[] = [
+    { tab: 'overview', label: 'Tổng quan', short: 'Tổng quan' },
+    { tab: 'capture', label: 'Quét nội dung', short: 'Quét' },
+    { tab: 'events', label: 'Sự kiện', short: 'Sự kiện', count: counts.nhap + counts.dang_theo_doi },
+    { tab: 'profiles', label: 'Hồ sơ', short: 'Hồ sơ', count: state.profiles.length },
   ];
   return `<nav class="tabs" aria-label="Điều hướng">
-    ${items
-      .map(
-        (item) => `<button type="button" role="tab" aria-selected="${state.tab === item.tab}" class="tab ${
-          state.tab === item.tab ? 'tab--active' : ''
-        }" data-action="tab" data-tab="${item.tab}">
-          <span>${item.label}</span>
-          ${item.count ? `<span class="tab__count">${item.count}</span>` : ''}
-        </button>`,
-      )
-      .join('')}
-    <button type="button" role="tab" aria-selected="${state.tab === 'settings'}" class="tab tab--icon ${
+    <div class="tabs__scroll" role="tablist">
+      ${items
+        .map(
+          (item) => `<button type="button" role="tab" aria-selected="${state.tab === item.tab}" class="tab ${
+            state.tab === item.tab ? 'tab--active' : ''
+          }" data-action="tab" data-tab="${item.tab}">
+            <span class="tab__full">${item.label}</span>
+            <span class="tab__short">${item.short ?? item.label}</span>
+            ${item.count ? `<span class="tab__count">${item.count}</span>` : ''}
+          </button>`,
+        )
+        .join('')}
+    </div>
+    <button type="button" role="tab" aria-selected="${state.tab === 'settings'}" class="tab tab--icon tabs__settings ${
       state.tab === 'settings' ? 'tab--active' : ''
     }" data-action="tab" data-tab="settings" title="Cài đặt" aria-label="Cài đặt">${icon('settings')}</button>
   </nav>`;
