@@ -32,6 +32,7 @@ Both feed one **Document Processing Layer** and one **NLP Pipeline**.
 | `docs/DEVIATIONS.md` | Where the demo intentionally differs from the plan, and why. | Vietnamese |
 | `docs/kiem-thu-demo.md` | Manual test checklist mapped to KS scenarios. | Vietnamese |
 | `docs/phien-lam-viec-tiep-theo.md` | Handoff for the next session: manual test results, open issues, fix plan. | Vietnamese |
+| `docs/thiet-ke-demo-va-san-sang-llama-cpp.md` | Demo architecture summary + readiness assessment for local llama.cpp event extraction. | Vietnamese |
 | `.github/workflows/ci.yml` | Quality gate: typecheck, lint, test, build. | YAML |
 
 > **All documentation is written in Vietnamese.** Keep new prose in Vietnamese unless explicitly told otherwise.
@@ -230,7 +231,7 @@ Use Vietnamese in docs, but map to these English concepts:
 ## 11. Current status
 
 - **Demo (implemented):** `extension/` — page capture (filtered **page snapshot** with landmark/noise removal + Readability + raw DOM fallback + forced raw + selection + context-menu selection + **context-menu page scan**), **dedicated capture tab**, document viewer, profile CRUD, manual event CRUD (7 fields + **custom tags**, status machine, source refs, uncertain flags), **per-profile plans on overview**, **date/time split inputs**, **upcoming-first event ordering**, JSON export/import. **No ML/LLM, no reminders, no Gmail API.**
-- **Verified:** `npm run typecheck`, `npm run lint`, `npm test` (63 tests incl. jsdom smoke, parse, page-snapshot and tag tests), `npm run build` all pass; `dist/` loads unpacked.
+- **Verified:** `npm run typecheck`, `npm run lint`, `npm test` (72 tests incl. jsdom smoke, parse, page-snapshot and tag tests), `npm run build` all pass; `dist/` loads unpacked.
 - **Manual checks pending:** re-run `docs/kiem-thu-demo.md` in Chrome for context menu (page + selection), side-panel widths 320/360/400px, click areas, Gmail best-effort capture, and SPA/regression checks (KT-13/KT-14).
 - **Build plan:** `ke_hoach_phat_trien.md` — 7 sprints / 14 weeks; web first, Gmail in the final sprint.
 - **Tech stack:** locked in §3 (TypeScript + Vite, no UI framework, local llama.cpp server, linear classifier).

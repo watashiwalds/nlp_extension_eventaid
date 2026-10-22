@@ -23,7 +23,7 @@ nhằm giữ demo chạy được trong 1 buổi, nhưng vẫn giữ đúng hợ
 | Job queue / pipeline | `Job`, state machine, resume sau SW restart | Không có job nền | Đọc trang là thao tác đồng bộ, vài trăm ms |
 | `Settings` store | `settings` | Có trong DB nhưng demo chưa dùng; cờ quét dùng `chrome.storage.session` | — |
 | Classifier | `public/models/classifier.json` | Không có | — |
-| Test | Vitest + checklist KS | Vitest (63 test, gồm smoke UI bằng jsdom, parse Readability/forceRaw, page snapshot và tags) + checklist | Không có Playwright như kế hoạch |
+| Test | Vitest + checklist KS | Vitest (72 test, gồm smoke UI bằng jsdom, parse Readability/forceRaw, page snapshot và tags) + checklist | Không có Playwright như kế hoạch |
 | Thông báo UI | 2 nút theo giới hạn Chrome | Không có | — |
 
 ## Điểm **không** lệch

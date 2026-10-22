@@ -57,7 +57,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | A3 | `shared/contracts.ts` là nguồn hợp đồng duy nhất, Zod validate ở biên IndexedDB | ✅ | Đủ `Document`, `Profile`, `Event`, `Settings`; có test parse |
 | A4 | Phân lớp `core/` → `platform/` → `ui/`, không import ngược | ✅ | ESLint `no-restricted-imports` + `no-restricted-globals` |
 | A5 | IndexedDB + wrapper typed (~150 dòng), không Dexie | ✅ | `platform/storage/db.ts`; 4 object store |
-| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 63 test Vitest |
+| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 72 test Vitest |
 | A7 | Content script inject Readability theo yêu cầu | 🟡 | `scripting.executeScript` chạy page snapshot (lọc `main`/landmark, bỏ menu/khung ẩn), **Readability chạy trong side panel**; chưa có content script thường trú |
 | A8 | Job queue bền, tiến trình, resume sau service worker restart | ❌ | Đọc trang là thao tác đồng bộ vài trăm ms, không có job nền |
 | A9 | Offscreen document chạy classifier + LLM | ❌ | Không có tác vụ dài cần offscreen |
@@ -144,7 +144,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | G5 | Không thực thi script/macro trong tài liệu đầu vào | ✅ | Chỉ đọc text/HTML tĩnh, không eval |
 | G6 | Accessibility: bàn phím, focus ring, nhãn ARIA | 🟡 | Đã bỏ `autofocus`, thêm `:focus-visible`, Esc đóng form, focus ô lỗi đầu tiên; cần kiểm thủ công lại |
 | G7 | Side panel 320/360/400px không tràn ngang | 🟡 | Đã tách ô ngày/giờ + grid `minmax(0, 1fr)`, stack khi hẹp; **chưa xác nhận lại trên Chrome thật** |
-| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 63 test Vitest (core + parse + page snapshot + smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
+| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 72 test Vitest (core + parse + page snapshot + smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
 | G9 | Golden set 150 mẫu + `run_eval.ts` + F1/p95 | ❌ | Chưa có dataset, chưa có eval |
 | G10 | **KS-11** Luồng lỗi: token hết hạn, quota, model chết, trang không inject được | 🟡 | Có xử lý `chrome://`, nội dung rỗng, JSON rác, trang SPA chưa render (hướng dẫn quét lại/bôi đen/dán); thiếu lỗi OAuth/quota/model |
 | G11 | Đóng gói CRX + privacy policy + báo cáo eval | ❌ | Mới ở mức load unpacked `dist/` |

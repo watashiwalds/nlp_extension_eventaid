@@ -49,7 +49,7 @@ npm run build
 | `npm run build` | `tsc --noEmit` + `vite build` → `dist/` |
 | `npm run typecheck` | TypeScript strict, 0 lỗi |
 | `npm run lint` | ESLint (flat config) |
-| `npm test` | Vitest: 63 test (core + parse + page snapshot + smoke test UI bằng jsdom) |
+| `npm test` | Vitest: 72 test (core + parse + page snapshot + smoke test UI bằng jsdom) |
 | `npm run icons` | Sinh lại icon PNG |
 
 ---
@@ -68,7 +68,8 @@ npm run build
 │  ├─ DEVIATIONS.md              # Demo khác kế hoạch ở đâu và vì sao
 │  ├─ chuc-nang-demo-vs-chinh-thuc.md # Đối chiếu chức năng kế hoạch vs demo
 │  ├─ kiem-thu-demo.md           # Checklist kiểm thử thủ công theo KS
-│  └─ phien-lam-viec-tiep-theo.md # Kế hoạch 2 phiên tiếp theo
+│  ├─ phien-lam-viec-tiep-theo.md # Kế hoạch 2 phiên tiếp theo
+│  └─ thiet-ke-demo-va-san-sang-llama-cpp.md # Thiết kế demo + đánh giá sẵn sàng LLM
 ├─ extension/                    # Mã nguồn demo
 │  ├─ src/shared/                # contracts.ts (Zod), messages.ts, constants.ts
 │  ├─ src/core/                  # Thuần TS: dates, events, profiles, forms, text
@@ -113,3 +114,4 @@ Checklist thủ công (theo kịch bản KS): [`docs/kiem-thu-demo.md`](docs/kie
 
 Xem lộ trình đầy đủ trong [`ke_hoach_phat_trien.md`](ke_hoach_phat_trien.md) §9.
 Kế hoạch ngắn hạn chia 2 phiên: [`docs/phien-lam-viec-tiep-theo.md`](docs/phien-lam-viec-tiep-theo.md).
+Đánh giá khoảng cách tới llama.cpp: [`docs/thiet-ke-demo-va-san-sang-llama-cpp.md`](docs/thiet-ke-demo-va-san-sang-llama-cpp.md).
