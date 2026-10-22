@@ -465,6 +465,27 @@ input[type='datetime-local'] {
   min-width: 0;
 }
 
+.datetime-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.datetime-grid > .field {
+  min-width: 0;
+}
+
+.datetime-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.datetime-row > .input {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .form__actions {
   display: flex;
   flex-wrap: wrap;
@@ -1004,6 +1025,45 @@ input[type='datetime-local'] {
   gap: 6px;
 }
 
+/* ---------------------------- profile tab strip ---------------------------- */
+
+.profile-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.profile-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-tab {
+  flex: none;
+  padding: 5px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.profile-tab:hover {
+  background: var(--surface-2);
+}
+
+.profile-tab--active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
 /* --------------------------------- stats ---------------------------------- */
 
 .stats {
@@ -1219,6 +1279,26 @@ input[type='datetime-local'] {
   font-size: 12.5px;
 }
 
+.about summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-soft);
+  padding: 2px 0;
+}
+
+.about summary:hover {
+  color: var(--primary);
+}
+
+.about__grid {
+  margin: 10px 0;
+}
+
+.about .bullets {
+  margin-bottom: 8px;
+}
+
 /* --------------------------------- toast ---------------------------------- */
 
 .toast {
@@ -1389,6 +1469,7 @@ input[type='datetime-local'] {
 .btn:focus-visible,
 .icon-btn:focus-visible,
 .tab:focus-visible,
+.profile-tab:focus-visible,
 .link-btn:focus-visible,
 .stat:focus-visible,
 .event-card__main:focus-visible,
@@ -1398,10 +1479,22 @@ input[type='datetime-local'] {
   outline-offset: 2px;
 }
 
+@media (max-width: 520px) {
+  .datetime-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 420px) {
   .grid-2,
   .detail-grid,
   .filters__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 340px) {
+  .datetime-row {
     grid-template-columns: 1fr;
   }
 }

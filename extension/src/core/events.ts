@@ -1,6 +1,6 @@
 import { EventSchema } from '../shared/contracts';
 import type { Event, EventStatus, Label, SourceRef } from '../shared/contracts';
-import { durationMinutes, isPast, parseLocalDateTime } from './dates';
+import { durationMinutes, isPast, parseLocalDateTime, toInputValue } from './dates';
 import { newId } from './ids';
 
 export interface EventInput {
@@ -111,21 +111,28 @@ export function setEventStatus(event: Event, status: EventStatus, now: Date = ne
   return next;
 }
 
-/** Sắp xếp: sự kiện có thời điểm lên trước, gần hiện tại nhất trước; chưa có thời điểm xếp cuối. */
-export function sortEvents(events: Event[]): Event[] {
+/**
+ * Sắp xếp 3 nhóm: sắp/đang diễn ra (tăng dần), đã qua (gần nhất trước),
+ * chưa có thời điểm (cuối, mới tạo trước).
+ */
+export function sortEvents(events: Event[], now: Date = new Date()): Event[] {
+  const nowValue = toInputValue(now);
   return [...events].sort((a, b) => {
     const aStart = a.start.value;
     const bStart = b.start.value;
-    if (aStart && bStart) return aStart.localeCompare(bStart);
-    if (aStart) return -1;
-    if (bStart) return 1;
-    return b.createdAt.localeCompare(a.createdAt);
+    if (!aStart && !bStart) return b.createdAt.localeCompare(a.createdAt);
+    if (!aStart) return 1;
+    if (!bStart) return -1;
+    const aUpcoming = aStart >= nowValue;
+    const bUpcoming = bStart >= nowValue;
+    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+    return aUpcoming ? aStart.localeCompare(bStart) : bStart.localeCompare(aStart);
   });
 }
 
-export function filterEvents(events: Event[], filter: EventFilter): Event[] {
+export function filterEvents(events: Event[], filter: EventFilter, now: Date = new Date()): Event[] {
   const query = (filter.query ?? '').trim().toLowerCase();
-  return sortEvents(events).filter((event) => {
+  return sortEvents(events, now).filter((event) => {
     if (filter.status && filter.status !== 'all' && event.status !== filter.status) return false;
     if (filter.label && filter.label !== 'all' && event.label !== filter.label) return false;
     if (!query) return true;
@@ -136,8 +143,13 @@ export function filterEvents(events: Event[], filter: EventFilter): Event[] {
   });
 }
 
-export function countByStatus(events: Event[]): Record<EventStatus, number> {
-  const counts: Record<EventStatus, number> = { nhap: 0, dang_theo_doi: 0, hoan_thanh: 0, huy: 0 };
+/** Lọc sự kiện theo hồ sơ; `null` nghĩa là tất cả. */
+export function eventsForProfile(events: Event[], profileId: string | null): Event[] {
+  if (!profileId) return events;
+  return events.filter((event) => event.relatedProfiles.includes(profileId));
+}
+
+export function countByStatus(events: Event[]): Record<EventStatus, number> {  const counts: Record<EventStatus, number> = { nhap: 0, dang_theo_doi: 0, hoan_thanh: 0, huy: 0 };
   for (const event of events) counts[event.status] += 1;
   return counts;
 }
@@ -158,6 +170,7 @@ export function upcomingEvents(events: Event[], now: Date = new Date(), limit = 
         event.start.value !== null &&
         !isPast(event.start.value, now),
     ),
+    now,
   ).slice(0, limit);
 }
 

@@ -133,8 +133,8 @@ export function profilesView(state: AppState): string {
     }
     <section class="card card--muted">
       ${sectionHeader('Vì sao cần hồ sơ?')}
-      <p class="small muted">Khi có mô hình trích xuất, hồ sơ là danh sách đóng để đối chiếu tên, biệt danh và từ khoá —
-      tránh gắn sự kiện cho người không liên quan. Bản demo chỉ lưu và hiển thị, chưa tự so khớp.</p>
+      <p class="small muted">Hồ sơ là danh sách tên, biệt danh và từ khoá của những người liên quan —
+      giúp gắn sự kiện đúng người và tránh nhầm lẫn khi có nhiều kế hoạch.</p>
     </section>
   </div>`;
 }

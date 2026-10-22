@@ -2,6 +2,7 @@ import type { AppState } from './store';
 import { countByStatus } from '../core/events';
 import { icon, toastHtml } from './components';
 import { overviewView } from './views/overview';
+import { captureView } from './views/capture';
 import { eventsView } from './views/events';
 import { profilesView } from './views/profiles';
 import { settingsView } from './views/settings';
@@ -10,6 +11,7 @@ function tabs(state: AppState): string {
   const counts = countByStatus(state.events);
   const items: { tab: AppState['tab']; label: string; count?: number }[] = [
     { tab: 'overview', label: 'Tổng quan' },
+    { tab: 'capture', label: 'Quét nội dung' },
     { tab: 'events', label: 'Sự kiện', count: counts.nhap + counts.dang_theo_doi },
     { tab: 'profiles', label: 'Hồ sơ', count: state.profiles.length },
   ];
@@ -32,6 +34,8 @@ function tabs(state: AppState): string {
 
 function viewFor(state: AppState): string {
   switch (state.tab) {
+    case 'capture':
+      return captureView(state);
     case 'events':
       return eventsView(state);
     case 'profiles':
@@ -63,7 +67,7 @@ export function renderApp(state: AppState): string {
         <span class="brand__mark">${icon('calendar', 18)}</span>
         <div>
           <h1>Lịch trình</h1>
-          <p>Cá nhân · demo cục bộ</p>
+          <p>Cá nhân</p>
         </div>
       </div>
       <button type="button" class="icon-btn" data-action="capture-page" title="Quét trang đang mở" aria-label="Quét trang đang mở">${icon('scan')}</button>

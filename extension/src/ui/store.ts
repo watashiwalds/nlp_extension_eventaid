@@ -22,7 +22,7 @@ export function createStore<T>(initial: T) {
   };
 }
 
-export type Tab = 'overview' | 'events' | 'profiles' | 'settings';
+export type Tab = 'overview' | 'capture' | 'events' | 'profiles' | 'settings';
 export type ToastTone = 'success' | 'error' | 'info';
 
 export interface Toast {
@@ -40,8 +40,11 @@ export interface EventFilterState {
 export interface EventDraft {
   title: string;
   label: string;
-  start: string;
-  end: string;
+  /** Ngày và giờ tách riêng để form không tràn khi side panel hẹp. */
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
   duration: string;
   summary: string;
   profileIds: string[];
@@ -82,6 +85,8 @@ export interface AppState {
   profiles: Profile[];
   events: Event[];
   eventFilter: EventFilterState;
+  /** Hồ sơ đang xem ở tab Tổng quan; `null` = tất cả. */
+  overviewProfileId: string | null;
   eventForm: EventFormState;
   profileForm: ProfileFormState;
   expandedEventId: string | null;
@@ -94,8 +99,10 @@ export interface AppState {
 export const EMPTY_EVENT_DRAFT: EventDraft = {
   title: '',
   label: 'công_vụ',
-  start: '',
-  end: '',
+  startDate: '',
+  startTime: '',
+  endDate: '',
+  endTime: '',
   duration: '',
   summary: '',
   profileIds: [],
@@ -121,6 +128,7 @@ export const store = createStore<AppState>({
   profiles: [],
   events: [],
   eventFilter: { status: 'all', label: 'all', query: '' },
+  overviewProfileId: null,
   eventForm: {
     open: false,
     editingId: null,
@@ -176,6 +184,11 @@ export async function loadAll(): Promise<void> {
       profiles: mergedProfiles,
       events: mergedEvents,
       activeDocumentId: activeId,
+      overviewProfileId:
+        current.overviewProfileId &&
+        mergedProfiles.some((profile) => profile.id === current.overviewProfileId)
+          ? current.overviewProfileId
+          : null,
       status: 'ready',
       loadError: null,
     });

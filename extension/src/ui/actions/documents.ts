@@ -12,6 +12,8 @@ export interface CaptureOptions {
   forceRaw?: boolean;
   /** Vùng chọn do context menu lưu lại, dùng khi selection trên trang đã mất. */
   selectionFallback?: string;
+  /** Menu cấp trang: bỏ qua vùng bôi đen còn sót trên trang. */
+  ignoreSelection?: boolean;
 }
 
 export async function captureCurrentPage(options: CaptureOptions = {}): Promise<void> {
@@ -23,9 +25,12 @@ export async function captureCurrentPage(options: CaptureOptions = {}): Promise<
     const tabId = await activeTabId();
     if (tabId === null) throw new Error('Không tìm thấy tab đang hoạt động.');
     const captured = await captureTab(tabId);
-    const fallbackSelection = options.selectionFallback?.trim() ?? '';
-    const payload =
-      fallbackSelection && !captured.selection.trim()
+    const fallbackSelection = options.ignoreSelection
+      ? ''
+      : options.selectionFallback?.trim() ?? '';
+    const payload = options.ignoreSelection
+      ? { ...captured, selection: '' }
+      : fallbackSelection && !captured.selection.trim()
         ? { ...captured, selection: fallbackSelection }
         : captured;
     const { document, usedFallback } = parseCapture(payload, { forceRaw: options.forceRaw });
@@ -36,9 +41,9 @@ export async function captureCurrentPage(options: CaptureOptions = {}): Promise<
     }
     const elapsed = Math.round(performance.now() - started);
     const methodNote = options.forceRaw
-      ? ' (DOM thô theo yêu cầu)'
+      ? ' (toàn trang theo yêu cầu)'
       : usedFallback
-        ? ' (DOM thô dự phòng)'
+        ? ' (toàn trang dự phòng)'
         : '';
     await persistDocument(
       document,

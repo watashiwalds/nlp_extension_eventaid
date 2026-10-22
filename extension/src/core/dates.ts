@@ -26,6 +26,43 @@ export function toInputValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+export interface DateTimeParts {
+  date: string;
+  time: string;
+}
+
+/** Tách `YYYY-MM-DDTHH:mm` thành hai ô riêng để tránh tràn giao diện hẹp. */
+export function splitDateTimeLocal(value: string): DateTimeParts {
+  const trimmed = (value ?? '').trim();
+  if (!trimmed) return { date: '', time: '' };
+  const [date = '', time = ''] = trimmed.split('T');
+  return { date, time };
+}
+
+export interface JoinedDateTime {
+  /** `YYYY-MM-DDTHH:mm`, hoặc chuỗi rỗng khi cả hai ô đều trống. */
+  value: string;
+  error: string | null;
+}
+
+/** Ghép ô ngày + ô giờ; trả lỗi rõ ràng thay vì đoán giá trị còn thiếu. */
+export function joinDateTimeLocal(dateValue: string, timeValue: string): JoinedDateTime {
+  const date = dateValue.trim();
+  const time = timeValue.trim();
+  if (!date && !time) return { value: '', error: null };
+  if (!date) return { value: '', error: 'Cần nhập ngày' };
+  if (!time) return { value: '', error: 'Cần nhập giờ' };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) {
+    return { value: '', error: 'Ngày hoặc giờ không hợp lệ' };
+  }
+  const value = `${date}T${time}`;
+  const parsed = parseLocalDateTime(value);
+  if (!parsed || toInputValue(parsed) !== value) {
+    return { value: '', error: 'Ngày hoặc giờ không hợp lệ' };
+  }
+  return { value, error: null };
+}
+
 export function toIsoLocal(date: Date): string {
   return toInputValue(date);
 }

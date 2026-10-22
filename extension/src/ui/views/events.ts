@@ -194,7 +194,7 @@ export function eventsView(state: AppState): string {
     <div class="view-head">
       <div>
         <h2>Sự kiện</h2>
-        <p class="muted small">${state.events.length} sự kiện · lưu cục bộ trong IndexedDB</p>
+        <p class="muted small">${state.events.length} sự kiện · lưu trên thiết bị này</p>
       </div>
       ${primaryButton('new-event', 'Tạo sự kiện', 'plus')}
     </div>

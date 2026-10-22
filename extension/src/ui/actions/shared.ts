@@ -35,7 +35,7 @@ export async function persistDocument(
   store.set({
     documents: [document, ...store.get().documents],
     activeDocumentId: document.documentId,
-    tab: 'overview',
+    tab: 'capture',
     pasteOpen: false,
     expandedDocument: false,
   });

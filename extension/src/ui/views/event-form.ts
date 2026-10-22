@@ -72,15 +72,21 @@ export function eventFormView(state: AppState): string {
         ${errors.label ? `<p class="field__error">${escapeHtml(errors.label)}</p>` : ''}
       </div>
 
-      <div class="grid-2">
+      <div class="datetime-grid">
         <div class="field ${errors.start ? 'field--error' : ''}">
-          <label class="field__label" for="event-start">Bắt đầu</label>
-          <input class="input" id="event-start" name="start" type="datetime-local" value="${escapeAttr(values.start)}">
+          <span class="field__label">Bắt đầu</span>
+          <div class="datetime-row">
+            <input class="input" id="event-start-date" name="startDate" type="date" value="${escapeAttr(values.startDate)}" aria-label="Ngày bắt đầu">
+            <input class="input" id="event-start-time" name="startTime" type="time" value="${escapeAttr(values.startTime)}" aria-label="Giờ bắt đầu">
+          </div>
           ${errors.start ? `<p class="field__error">${escapeHtml(errors.start)}</p>` : ''}
         </div>
         <div class="field ${errors.end ? 'field--error' : ''}">
-          <label class="field__label" for="event-end">Kết thúc</label>
-          <input class="input" id="event-end" name="end" type="datetime-local" value="${escapeAttr(values.end)}">
+          <span class="field__label">Kết thúc</span>
+          <div class="datetime-row">
+            <input class="input" id="event-end-date" name="endDate" type="date" value="${escapeAttr(values.endDate)}" aria-label="Ngày kết thúc">
+            <input class="input" id="event-end-time" name="endTime" type="time" value="${escapeAttr(values.endTime)}" aria-label="Giờ kết thúc">
+          </div>
           ${errors.end ? `<p class="field__error">${escapeHtml(errors.end)}</p>` : ''}
         </div>
       </div>

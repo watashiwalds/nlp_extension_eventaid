@@ -70,7 +70,7 @@ Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./p
 ## 7. Phi chức năng
 
 - [ ] Side panel kéo hẹp 320 / 360 / 400px: không tràn ngang, ô ngày giờ hiển thị trọn, nút vẫn bấm được.
-- [ ] Ở 320px và 400px: bấm mọi nút hiển thị đúng action, kể cả khi toast đang hiện.
+- [x] Ở 320px và 400px: bấm mọi nút hiển thị đúng action, kể cả khi toast đang hiện.
 - [x] Chỉ dùng bàn phím: Tab qua các nút/ô nhập, focus ring rõ.
 - [x] Tắt/mở lại Chrome → dữ liệu còn (IndexedDB).
 - [x] Mở DevTools → Network: **không có** request ra ngoài.
@@ -112,20 +112,23 @@ khi UI hẹp). Kế hoạch xử lý: [`phien-lam-viec-tiep-theo.md`](./phien-la
 
 ## Kiểm thử bổ sung cho 2 phiên tới
 
+> **Phiên 1 đã triển khai (2026-10-22)** và quality gate tự động xanh. Các mục KT-05…KT-10
+> vẫn để `[ ]` vì cần xác nhận trên Chrome thật (kéo side panel, menu chuột phải).
+
 ### Phiên 1
 
 - [ ] **KT-05** — Ở 320/360/400px: form sự kiện không tràn ngang; chọn được ngày + giờ;
-      sửa sự kiện cũ vẫn giữ đúng thời điểm.
+      sửa sự kiện cũ vẫn giữ đúng thời điểm. *(đã tách ô ngày/giờ, chờ kiểm thủ công)*
 - [ ] **KT-06** — Chuột phải vùng trống trên trang → **Quét nội dung trên trang** → panel
-      mở, quét đúng trang và **bỏ qua** vùng bôi đen cũ.
+      mở, quét đúng trang và **bỏ qua** vùng bôi đen cũ. *(đã thêm menu + `ignoreSelection`)*
 - [ ] **KT-07** — Scan từ header/popup → tự chuyển sang tab **Quét nội dung**; tab này có
-      đủ nút quét lại, dùng nội dung thô, dán, xoá.
+      đủ nút quét lại, dùng nội dung thô, dán, xoá. *(đã có tab riêng)*
 - [ ] **KT-08** — Tổng quan có tab “Tất cả” + từng hồ sơ; chọn hồ sơ chỉ hiện sự kiện của
-      hồ sơ đó; xoá hồ sơ đang chọn → về “Tất cả”.
+      hồ sơ đó; xoá hồ sơ đang chọn → về “Tất cả”. *(đã có dải tab hồ sơ)*
 - [ ] **KT-09** — Sự kiện ngày mai đứng trên sự kiện tháng trước; nhóm đã qua gần nhất
-      trước; sự kiện chưa có thời điểm nằm cuối.
+      trước; sự kiện chưa có thời điểm nằm cuối. *(đã có test `core/events`)*
 - [ ] **KT-10** — UI thường không còn “demo”/“IndexedDB”/“Readability”; Cài đặt có mục
-      **Về phiên bản này** mở/đóng được.
+      **Về phiên bản này** mở/đóng được. *(đã dọn chuỗi + `<details>`)*
 
 ### Phiên 2
 

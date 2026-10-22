@@ -53,6 +53,7 @@ export function clearAllData(): void {
         profiles: [],
         events: [],
         expandedEventId: null,
+        overviewProfileId: null,
         eventForm: {
           open: false,
           editingId: null,

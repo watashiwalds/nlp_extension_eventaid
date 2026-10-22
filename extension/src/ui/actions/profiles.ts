@@ -109,6 +109,7 @@ export function deleteProfileAction(id: string): void {
         ...state,
         profiles: state.profiles.filter((item) => item.id !== id),
         events: state.events.map((event) => updated.find((item) => item.id === event.id) ?? event),
+        overviewProfileId: state.overviewProfileId === id ? null : state.overviewProfileId,
       }));
       showToast('success', 'Đã xoá hồ sơ.');
     } catch (error) {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   countByStatus,
+  eventsForProfile,
   filterEvents,
   isOverdue,
   makeEvent,
@@ -79,8 +80,40 @@ describe('events', () => {
     const later = makeEvent(input({ startValue: '2026-12-01T09:00' }), NOW);
     const sooner = makeEvent(input({ title: 'Sự kiện sớm', startValue: '2026-10-25T09:00' }), NOW);
     const unknown = makeEvent(input({ title: 'Chưa rõ', startValue: null, endValue: null }), NOW);
-    const sorted = sortEvents([unknown, later, sooner]);
+    const sorted = sortEvents([unknown, later, sooner], NOW);
     expect(sorted.map((event) => event.title)).toEqual(['Sự kiện sớm', 'Họp nhóm đồ án', 'Chưa rõ']);
+  });
+
+  it('ưu tiên sắp diễn ra, nhóm đã qua gần nhất trước', () => {
+    const tomorrow = makeEvent(input({ title: 'Ngày mai', startValue: '2026-10-22T09:00' }), NOW);
+    const nextMonth = makeEvent(input({ title: 'Tháng sau', startValue: '2026-11-20T09:00' }), NOW);
+    const lastMonth = makeEvent(
+      input({ title: 'Tháng trước', startValue: '2026-09-15T09:00', endValue: null }),
+      NOW,
+    );
+    const yesterday = makeEvent(
+      input({ title: 'Hôm qua', startValue: '2026-10-20T09:00', endValue: null }),
+      NOW,
+    );
+    const unknown = makeEvent(input({ title: 'Chưa rõ', startValue: null, endValue: null }), NOW);
+
+    const sorted = sortEvents([unknown, lastMonth, nextMonth, yesterday, tomorrow], NOW);
+    expect(sorted.map((event) => event.title)).toEqual([
+      'Ngày mai',
+      'Tháng sau',
+      'Hôm qua',
+      'Tháng trước',
+      'Chưa rõ',
+    ]);
+  });
+
+  it('lọc sự kiện theo hồ sơ', () => {
+    const withProfile = makeEvent(input({ relatedProfiles: ['prf_1'] }), NOW);
+    const withoutProfile = makeEvent(input({ title: 'Không gắn hồ sơ' }), NOW);
+    expect(eventsForProfile([withProfile, withoutProfile], 'prf_1').map((event) => event.id)).toEqual([
+      withProfile.id,
+    ]);
+    expect(eventsForProfile([withProfile, withoutProfile], null)).toHaveLength(2);
   });
 
   it('lọc theo trạng thái, nhãn và từ khoá', () => {

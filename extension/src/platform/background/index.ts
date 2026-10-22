@@ -1,8 +1,13 @@
 /**
- * Service worker: cấu hình side panel + menu chuột phải cho vùng bôi đen.
+ * Service worker: cấu hình side panel + menu chuột phải cho vùng bôi đen và cấp trang.
  * Demo không có pipeline nền — việc đọc trang do side panel thực hiện khi người dùng bấm.
  */
-import { ACTION_TITLE, PENDING_CAPTURE_KEY, SELECTION_MENU_ID } from '../../shared/constants';
+import {
+  ACTION_TITLE,
+  PAGE_MENU_ID,
+  PENDING_CAPTURE_KEY,
+  SELECTION_MENU_ID,
+} from '../../shared/constants';
 import type { PendingCapture } from '../../shared/messages';
 
 function registerContextMenus(): void {
@@ -12,6 +17,11 @@ function registerContextMenus(): void {
       title: 'Quét sự kiện từ vùng chọn',
       contexts: ['selection'],
     });
+    chrome.contextMenus.create({
+      id: PAGE_MENU_ID,
+      title: 'Quét nội dung trên trang',
+      contexts: ['page'],
+    });
   });
 }
 
@@ -19,7 +29,7 @@ function registerContextMenus(): void {
 function markPendingFallback(): void {
   void chrome.action.setBadgeBackgroundColor({ color: '#b54708' });
   void chrome.action.setBadgeText({ text: '!' });
-  void chrome.action.setTitle({ title: 'Mở bảng điều khiển để quét vùng chọn' });
+  void chrome.action.setTitle({ title: 'Mở bảng điều khiển để quét nội dung' });
 }
 
 function clearActionHint(): void {
@@ -41,13 +51,15 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId !== SELECTION_MENU_ID) return;
+  const isSelection = info.menuItemId === SELECTION_MENU_ID;
+  const isPage = info.menuItemId === PAGE_MENU_ID;
+  if (!isSelection && !isPage) return;
   const tabId = tab?.id;
   if (tabId === undefined) return;
 
   const pending: PendingCapture = {
-    mode: 'selection',
-    selectionText: info.selectionText ?? '',
+    mode: isSelection ? 'selection' : 'page',
+    ...(isSelection ? { selectionText: info.selectionText ?? '' } : {}),
     requestedAt: Date.now(),
   };
 

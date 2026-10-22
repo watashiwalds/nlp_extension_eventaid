@@ -77,6 +77,9 @@ function handleClick(event: MouseEvent): void {
       }));
       break;
     }
+    case 'goto-capture':
+      store.set({ tab: 'capture' });
+      break;
     case 'capture-page':
       void captureCurrentPage();
       break;
@@ -84,7 +87,7 @@ function handleClick(event: MouseEvent): void {
       void captureCurrentPage({ forceRaw: true });
       break;
     case 'open-paste':
-      store.set({ tab: 'overview', pasteOpen: true });
+      store.set({ tab: 'capture', pasteOpen: true });
       break;
     case 'close-paste':
       store.set({ pasteOpen: false });
@@ -129,6 +132,11 @@ function handleClick(event: MouseEvent): void {
     case 'delete-profile':
       if (id) deleteProfileAction(id);
       break;
+    case 'select-overview-profile': {
+      const profileId = trigger.dataset.profileId ?? '';
+      store.set({ overviewProfileId: profileId || null });
+      break;
+    }
     case 'clear-filter':
       clearFilter();
       break;
@@ -211,9 +219,11 @@ async function consumePendingCapture(): Promise<void> {
     const pending = bag[PENDING_CAPTURE_KEY] as PendingCapture | undefined;
     if (!pending) return;
     await chrome.storage.session.remove(PENDING_CAPTURE_KEY);
-    await captureCurrentPage({
-      selectionFallback: pending.mode === 'selection' ? pending.selectionText : undefined,
-    });
+    await captureCurrentPage(
+      pending.mode === 'page'
+        ? { ignoreSelection: true }
+        : { selectionFallback: pending.mode === 'selection' ? pending.selectionText : undefined },
+    );
   } catch (error) {
     console.warn('[sidepanel] Không xử lý được yêu cầu quét', error);
   } finally {

@@ -35,7 +35,7 @@ describe('render side panel', () => {
 
   it('hiển thị nội dung đã đọc và nhãn phương thức', () => {
     const document = parsePastedText('Thông báo lịch bảo vệ', 'Hội đồng gồm 3 giảng viên. Phòng B1-201.');
-    store.set({ documents: [document], activeDocumentId: document.documentId });
+    store.set({ tab: 'capture', documents: [document], activeDocumentId: document.documentId });
 
     const html = renderApp(store.get());
     expect(html).toContain('Thông báo lịch bảo vệ');
@@ -48,7 +48,12 @@ describe('render side panel', () => {
 
   it('luôn có nút dán và nút xem toàn bộ khi đã có nội dung', () => {
     const document = parsePastedText('Thông báo ngắn', 'Nội dung ngắn.');
-    store.set({ documents: [document], activeDocumentId: document.documentId, expandedDocument: false });
+    store.set({
+      tab: 'capture',
+      documents: [document],
+      activeDocumentId: document.documentId,
+      expandedDocument: false,
+    });
 
     const html = renderApp(store.get());
     expect(html).toContain('data-action="open-paste"');
@@ -56,12 +61,13 @@ describe('render side panel', () => {
     expect(html).toContain('Dùng nội dung thô');
   });
 
-  it('giải thích khi nội dung đọc bằng DOM thô', () => {
+  it('giải thích khi nội dung đọc bằng toàn trang', () => {
     const document = { ...parsePastedText('Trang SPA', 'Nội dung thô'), extractionMethod: 'raw_dom' as const };
-    store.set({ documents: [document], activeDocumentId: document.documentId });
+    store.set({ tab: 'capture', documents: [document], activeDocumentId: document.documentId });
 
     const html = renderApp(store.get());
-    expect(html).toContain('toàn bộ DOM thay vì Readability');
+    expect(html).toContain('Toàn trang (dự phòng)');
+    expect(html).toContain('toàn bộ phần chữ trên trang');
     expect(html).toContain('data-action="capture-raw"');
   });
 
@@ -127,15 +133,82 @@ describe('render side panel', () => {
     store.set({ tab: 'settings' });
     const settings = renderApp(store.get());
     expect(settings).toContain('Xuất JSON');
-    expect(settings).toContain('Giới hạn của bản demo');
+    expect(settings).toContain('Về phiên bản này');
+    expect(settings).toContain('Không gửi dữ liệu đi đâu');
   });
 
+  it('Tổng quan có tab hồ sơ và lọc kế hoạch theo hồ sơ', () => {
+    const an = makeProfile(
+      { name: 'Nguyễn Minh An', role: '', org: '', email: '', nicknames: [], keywords: [], notes: '' },
+      NOW,
+    );
+    const bao = makeProfile(
+      { name: 'Trần Bảo', role: '', org: '', email: '', nicknames: [], keywords: [], notes: '' },
+      NOW,
+    );
+    const ofAn = makeEvent(
+      {
+        title: 'Bảo vệ đồ án',
+        label: 'công_vụ',
+        startValue: '2026-11-02T09:00',
+        endValue: null,
+        durationMinutesInput: 60,
+        summary: [],
+        relatedProfiles: [an.id],
+        sources: [],
+      },
+      NOW,
+    );
+    const ofBao = makeEvent(
+      {
+        title: 'Đi xem phim',
+        label: 'giải_trí',
+        startValue: '2026-11-03T19:00',
+        endValue: null,
+        durationMinutesInput: 120,
+        summary: [],
+        relatedProfiles: [bao.id],
+        sources: [],
+      },
+      NOW,
+    );
+
+    store.set({ tab: 'overview', profiles: [an, bao], events: [ofAn, ofBao], overviewProfileId: null });
+    const all = renderApp(store.get());
+    expect(all).toContain('data-action="select-overview-profile"');
+    expect(all).toContain('Tất cả');
+    expect(all).toContain('Bảo vệ đồ án');
+    expect(all).toContain('Đi xem phim');
+
+    store.set({ overviewProfileId: an.id });
+    const scoped = renderApp(store.get());
+    expect(scoped).toContain('Kế hoạch của Nguyễn Minh An');
+    expect(scoped).toContain('Bảo vệ đồ án');
+    expect(scoped).not.toContain('Đi xem phim');
+  });
+
+  it('Tổng quan chưa có nội dung thì có CTA sang tab quét', () => {
+    const html = renderApp(store.get());
+    expect(html).toContain('data-action="goto-capture"');
+    expect(html).not.toContain('IndexedDB');
+  });
+
+  it('UI thường không còn chuỗi hệ thống', () => {
+    store.set({ tab: 'overview' });
+    expect(renderApp(store.get())).not.toContain('demo');
+    store.set({ tab: 'events' });
+    expect(renderApp(store.get())).not.toContain('IndexedDB');
+    store.set({ tab: 'profiles' });
+    expect(renderApp(store.get())).not.toContain('Bản demo');
+  });
   it('hiển thị lỗi validate khi form sự kiện thiếu tiêu đề', async () => {
     document.body.innerHTML = `<form id="event-form">
       <input name="title" value="">
       <select name="label"><option value="công_vụ" selected>công_vụ</option></select>
-      <input name="start" value="">
-      <input name="end" value="">
+      <input name="startDate" value="">
+      <input name="startTime" value="">
+      <input name="endDate" value="">
+      <input name="endTime" value="">
       <input name="duration" value="">
       <textarea name="summary"></textarea>
     </form>`;
@@ -180,8 +253,10 @@ describe('luồng tạo sự kiện', () => {
     document.body.innerHTML = `<form id="event-form">
       <input name="title" value="Họp lớp">
       <select name="label"><option value="cá_nhân" selected>cá nhân</option></select>
-      <input name="start" value="2026-11-02T09:00">
-      <input name="end" value="">
+      <input name="startDate" value="2026-11-02">
+      <input name="startTime" value="09:00">
+      <input name="endDate" value="">
+      <input name="endTime" value="">
       <input name="duration" value="60">
       <textarea name="summary">Chủ đề: tổng kết học kỳ
 Địa điểm: B1-201</textarea>

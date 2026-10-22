@@ -59,6 +59,21 @@ cho trang, tab hồ sơ ở Tổng quan, thứ tự sự kiện hợp lý và d�
 **Không làm trong phiên 1:** nhãn tuỳ chỉnh (schema), Gmail/trang động, thay đổi
 `NormalizedDocument`/`Event` ngoài các trường UI.
 
+### Kết quả phiên 1 (2026-10-22)
+
+| Bước | Task | Trạng thái | Ghi chú |
+|---|---|---|---|
+| 1 | S1-01 — tách ô ngày/giờ | ✅ | `splitDateTimeLocal`/`joinDateTimeLocal` + `.datetime-row`; `EventDraft` giữ 4 chuỗi ngày/giờ thay vì `start`/`end` để không mất dữ liệu khi validate lỗi |
+| 2 | S1-02 — tab Quét nội dung | ✅ | `ui/views/capture.ts`; quét thành công tự chuyển tab; form dán chỉ mở trong tab này |
+| 3 | S1-03 — menu chuột phải cấp trang | ✅ | `PAGE_MENU_ID`; quét bỏ qua vùng bôi đen còn sót (`ignoreSelection`) |
+| 4 | S1-04 — tab hồ sơ ở Tổng quan | ✅ | `overviewProfileId` + `eventsForProfile`; thống kê vẫn toàn cục |
+| 5 | S1-05 — ưu tiên sự kiện sắp diễn ra | ✅ | `sortEvents(events, now)` chia 3 nhóm |
+| 6 | S1-06 — dọn chuỗi hệ thống | ✅ | Header “Cá nhân”; “Về phiên bản này” dạng `<details>`; badge **Nội dung chính / Toàn trang (dự phòng)** |
+| 7 | Quality gate | ✅ | `typecheck`, `lint`, `test` (47 test), `build` đều xanh — chờ kiểm thủ công trên Chrome |
+
+**Còn lại:** xác nhận lại KT-05…KT-10 trong [`kiem-thu-demo.md`](./kiem-thu-demo.md)
+ở 320/360/400px và với menu chuột phải thật. Sau khi xác nhận, mới bắt đầu phiên 2.
+
 ### Thứ tự thực hiện & commit
 
 | Bước | Task | Commit gợi ý |
@@ -282,13 +297,13 @@ sự kiện ngày mai trong tab Sự kiện.
 
 ### Definition of Done — Phiên 1
 
-- [ ] S1-01…S1-06 hoàn tất, hoặc ghi rõ mục nào bị cắt và lý do.
-- [ ] `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` xanh.
+- [x] S1-01…S1-06 hoàn tất (không cắt mục nào).
+- [x] `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` xanh.
 - [ ] Kiểm thủ công: 320/360/400px, menu chuột phải cấp trang, tab Quét nội dung,
-      tab hồ sơ, thứ tự sự kiện, chuỗi UI.
-- [ ] `docs/kiem-thu-demo.md` cập nhật kết quả + mục kiểm thử mới.
-- [ ] `README.md`, `extension/README.md`, `docs/chuc-nang-demo-vs-chinh-thuc.md` đồng bộ.
-- [ ] Commit sạch trên `main`, không chứa `dist/`/`node_modules/`.
+      tab hồ sơ, thứ tự sự kiện, chuỗi UI. *(chờ xác nhận trên Chrome)*
+- [x] `docs/kiem-thu-demo.md` cập nhật kết quả + mục kiểm thử mới.
+- [x] `README.md`, `extension/README.md`, `docs/chuc-nang-demo-vs-chinh-thuc.md` đồng bộ.
+- [x] Commit sạch trên `main`, không chứa `dist/`/`node_modules/`.
 
 ---
 

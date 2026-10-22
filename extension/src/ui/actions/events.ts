@@ -1,10 +1,22 @@
 import type { EventStatus, SourceRef } from '../../shared/contracts';
 import { buildEventFromForm } from '../../core/forms';
+import { joinDateTimeLocal, splitDateTimeLocal } from '../../core/dates';
 import { setEventStatus } from '../../core/events';
 import { deleteEvent, saveEvent } from '../../platform/storage/db';
 import { EMPTY_EVENT_DRAFT, editingEvent, showToast, store } from '../store';
 import type { EventDraft } from '../store';
 import { focusFirstError, messageOf, sourceFromDocument, valueOf } from './shared';
+
+function splitDraftDates(start: string, end: string): Pick<EventDraft, 'startDate' | 'startTime' | 'endDate' | 'endTime'> {
+  const startParts = splitDateTimeLocal(start);
+  const endParts = splitDateTimeLocal(end);
+  return {
+    startDate: startParts.date,
+    startTime: startParts.time,
+    endDate: endParts.date,
+    endTime: endParts.time,
+  };
+}
 
 export function openEventForm(
   options: { eventId?: string; sourceDocumentId?: string | null } = {},
@@ -19,8 +31,7 @@ export function openEventForm(
     ? {
         title: event.title,
         label: event.label,
-        start: event.start.value ?? '',
-        end: event.end?.value ?? '',
+        ...splitDraftDates(event.start.value ?? '', event.end?.value ?? ''),
         duration: event.end?.value ? '' : event.durationMinutes ? String(event.durationMinutes) : '',
         summary: event.summary.join('\n'),
         profileIds: [...event.relatedProfiles],
@@ -59,16 +70,33 @@ export async function saveEventFromForm(form: HTMLFormElement): Promise<void> {
   const state = store.get();
   const formData = new FormData(form);
   const attachInput = form.elements.namedItem('attachSource');
+  const start = joinDateTimeLocal(valueOf(form, 'startDate'), valueOf(form, 'startTime'));
+  const end = joinDateTimeLocal(valueOf(form, 'endDate'), valueOf(form, 'endTime'));
   const draft: EventDraft = {
     title: valueOf(form, 'title'),
     label: valueOf(form, 'label'),
-    start: valueOf(form, 'start'),
-    end: valueOf(form, 'end'),
+    startDate: valueOf(form, 'startDate'),
+    startTime: valueOf(form, 'startTime'),
+    endDate: valueOf(form, 'endDate'),
+    endTime: valueOf(form, 'endTime'),
     duration: valueOf(form, 'duration'),
     summary: valueOf(form, 'summary'),
     profileIds: formData.getAll('profileIds').map(String),
     attachSource: attachInput instanceof HTMLInputElement ? attachInput.checked : false,
   };
+
+  const dateErrors: Record<string, string> = {};
+  if (start.error) dateErrors.start = start.error;
+  if (end.error) dateErrors.end = end.error;
+  if (Object.keys(dateErrors).length > 0) {
+    store.set((current) => ({
+      ...current,
+      eventForm: { ...current.eventForm, values: draft, errors: dateErrors },
+    }));
+    focusFirstError('event-form');
+    showToast('error', 'Kiểm tra lại ngày và giờ.');
+    return;
+  }
 
   const editing = editingEvent(state);
   const document = state.eventForm.sourceDocumentId
@@ -84,8 +112,8 @@ export async function saveEventFromForm(form: HTMLFormElement): Promise<void> {
     {
       title: draft.title,
       label: draft.label,
-      start: draft.start,
-      end: draft.end,
+      start: start.value,
+      end: end.value,
       duration: draft.duration,
       summary: draft.summary,
       profileIds: draft.profileIds,

@@ -3,8 +3,10 @@ import {
   daysFromToday,
   durationMinutes,
   formatDuration,
+  joinDateTimeLocal,
   parseLocalDateTime,
   relativeLabel,
+  splitDateTimeLocal,
   toInputValue,
 } from '../../src/core/dates';
 
@@ -49,5 +51,22 @@ describe('dates', () => {
     expect(formatDuration(120)).toBe('2 giờ');
     expect(formatDuration(45)).toBe('45 phút');
     expect(formatDuration(null)).toBe('—');
+  });
+
+  it('tách và ghép ô ngày/giờ round-trip', () => {
+    expect(splitDateTimeLocal('2026-11-02T09:30')).toEqual({ date: '2026-11-02', time: '09:30' });
+    expect(joinDateTimeLocal('2026-11-02', '09:30')).toEqual({
+      value: '2026-11-02T09:30',
+      error: null,
+    });
+  });
+
+  it('ghép ô ngày/giờ xử lý rỗng và giá trị thiếu', () => {
+    expect(joinDateTimeLocal('', '')).toEqual({ value: '', error: null });
+    expect(splitDateTimeLocal('')).toEqual({ date: '', time: '' });
+    expect(joinDateTimeLocal('2026-11-02', '').error).toBe('Cần nhập giờ');
+    expect(joinDateTimeLocal('', '09:30').error).toBe('Cần nhập ngày');
+    expect(joinDateTimeLocal('2026-11-31', '09:30').error).toBe('Ngày hoặc giờ không hợp lệ');
+    expect(joinDateTimeLocal('2026-11-02', '99:99').error).toBe('Ngày hoặc giờ không hợp lệ');
   });
 });

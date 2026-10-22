@@ -25,8 +25,8 @@ export const STATUS_TONE: Record<EventStatus, 'muted' | 'primary' | 'success' | 
 };
 
 export const METHOD_TEXT: Record<ExtractionMethod, string> = {
-  readability: 'Readability',
-  raw_dom: 'DOM thô (dự phòng)',
+  readability: 'Nội dung chính',
+  raw_dom: 'Toàn trang (dự phòng)',
   selection: 'Vùng bôi đen',
   paste: 'Dán tay',
 };
@@ -58,4 +58,6 @@ export const PENDING_CAPTURE_KEY = 'pending_capture';
 
 /** ID menu chuột phải cho vùng bôi đen (VĐ-03). */
 export const SELECTION_MENU_ID = 'scan-selection';
+/** ID menu chuột phải cấp trang (YC-02). */
+export const PAGE_MENU_ID = 'scan-page';
 export const ACTION_TITLE = 'Lịch trình cá nhân';

@@ -5,7 +5,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 đã có trong **demo** tại `extension/`.
 
 - **Ngày đối chiếu:** 2026-10-22
-- **Mốc demo:** commit `b307b0b` (sau khi xử lý VĐ-01…VĐ-08)
+- **Mốc demo:** sau phiên 1 (VĐ-10, YC-01, YC-02, YC-04, YC-05, YC-06)
 - **Nguồn tham chiếu chéo:** [`DEVIATIONS.md`](./DEVIATIONS.md), [`kiem-thu-demo.md`](./kiem-thu-demo.md)
 
 ## Chú giải
@@ -57,7 +57,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | A3 | `shared/contracts.ts` là nguồn hợp đồng duy nhất, Zod validate ở biên IndexedDB | ✅ | Đủ `Document`, `Profile`, `Event`, `Settings`; có test parse |
 | A4 | Phân lớp `core/` → `platform/` → `ui/`, không import ngược | ✅ | ESLint `no-restricted-imports` + `no-restricted-globals` |
 | A5 | IndexedDB + wrapper typed (~150 dòng), không Dexie | ✅ | `platform/storage/db.ts`; 4 object store |
-| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 40 test Vitest |
+| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 47 test Vitest |
 | A7 | Content script inject Readability theo yêu cầu | 🟡 | `scripting.executeScript` lấy HTML, **Readability chạy trong side panel**; chưa có content script thường trú |
 | A8 | Job queue bền, tiến trình, resume sau service worker restart | ❌ | Đọc trang là thao tác đồng bộ vài trăm ms, không có job nền |
 | A9 | Offscreen document chạy classifier + LLM | ❌ | Không có tác vụ dài cần offscreen |
@@ -70,16 +70,16 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | B1 | **KS-01** Cài đặt lần đầu & mở side panel | 🟡 | Mở panel từ popup/action và từ menu chuột phải; chưa có luồng onboarding nhiều bước |
 | B2 | **KS-02** Thiết lập hồ sơ người dùng (CRUD, biệt danh, từ khoá) | ✅ | Tạo/sửa/xoá; validate tên, email; chip biệt danh/từ khoá |
 | B3 | **KS-03** Liên kết Gmail OAuth `gmail.readonly` | ❌ | Không có `identity`, không có OAuth |
-| B4 | **KS-04** Quét trang web đang mở | ✅ | `activeTab` + Readability; ưu tiên vùng bôi đen nếu có |
-| B5 | Lọc nhiễu nội dung bằng Mozilla Readability | ✅ | Badge phương thức = **Readability** |
+| B4 | **KS-04** Quét trang web đang mở | ✅ | `activeTab` + Readability; ưu tiên vùng bôi đen nếu có; menu chuột phải cấp trang **Quét nội dung trên trang** |
+| B5 | Lọc nhiễu nội dung bằng Mozilla Readability | ✅ | Badge phương thức = **Nội dung chính** |
 | B6 | Fallback `raw_dom` khi Readability lỗi/rỗng, kèm cảnh báo | ✅ | Có cảnh báo giải thích + nút **Dùng nội dung thô** (`forceRaw`) tạo document mới |
 | B7 | Giới hạn kích thước văn bản, báo khi cắt bớt | ✅ | `MAX_DOCUMENT_CHARS = 200.000`; hiển thị số ký tự + cờ cắt bớt |
 | B8 | **KS-05** Quét hộp thư Gmail | ❌ | Không có |
 | B9 | **KS-06** Xử lý tệp đính kèm: PDF, DOCX, TXT, ICS, OCR | ❌ | Không có; dùng **Dán văn bản** thay thế một phần |
 | B10 | **KS-07** Trích từ vùng văn bản được chọn (bôi đen) | ✅ | Nút quét vùng chọn + menu chuột phải **Quét sự kiện từ vùng chọn** |
 | B11 | Dán văn bản thủ công | ✅ | Có (ngoài kế hoạch, dùng thay Gmail/PDF); badge **Văn bản dán** |
-| B12 | Xem lại document: tiêu đề, nguồn, phương thức, số ký tự, toàn văn | ✅ | Thu gọn/mở rộng, nút **Xem toàn bộ** luôn hiển thị |
-| B13 | Nhiều nguồn gần đây, chọn qua lại | ✅ | Danh sách document trong tab Tổng quan |
+| B12 | Xem lại document: tiêu đề, nguồn, phương thức, số ký tự, toàn văn | ✅ | Tab **Quét nội dung**; thu gọn/mở rộng, nút **Xem toàn bộ** luôn hiển thị |
+| B13 | Nhiều nguồn gần đây, chọn qua lại | ✅ | Danh sách document trong tab **Quét nội dung** (tách khỏi Tổng quan) |
 
 ## C. Pipeline NLP dùng chung
 
@@ -105,12 +105,12 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | D2 | **KS-09** CRUD sự kiện | ✅ | Tạo, xem, sửa, xoá; giữ `id`/trạng thái/nguồn khi sửa |
 | D3 | Máy trạng thái `nhap → dang_theo_doi → hoan_thanh \| huy` | ✅ | Chuyển trạng thái thủ công; quay lại được; `completedAt` được set/xoá đúng |
 | D4 | Tự động hoàn thành khi qua giờ kết thúc (service worker) | ❌ | Chỉ hiển thị viền đỏ + nhãn "đã qua"; hoàn thành phải bấm tay |
-| D5 | Lọc theo trạng thái/nhãn, tìm theo tiêu đề/tóm tắt/nguồn | ✅ | Có empty state + nút **Xoá bộ lọc** |
+| D5 | Lọc theo trạng thái/nhãn, tìm theo tiêu đề/tóm tắt/nguồn | ✅ | Có empty state + nút **Xoá bộ lọc**; danh sách ưu tiên sự kiện sắp/đang diễn ra |
 | D6 | Mục **"Cần bổ sung thời gian"** cho sự kiện thiếu `start` | 🟡 | Có cờ `chua_ro_thoi_diem` + badge trong chi tiết; chưa có mục/tab tổng hợp riêng |
 | D7 | Nhãn sự kiện | 🟡 | 5 nhãn cố định đúng hợp đồng (`công_vụ`, `giải_trí`, `cá_nhân`, `kỷ_niệm`, `khác`); chưa cho nhãn tuỳ chỉnh |
 | D8 | **KS-12** `versionHistory` + cập nhật khi nguồn đổi lịch | ❌ | Không có; sửa tay thì mất dấu vết thay đổi |
 | D9 | Huỷ mềm + khôi phục từ bộ lọc "Đã huỷ" | ✅ | `huy` không xoá cứng; lọc và đổi lại trạng thái được |
-| D10 | Tab Tổng quan: sắp diễn ra, thống kê, nguồn gần đây | ✅ | Có; kế hoạch hiển thị theo hồ sơ dạng tab chưa có |
+| D10 | Tab Tổng quan: sắp diễn ra, thống kê, nguồn gần đây | ✅ | Có; thêm **tab kế hoạch theo hồ sơ** (Tất cả + từng hồ sơ); nguồn gần đây chuyển sang tab **Quét nội dung** |
 
 ## E. Nhắc việc
 
@@ -143,8 +143,8 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | G4 | Escape HTML trước khi render | ✅ | Toàn bộ nội dung động đi qua `escapeHtml`/`escapeAttr` |
 | G5 | Không thực thi script/macro trong tài liệu đầu vào | ✅ | Chỉ đọc text/HTML tĩnh, không eval |
 | G6 | Accessibility: bàn phím, focus ring, nhãn ARIA | 🟡 | Đã bỏ `autofocus`, thêm `:focus-visible`, Esc đóng form, focus ô lỗi đầu tiên; cần kiểm thủ công lại |
-| G7 | Side panel 320/360/400px không tràn ngang | 🟡 | Đã sửa grid `minmax(0, 1fr)`, stack 1 cột ≤ 420px; **chưa xác nhận trên Chrome thật** |
-| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 40 test Vitest (core + parse + smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
+| G7 | Side panel 320/360/400px không tràn ngang | 🟡 | Đã tách ô ngày/giờ + grid `minmax(0, 1fr)`, stack khi hẹp; **chưa xác nhận lại trên Chrome thật** |
+| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 47 test Vitest (core + parse + smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
 | G9 | Golden set 150 mẫu + `run_eval.ts` + F1/p95 | ❌ | Chưa có dataset, chưa có eval |
 | G10 | **KS-11** Luồng lỗi: token hết hạn, quota, model chết, trang không inject được | 🟡 | Có xử lý `chrome://`, nội dung rỗng, JSON rác; thiếu lỗi OAuth/quota/model |
 | G11 | Đóng gói CRX + privacy policy + báo cáo eval | ❌ | Mới ở mức load unpacked `dist/` |

@@ -23,7 +23,7 @@ export async function captureTab(tabId: number): Promise<CapturePayload> {
     throw new Error('Không đọc được trang này. Hãy thử tải lại trang rồi quét lại.');
   }
   if (payload.html.length > MAX_HTML_CHARS) {
-    throw new Error('Trang quá lớn để đọc trong demo. Hãy bôi đen phần cần thiết rồi quét lại.');
+    throw new Error('Trang quá lớn để đọc. Hãy bôi đen phần cần thiết rồi quét lại.');
   }
   return payload;
 }
