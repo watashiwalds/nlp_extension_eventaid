@@ -1,6 +1,7 @@
 import { activeTabId, captureTab } from '../../platform/capture/tab';
 import { parseCapture, parsePastedText } from '../../platform/capture/parse';
 import { deleteDocument } from '../../platform/storage/db';
+import { unlinkedDocuments } from '../../core/documents';
 import { activeDocument, showToast, store } from '../store';
 import { formatCharCount } from '../format';
 import { documentSummary, messageOf, persistDocument, valueOf } from './shared';
@@ -100,4 +101,36 @@ export function deleteActiveDocumentAction(): void {
 export function selectDocument(documentId: string): void {
   if (!store.get().documents.some((doc) => doc.documentId === documentId)) return;
   store.set({ activeDocumentId: documentId, expandedDocument: false });
+}
+
+/** Xoá các nội dung không còn được sự kiện nào tham chiếu; giữ nguyên sự kiện. */
+export function deleteUnlinkedDocumentsAction(): void {
+  const state = store.get();
+  const targets = unlinkedDocuments(state.documents, state.events);
+  if (targets.length === 0) return;
+  if (
+    !window.confirm(
+      `Xoá ${targets.length} nội dung đã quét không liên kết với sự kiện nào? Các sự kiện vẫn được giữ.`,
+    )
+  ) {
+    return;
+  }
+  void (async () => {
+    store.set({ busy: 'Đang xoá nội dung không liên kết…' });
+    try {
+      const ids = new Set(targets.map((doc) => doc.documentId));
+      for (const id of ids) await deleteDocument(id);
+      const documents = store.get().documents.filter((doc) => !ids.has(doc.documentId));
+      const activeId =
+        store.get().activeDocumentId && documents.some((doc) => doc.documentId === store.get().activeDocumentId)
+          ? store.get().activeDocumentId
+          : documents[0]?.documentId ?? null;
+      store.set({ documents, activeDocumentId: activeId, expandedDocument: false });
+      showToast('success', `Đã xoá ${targets.length} nội dung không liên kết.`);
+    } catch (error) {
+      showToast('error', messageOf(error));
+    } finally {
+      store.set({ busy: null });
+    }
+  })();
 }

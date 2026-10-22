@@ -1,6 +1,6 @@
 import { EventSchema } from '../shared/contracts';
 import type { Event, EventStatus, Label, SourceRef } from '../shared/contracts';
-import { durationMinutes, isPast, parseLocalDateTime, toInputValue } from './dates';
+import { durationMinutes, parseLocalDateTime, toInputValue } from './dates';
 import { newId } from './ids';
 
 export interface EventInput {
@@ -23,6 +23,36 @@ export interface EventFilter {
   /** Lọc đúng một nhãn tuỳ chỉnh; `'all'`/rỗng = không lọc. */
   tag?: string | 'all';
   query?: string;
+}
+
+export type EventTiming = 'ongoing' | 'upcoming' | 'past' | 'unknown';
+
+/** Thời điểm kết thúc hiệu dụng: `end` hoặc suy ra từ start + thời lượng (không bịa nếu thiếu). */
+export function eventEndValue(event: Event): string | null {
+  if (event.end?.value) return event.end.value;
+  if (!event.start.value || !event.durationMinutes || event.durationMinutes <= 0) return null;
+  const start = new Date(event.start.value);
+  if (Number.isNaN(start.getTime())) return null;
+  return toInputValue(new Date(start.getTime() + event.durationMinutes * 60_000));
+}
+
+/** Phân loại theo thời gian thực: đang diễn ra / sắp tới / đã qua / chưa rõ. */
+export function eventTiming(event: Event, now: Date = new Date()): EventTiming {
+  if (!event.start.value) return 'unknown';
+  const start = new Date(event.start.value).getTime();
+  if (Number.isNaN(start)) return 'unknown';
+  const endValue = eventEndValue(event);
+  const end = endValue ? new Date(endValue).getTime() : null;
+  const current = now.getTime();
+  if (end !== null && !Number.isNaN(end) && current >= start && current < end) return 'ongoing';
+  return current < start ? 'upcoming' : 'past';
+}
+
+/** Đang diễn ra và sự kiện còn hiệu lực (không áp dụng cho đã huỷ/hoàn thành). */
+export function isOngoing(event: Event, now: Date = new Date()): boolean {
+  return (
+    eventTiming(event, now) === 'ongoing' && event.status !== 'hoan_thanh' && event.status !== 'huy'
+  );
 }
 
 /** Cờ "chưa chắc chắn" — không bao giờ tự bịa giá trị thiếu. */
@@ -117,21 +147,25 @@ export function setEventStatus(event: Event, status: EventStatus, now: Date = ne
 }
 
 /**
- * Sắp xếp 3 nhóm: sắp/đang diễn ra (tăng dần), đã qua (gần nhất trước),
- * chưa có thời điểm (cuối, mới tạo trước).
+ * Sắp xếp 4 nhóm: đang diễn ra → sắp tới (tăng dần) → đã qua (gần nhất trước)
+ * → chưa có thời điểm (cuối, mới tạo trước).
  */
 export function sortEvents(events: Event[], now: Date = new Date()): Event[] {
-  const nowValue = toInputValue(now);
+  const rank = (event: Event): number => {
+    const timing = eventTiming(event, now);
+    if (timing === 'ongoing') return 0;
+    if (timing === 'upcoming') return 1;
+    if (timing === 'past') return 2;
+    return 3;
+  };
   return [...events].sort((a, b) => {
-    const aStart = a.start.value;
-    const bStart = b.start.value;
-    if (!aStart && !bStart) return b.createdAt.localeCompare(a.createdAt);
-    if (!aStart) return 1;
-    if (!bStart) return -1;
-    const aUpcoming = aStart >= nowValue;
-    const bUpcoming = bStart >= nowValue;
-    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-    return aUpcoming ? aStart.localeCompare(bStart) : bStart.localeCompare(aStart);
+    const rankA = rank(a);
+    const rankB = rank(b);
+    if (rankA !== rankB) return rankA - rankB;
+    if (rankA === 3) return b.createdAt.localeCompare(a.createdAt);
+    const startA = a.start.value ?? '';
+    const startB = b.start.value ?? '';
+    return rankA === 2 ? startB.localeCompare(startA) : startA.localeCompare(startB);
   });
 }
 
@@ -179,21 +213,16 @@ export function countByStatus(events: Event[]): Record<EventStatus, number> {  c
 }
 
 export function isOverdue(event: Event, now: Date = new Date()): boolean {
-  return (
-    event.status === 'dang_theo_doi' &&
-    event.start.value !== null &&
-    isPast(event.start.value, now)
-  );
+  return event.status === 'dang_theo_doi' && eventTiming(event, now) === 'past';
 }
 
 export function upcomingEvents(events: Event[], now: Date = new Date(), limit = 3): Event[] {
   return sortEvents(
-    events.filter(
-      (event) =>
-        (event.status === 'dang_theo_doi' || event.status === 'nhap') &&
-        event.start.value !== null &&
-        !isPast(event.start.value, now),
-    ),
+    events.filter((event) => {
+      if (event.status !== 'dang_theo_doi' && event.status !== 'nhap') return false;
+      const timing = eventTiming(event, now);
+      return timing === 'ongoing' || timing === 'upcoming';
+    }),
     now,
   ).slice(0, limit);
 }

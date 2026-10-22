@@ -1,5 +1,6 @@
 import { DOCUMENT_PREVIEW_CHARS, METHOD_TEXT, SOURCE_TEXT } from '../../shared/constants';
 import { relativeLabel } from '../../core/dates';
+import { unlinkedDocuments } from '../../core/documents';
 import type { AppState } from '../store';
 import { activeDocument } from '../store';
 import {
@@ -119,6 +120,20 @@ function pasteForm(): string {
   </section>`;
 }
 
+function cleanupRow(state: AppState): string {
+  const unlinked = unlinkedDocuments(state.documents, state.events);
+  if (unlinked.length === 0) return '';
+  return `<div class="cleanup">
+    <div>
+      <strong>Nội dung không liên kết</strong>
+      <p class="muted small">${unlinked.length} nội dung đã quét chưa được sự kiện nào dùng làm nguồn trích.</p>
+    </div>
+    <button type="button" class="btn btn--danger-ghost" data-action="delete-unlinked-documents">
+      ${icon('trash')}<span>Xoá ${unlinked.length} nội dung</span>
+    </button>
+  </div>`;
+}
+
 export function captureView(state: AppState): string {
   return `<div class="stack">
     <div class="view-head">
@@ -129,6 +144,7 @@ export function captureView(state: AppState): string {
       ${primaryButton('capture-page', 'Quét trang đang mở', 'scan')}
     </div>
     ${documentCard(state)}
+    ${cleanupRow(state)}
     ${state.pasteOpen ? pasteForm() : ''}
   </div>`;
 }

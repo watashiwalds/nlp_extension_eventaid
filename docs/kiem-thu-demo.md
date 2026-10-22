@@ -164,11 +164,23 @@ nhập trong form sự kiện, hiện chip, lọc và tìm kiếm được.
 
 #### Vấn đề
 
-- Cần thêm nhãn "đang diễn ra" khi hiện tại đứng giữa thời điểm bắt đầu và thời điểm kết thúc của sự kiện.
-- "Nội dung đã quét" chưa thực hiện xoá các nội dung không được liên kết với sự kiện.
+- ✅ Cần thêm nhãn "đang diễn ra" khi hiện tại đứng giữa thời điểm bắt đầu và thời điểm kết thúc của sự kiện.
+  — `core/events.ts` thêm `eventTiming`/`isOngoing` (dùng `end`, hoặc suy ra từ `start + durationMinutes`);
+  card và chi tiết hiển thị **Đang diễn ra**, viền xanh, sự kiện đang diễn ra được ưu tiên lên đầu;
+  sự kiện đang diễn ra **không** còn bị coi là quá hạn.
+- ✅ "Nội dung đã quét" chưa thực hiện xoá các nội dung không được liên kết với sự kiện.
+  — `core/documents.ts` thêm `unlinkedDocuments`; tab **Quét nội dung** hiện khối **Nội dung không liên kết**
+  với nút **Xoá N nội dung** (có xác nhận, chỉ xoá nội dung, giữ nguyên sự kiện).
 
 #### Cải thiện
 
-- Đảm bảo mốc thời gian "hiện tại" của hệ thống được cập nhật theo thời gian thực, không phải giá trị cứng.
-- Xoá header trên cùng (Logo extension và icon quét) của giao diện side panel
-- Đảm bảo các nút bấm có thể nhấn được trên toàn bộ phạm vi hiển thị (bao gồm cả các icon được hiển thị cùng)
+- ✅ Đảm bảo mốc thời gian "hiện tại" của hệ thống được cập nhật theo thời gian thực, không phải giá trị cứng.
+  — side panel render lại mỗi 30 giây và khi tab được hiện lại; bỏ qua khi đang mở form
+  hoặc đang gõ trong ô nhập để không mất dữ liệu.
+- ✅ Xoá header trên cùng (Logo extension và icon quét) của giao diện side panel.
+  — đã bỏ `.topbar`; thao tác quét vẫn nằm ở tab **Quét nội dung**.
+- ✅ Đảm bảo các nút bấm có thể nhấn được trên toàn bộ phạm vi hiển thị (bao gồm cả các icon được hiển thị cùng).
+  — sửa `handleClick` dùng `Element` thay vì `HTMLElement` (icon SVG không còn chặn cú nhấp);
+  thêm `.icon { pointer-events: none; }` để cú nhấp luôn tới phần tử mang `data-action`.
+
+> Quality gate sau sửa: `typecheck`, `lint`, `test` (72 test), `build` đều xanh.

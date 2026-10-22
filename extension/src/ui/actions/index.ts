@@ -1,6 +1,7 @@
 export {
   captureCurrentPage,
   deleteActiveDocumentAction,
+  deleteUnlinkedDocumentsAction,
   savePastedText,
   selectDocument,
 } from './documents';

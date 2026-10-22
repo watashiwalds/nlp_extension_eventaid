@@ -1,7 +1,14 @@
 import { LABEL_TEXT, STATUS_TEXT, STATUS_TONE, UNCERTAIN_TEXT } from '../../shared/constants';
 import { LABELS } from '../../shared/contracts';
 import type { Event } from '../../shared/contracts';
-import { allEventTags, filterEvents, isOverdue, nextStatusOptions } from '../../core/events';
+import {
+  allEventTags,
+  eventTiming,
+  filterEvents,
+  isOngoing,
+  isOverdue,
+  nextStatusOptions,
+} from '../../core/events';
 import { formatDateTimeLong, formatDuration, relativeLabel } from '../../core/dates';
 import type { AppState } from '../store';
 import {
@@ -30,8 +37,20 @@ function profileNames(event: Event, state: AppState): string[] {
     .filter((name): name is string => Boolean(name));
 }
 
+const TIMING_TEXT: Record<string, string> = {
+  ongoing: 'Đang diễn ra',
+  upcoming: 'Sắp diễn ra',
+  past: 'Đã qua',
+  unknown: 'Chưa xác định',
+};
+
+function timingText(event: Event): string {
+  return TIMING_TEXT[eventTiming(event)] ?? 'Chưa xác định';
+}
+
 function eventDetail(event: Event, state: AppState): string {
   const names = profileNames(event, state);
+  const ongoing = isOngoing(event);
   const endText = event.end?.value
     ? formatDateTimeLong(event.end.value)
     : event.durationMinutes
@@ -43,6 +62,7 @@ function eventDetail(event: Event, state: AppState): string {
     <dl class="detail-grid">
       <div><dt>Bắt đầu</dt><dd>${event.start.value ? escapeHtml(formatDateTimeLong(event.start.value)) : '<span class="warn-text">Chưa xác định</span>'}</dd></div>
       <div><dt>Kết thúc</dt><dd>${escapeHtml(endText)}</dd></div>
+      <div><dt>Diễn biến</dt><dd class="${ongoing ? 'ongoing-text' : ''}">${escapeHtml(timingText(event))}</dd></div>
       <div><dt>Nhãn</dt><dd>${escapeHtml(LABEL_TEXT[event.label])}</dd></div>
       <div><dt>Cập nhật</dt><dd>${escapeHtml(formatDateTimeLong(event.updatedAt))}</dd></div>
     </dl>
@@ -128,6 +148,7 @@ function eventDetail(event: Event, state: AppState): string {
 
 function eventCard(event: Event, state: AppState): string {
   const expanded = state.expandedEventId === event.id;
+  const ongoing = isOngoing(event);
   const overdue = isOverdue(event);
   const names = profileNames(event, state);
   const start = event.start.value;
@@ -135,7 +156,7 @@ function eventCard(event: Event, state: AppState): string {
   const missingTime = !start;
   const hasChips = event.tags.length > 0 || names.length > 0 || missingTime;
 
-  return `<article class="event-card ${expanded ? 'event-card--expanded' : ''} ${overdue ? 'event-card--overdue' : ''}">
+  return `<article class="event-card ${expanded ? 'event-card--expanded' : ''} ${overdue ? 'event-card--overdue' : ''} ${ongoing ? 'event-card--ongoing' : ''}">
     <button type="button" class="event-card__main" data-action="toggle-event" data-id="${escapeAttr(event.id)}" aria-expanded="${expanded}">
       <span class="date-block">
         <span class="date-block__day">${start ? dayOfMonth(start) : '—'}</span>
@@ -147,7 +168,13 @@ function eventCard(event: Event, state: AppState): string {
           ${badge(STATUS_TEXT[event.status], STATUS_TONE[event.status])}
         </span>
         <span class="event-card__meta">
-          ${start ? escapeHtml(relativeLabel(start)) : '<span class="warn-text">Chưa có thời điểm</span>'}
+          ${
+            ongoing
+              ? '<span class="ongoing-text">Đang diễn ra</span>'
+              : start
+                ? escapeHtml(relativeLabel(start))
+                : '<span class="warn-text">Chưa có thời điểm</span>'
+          }
           · ${escapeHtml(LABEL_TEXT[event.label])}
           ${overdue ? ' · <span class="danger-text">đã qua</span>' : ''}
         </span>

@@ -340,9 +340,11 @@ Không hứa “đọc được mọi trang Gmail”; nếu không đọc đư�
 | 5 | S2-03 — regression + docs | ✅ | 63 test; cập nhật checklist, DEVIATIONS, README, đối chiếu |
 | 6 | Quality gate | ✅ | `typecheck`, `lint`, `test` (63), `build` đều xanh |
 | 7 | Kiểm thủ công Gmail/SPA | ⏳ | Cần Chrome thật; code đã sẵn sàng, ghi trung thực là best-effort |
+| 8 | Sửa nhanh sau nghiệm thu | ✅ | Nhãn **Đang diễn ra** + xếp lên đầu; xoá nội dung không liên kết; đồng hồ cập nhật mỗi 30s; bỏ header; sửa nhấp icon SVG; 72 test |
 
-**Trạng thái:** phần mã nguồn và tài liệu của Phiên 2 đã xong. Chỉ còn KT-13/KT-14
-(Gmail + SPA/bài báo trên Chrome thật) để nghiệm thu thủ công.
+**Trạng thái:** phần mã nguồn và tài liệu của Phiên 2 đã xong, kể cả các vấn đề/cải thiện
+phát sinh sau nghiệm thu (mục Vấn đề & Cải thiện trong `docs/kiem-thu-demo.md`). Chỉ còn
+KT-13/KT-14 (Gmail + SPA/bài báo trên Chrome thật) để nghiệm thu thủ công.
 
 ---
 

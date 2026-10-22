@@ -16,6 +16,7 @@ import {
   deleteActiveDocumentAction,
   deleteEventAction,
   deleteProfileAction,
+  deleteUnlinkedDocumentsAction,
   exportData,
   importData,
   openEventForm,
@@ -49,7 +50,7 @@ function isStatus(value: string | undefined): value is EventStatus {
 
 function handleClick(event: MouseEvent): void {
   const target = event.target;
-  if (!(target instanceof HTMLElement)) return;
+  if (!(target instanceof Element)) return;
   const trigger = target.closest<HTMLElement>('[data-action]');
   if (!trigger) return;
 
@@ -97,6 +98,9 @@ function handleClick(event: MouseEvent): void {
       break;
     case 'delete-document':
       deleteActiveDocumentAction();
+      break;
+    case 'delete-unlinked-documents':
+      deleteUnlinkedDocumentsAction();
       break;
     case 'new-event':
       openEventForm({
@@ -259,3 +263,30 @@ store.subscribe(render);
 render();
 void loadAll();
 void consumePendingCapture();
+
+/**
+ * Nhãn thời gian ("đang diễn ra", "còn N ngày"…) được tính tại thời điểm render,
+ * nên cần render lại định kỳ để không bị "đóng băng" theo mốc cũ.
+ */
+const CLOCK_REFRESH_MS = 30_000;
+
+function hasFocusedField(): boolean {
+  const active = document.activeElement;
+  return (
+    active instanceof Element &&
+    active.closest('input, textarea, select, [contenteditable="true"]') !== null
+  );
+}
+
+function refreshClock(): void {
+  const state = store.get();
+  if (state.status !== 'ready') return;
+  if (state.eventForm.open || state.profileForm.open || state.pasteOpen) return;
+  if (hasFocusedField()) return;
+  store.set((current) => ({ ...current }));
+}
+
+window.setInterval(refreshClock, CLOCK_REFRESH_MS);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshClock();
+});

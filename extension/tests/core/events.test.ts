@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   allEventTags,
   countByStatus,
+  eventEndValue,
+  eventTiming,
   eventsForProfile,
   filterEvents,
+  isOngoing,
   isOverdue,
   makeEvent,
   nextStatusOptions,
@@ -141,10 +144,69 @@ describe('events', () => {
   });
 
   it('nhận biết quá hạn và lọc sự kiện sắp tới', () => {
-    const past = setEventStatus(makeEvent(input({ startValue: '2026-10-20T09:00' }), NOW), 'dang_theo_doi', NOW);
-    const future = setEventStatus(makeEvent(input({ startValue: '2026-10-25T09:00' }), NOW), 'dang_theo_doi', NOW);
+    const past = setEventStatus(
+      makeEvent(input({ startValue: '2026-10-20T09:00', endValue: '2026-10-20T10:00' }), NOW),
+      'dang_theo_doi',
+      NOW,
+    );
+    const future = setEventStatus(
+      makeEvent(input({ startValue: '2026-10-25T09:00', endValue: '2026-10-25T10:00' }), NOW),
+      'dang_theo_doi',
+      NOW,
+    );
     expect(isOverdue(past, NOW)).toBe(true);
     expect(isOverdue(future, NOW)).toBe(false);
     expect(upcomingEvents([past, future], NOW, 3).map((event) => event.id)).toEqual([future.id]);
+  });
+
+  it('nhận diện sự kiện đang diễn ra và không coi là quá hạn', () => {
+    const ongoing = setEventStatus(
+      makeEvent(
+        input({ title: 'Đang diễn ra', startValue: '2026-10-21T07:00', endValue: '2026-10-21T09:00' }),
+        NOW,
+      ),
+      'dang_theo_doi',
+      NOW,
+    );
+    expect(eventTiming(ongoing, NOW)).toBe('ongoing');
+    expect(isOngoing(ongoing, NOW)).toBe(true);
+    expect(isOverdue(ongoing, NOW)).toBe(false);
+    expect(upcomingEvents([ongoing], NOW, 3).map((event) => event.id)).toEqual([ongoing.id]);
+  });
+
+  it('suy ra thời điểm kết thúc từ thời lượng để phát hiện đang diễn ra', () => {
+    const ongoing = makeEvent(
+      input({ startValue: '2026-10-21T07:30', endValue: null, durationMinutesInput: 60 }),
+      NOW,
+    );
+    expect(eventEndValue(ongoing)).toBe('2026-10-21T08:30');
+    expect(eventTiming(ongoing, NOW)).toBe('ongoing');
+  });
+
+  it('không coi sự kiện đã huỷ là đang diễn ra', () => {
+    const event = makeEvent(
+      input({ startValue: '2026-10-21T07:00', endValue: '2026-10-21T09:00' }),
+      NOW,
+    );
+    const cancelled = setEventStatus(event, 'huy', NOW);
+    expect(eventTiming(cancelled, NOW)).toBe('ongoing');
+    expect(isOngoing(cancelled, NOW)).toBe(false);
+  });
+
+  it('xếp sự kiện đang diễn ra lên trước sắp tới và đã qua', () => {
+    const upcoming = makeEvent(
+      input({ title: 'Sắp tới', startValue: '2026-10-25T09:00', endValue: '2026-10-25T10:00' }),
+      NOW,
+    );
+    const ongoing = makeEvent(
+      input({ title: 'Đang diễn ra', startValue: '2026-10-21T07:00', endValue: '2026-10-21T09:00' }),
+      NOW,
+    );
+    const past = makeEvent(
+      input({ title: 'Đã qua', startValue: '2026-10-19T07:00', endValue: '2026-10-19T08:00' }),
+      NOW,
+    );
+    const sorted = sortEvents([past, upcoming, ongoing], NOW);
+    expect(sorted.map((event) => event.title)).toEqual(['Đang diễn ra', 'Sắp tới', 'Đã qua']);
   });
 });

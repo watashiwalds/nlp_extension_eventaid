@@ -65,17 +65,7 @@ function loadingView(state: AppState): string {
 
 export function renderApp(state: AppState): string {
   const body = state.status === 'ready' ? viewFor(state) : loadingView(state);
-  return `<header class="topbar">
-      <div class="brand">
-        <span class="brand__mark">${icon('calendar', 18)}</span>
-        <div>
-          <h1>Lịch trình</h1>
-          <p>Cá nhân</p>
-        </div>
-      </div>
-      <button type="button" class="icon-btn" data-action="capture-page" title="Quét trang đang mở" aria-label="Quét trang đang mở">${icon('scan')}</button>
-    </header>
-    ${
+  return `${
       state.status === 'ready'
         ? `${tabs(state)}<main class="view" id="view">${body}</main>`
         : `<main class="view">${body}</main>`

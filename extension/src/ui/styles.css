@@ -28,6 +28,11 @@
   box-sizing: border-box;
 }
 
+/* Icon trang trí không "chặn" cú nhấp — sự kiện luôn tới được phần tử mang data-action. */
+.icon {
+  pointer-events: none;
+}
+
 html,
 body {
   margin: 0;
@@ -92,23 +97,6 @@ code {
   min-width: 300px;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 14px 10px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
 .brand__mark {
   display: grid;
   place-items: center;
@@ -118,16 +106,6 @@ code {
   background: linear-gradient(140deg, #3d6ff0, #2449b4);
   color: #fff;
   flex: none;
-}
-
-.brand h1 {
-  font-size: 14.5px;
-  line-height: 1.2;
-}
-
-.brand p {
-  font-size: 11px;
-  color: var(--muted);
 }
 
 .tabs {
@@ -746,6 +724,10 @@ input[type='datetime-local'] {
   border-left: 3px solid #f04438;
 }
 
+.event-card--ongoing {
+  border-left: 3px solid var(--success);
+}
+
 .event-card--expanded {
   border-color: #c7d3f5;
   box-shadow: 0 4px 14px rgba(47, 95, 224, 0.08);
@@ -1281,6 +1263,11 @@ input[type='datetime-local'] {
   font-weight: 600;
 }
 
+.ongoing-text {
+  color: var(--success);
+  font-weight: 650;
+}
+
 .muted {
   color: var(--muted);
 }
@@ -1297,6 +1284,22 @@ input[type='datetime-local'] {
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px dashed var(--border-strong);
+}
+
+.cleanup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.cleanup strong {
+  font-size: 12.5px;
 }
 
 .danger-zone strong {
