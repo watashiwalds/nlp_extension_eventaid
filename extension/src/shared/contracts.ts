@@ -59,6 +59,12 @@ export const DateTimeRefSchema = z.object({
 });
 export type DateTimeRef = z.infer<typeof DateTimeRefSchema>;
 
+/**
+ * Tóm tắt nhập tay: không giới hạn 5 ý như LLM.
+ * Cap 50 chỉ để tránh dữ liệu rác; pipeline LLM sau này vẫn truyền 5.
+ */
+export const MAX_SUMMARY_ITEMS = 50;
+
 /** Sự kiện lịch trình — 7 trường trong base_idea.md. */
 export const EventSchema = z.object({
   id: z.string().min(1),
@@ -67,7 +73,9 @@ export const EventSchema = z.object({
   start: DateTimeRefSchema,
   end: DateTimeRefSchema.nullable(),
   durationMinutes: z.number().int().positive().max(60 * 24 * 30).nullable(),
-  summary: z.array(z.string().trim().min(1).max(300)).max(5, 'Tóm tắt tối đa 5 ý'),
+  summary: z
+    .array(z.string().trim().min(1).max(300))
+    .max(MAX_SUMMARY_ITEMS, `Tóm tắt tối đa ${MAX_SUMMARY_ITEMS} ý`),
   relatedProfiles: z.array(z.string()),
   sources: z.array(SourceRefSchema),
   status: EventStatusSchema,

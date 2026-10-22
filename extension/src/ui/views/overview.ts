@@ -34,6 +34,8 @@ function documentCard(state: AppState): string {
   const actions = doc
     ? `${primaryButton('new-event', 'Tạo sự kiện', 'plus')}
        ${secondaryButton('capture-page', 'Quét lại', 'scan')}
+       ${secondaryButton('capture-raw', 'Dùng nội dung thô', 'layers')}
+       ${secondaryButton('open-paste', 'Dán văn bản', 'copy')}
        <button type="button" class="icon-btn icon-btn--danger" data-action="delete-document" title="Xoá nội dung" aria-label="Xoá nội dung">${icon('trash')}</button>`
     : '';
 
@@ -79,18 +81,21 @@ function documentCard(state: AppState): string {
         ? `<p class="alert alert--warning">${icon('alert')} Nội dung dài hơn 200.000 ký tự và đã bị cắt bớt.</p>`
         : ''
     }
+    ${
+      doc.extractionMethod === 'raw_dom'
+        ? `<p class="alert alert--warning">${icon('alert')} Nội dung đang dùng toàn bộ DOM thay vì Readability (tự động dự phòng hoặc do bạn chọn), nên có thể kèm menu/quảng cáo. Nếu bị nhiễu, hãy bôi đen phần cần lấy rồi quét lại; nếu Readability bỏ sót nội dung, dùng nút “Dùng nội dung thô”.</p>`
+        : ''
+    }
     <h3 class="doc-title">${escapeHtml(doc.title)}</h3>
     <p class="doc-time">Đọc lúc ${escapeHtml(relativeLabel(doc.capturedAt))}</p>
     <div class="doc-text ${state.expandedDocument ? 'doc-text--expanded' : ''}">${paragraphs(preview)}</div>
-    ${
-      hidden > 0 || state.expandedDocument
-        ? `<button type="button" class="link-btn" data-action="toggle-document">${
-            state.expandedDocument
-              ? 'Thu gọn'
-              : `Xem toàn bộ (+${new Intl.NumberFormat('vi-VN').format(hidden)} ký tự)`
-          }</button>`
-        : ''
-    }
+    <button type="button" class="link-btn" data-action="toggle-document">${
+      state.expandedDocument
+        ? 'Thu gọn'
+        : hidden > 0
+          ? `Xem toàn bộ (+${new Intl.NumberFormat('vi-VN').format(hidden)} ký tự)`
+          : 'Xem toàn bộ'
+    }</button>
     <div class="card__actions">${actions}</div>
   </section>`;
 }

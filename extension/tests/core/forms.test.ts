@@ -43,13 +43,21 @@ describe('form sự kiện', () => {
     expect(result.errors.end).toBeTruthy();
   });
 
-  it('chặn tóm tắt quá 5 ý', () => {
+  it('cho phép tóm tắt 6–10 ý khi nhập tay', () => {
     const result = buildEventFromForm(
-      values({ summary: '1\n2\n3\n4\n5\n6' }),
+      values({ summary: 'Ý 1\nÝ 2\nÝ 3\nÝ 4\nÝ 5\nÝ 6\nÝ 7\nÝ 8\nÝ 9\nÝ 10' }),
       null,
       NOW,
     );
+    expect(result.errors.summary).toBeUndefined();
+    expect(result.event?.summary).toHaveLength(10);
+  });
+
+  it('chặn tóm tắt quá 50 ý', () => {
+    const summary = Array.from({ length: 51 }, (_, index) => `Ý ${index + 1}`).join('\n');
+    const result = buildEventFromForm(values({ summary }), null, NOW);
     expect(result.errors.summary).toBeTruthy();
+    expect(result.event).toBeUndefined();
   });
 
   it('cho phép lưu khi chưa có thời điểm và gắn cờ cần kiểm tra', () => {

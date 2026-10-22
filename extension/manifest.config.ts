@@ -8,7 +8,7 @@ export default defineManifest({
     'Đọc nội dung trang web, quản lý hồ sơ và tạo sự kiện lịch trình thủ công. Toàn bộ dữ liệu lưu cục bộ.',
   version: pkg.version,
   minimum_chrome_version: '120',
-  permissions: ['activeTab', 'scripting', 'storage', 'sidePanel'],
+  permissions: ['activeTab', 'scripting', 'storage', 'sidePanel', 'contextMenus'],
   action: {
     default_title: 'Lịch trình cá nhân',
     default_popup: 'src/ui/popup.html',

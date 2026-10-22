@@ -27,3 +27,11 @@ export interface ParsedCapture {
   document: NormalizedDocument;
   usedFallback: boolean;
 }
+
+/** Cờ bàn giao giữa popup / context menu và side panel. */
+export interface PendingCapture {
+  mode?: 'page' | 'selection';
+  /** Vùng chọn do context menu lưu, dự phòng khi selection trên trang đã mất. */
+  selectionText?: string;
+  requestedAt: number;
+}

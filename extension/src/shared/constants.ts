@@ -55,3 +55,7 @@ export const MAX_DOCUMENT_CHARS = 200_000;
 export const DOCUMENT_PREVIEW_CHARS = 6_000;
 
 export const PENDING_CAPTURE_KEY = 'pending_capture';
+
+/** ID menu chuột phải cho vùng bôi đen (VĐ-03). */
+export const SELECTION_MENU_ID = 'scan-selection';
+export const ACTION_TITLE = 'Lịch trình cá nhân';

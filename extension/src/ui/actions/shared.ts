@@ -16,6 +16,17 @@ export function valueOf(form: HTMLFormElement, name: string): string {
   return typeof data === 'string' ? data : '';
 }
 
+/**
+ * Form đã render lại sau khi validate lỗi: đưa focus về ô sai đầu tiên.
+ * Thay cho `autofocus` (VĐ-08) để không nhảy focus khi mở form.
+ */
+export function focusFirstError(formId: string): void {
+  const field = document.querySelector<HTMLElement>(
+    `#${formId} .field--error input, #${formId} .field--error select, #${formId} .field--error textarea`,
+  );
+  field?.focus();
+}
+
 export async function persistDocument(
   document: NormalizedDocument,
   successMessage: string,

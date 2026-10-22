@@ -4,7 +4,7 @@ import { setEventStatus } from '../../core/events';
 import { deleteEvent, saveEvent } from '../../platform/storage/db';
 import { EMPTY_EVENT_DRAFT, editingEvent, showToast, store } from '../store';
 import type { EventDraft } from '../store';
-import { messageOf, sourceFromDocument, valueOf } from './shared';
+import { focusFirstError, messageOf, sourceFromDocument, valueOf } from './shared';
 
 export function openEventForm(
   options: { eventId?: string; sourceDocumentId?: string | null } = {},
@@ -99,6 +99,7 @@ export async function saveEventFromForm(form: HTMLFormElement): Promise<void> {
       ...current,
       eventForm: { ...current.eventForm, values: draft, errors: result.errors },
     }));
+    focusFirstError('event-form');
     showToast('error', 'Kiểm tra lại các trường được đánh dấu.');
     return;
   }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EventSchema, LabelSchema, ProfileSchema } from '../shared/contracts';
+import { EventSchema, LabelSchema, MAX_SUMMARY_ITEMS, ProfileSchema } from '../shared/contracts';
 import type { Event, Label, Profile, SourceRef } from '../shared/contracts';
 import { makeEvent, updateEvent } from './events';
 import type { EventInput } from './events';
@@ -87,7 +87,9 @@ export function buildEventFromForm(
     .split(/\n+/)
     .map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim())
     .filter(Boolean);
-  if (summaryLines.length > 5) errors.summary = 'Tóm tắt tối đa 5 ý';
+  if (summaryLines.length > MAX_SUMMARY_ITEMS) {
+    errors.summary = `Tóm tắt tối đa ${MAX_SUMMARY_ITEMS} ý`;
+  }
 
   if (Object.keys(errors).length > 0 || !labelParsed.success) {
     return { errors };

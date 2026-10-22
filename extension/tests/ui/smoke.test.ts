@@ -42,6 +42,27 @@ describe('render side panel', () => {
     expect(html).toContain('Văn bản dán');
     expect(html).toContain('Tạo sự kiện');
     expect(html).toContain('Hội đồng gồm 3 giảng viên');
+    expect(html).toContain('Dán văn bản');
+    expect(html).toContain('Xem toàn bộ');
+  });
+
+  it('luôn có nút dán và nút xem toàn bộ khi đã có nội dung', () => {
+    const document = parsePastedText('Thông báo ngắn', 'Nội dung ngắn.');
+    store.set({ documents: [document], activeDocumentId: document.documentId, expandedDocument: false });
+
+    const html = renderApp(store.get());
+    expect(html).toContain('data-action="open-paste"');
+    expect(html).toContain('data-action="toggle-document"');
+    expect(html).toContain('Dùng nội dung thô');
+  });
+
+  it('giải thích khi nội dung đọc bằng DOM thô', () => {
+    const document = { ...parsePastedText('Trang SPA', 'Nội dung thô'), extractionMethod: 'raw_dom' as const };
+    store.set({ documents: [document], activeDocumentId: document.documentId });
+
+    const html = renderApp(store.get());
+    expect(html).toContain('toàn bộ DOM thay vì Readability');
+    expect(html).toContain('data-action="capture-raw"');
   });
 
   it('hiển thị sự kiện đang mở với đủ 7 trường', () => {

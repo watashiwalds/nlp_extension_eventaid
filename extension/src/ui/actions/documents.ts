@@ -7,7 +7,14 @@ import { documentSummary, messageOf, persistDocument, valueOf } from './shared';
 
 let capturing = false;
 
-export async function captureCurrentPage(): Promise<void> {
+export interface CaptureOptions {
+  /** Bỏ qua Readability, lấy toàn bộ DOM theo yêu cầu người dùng. */
+  forceRaw?: boolean;
+  /** Vùng chọn do context menu lưu lại, dùng khi selection trên trang đã mất. */
+  selectionFallback?: string;
+}
+
+export async function captureCurrentPage(options: CaptureOptions = {}): Promise<void> {
   if (capturing) return;
   capturing = true;
   store.set({ busy: 'Đang đọc trang…' });
@@ -15,19 +22,27 @@ export async function captureCurrentPage(): Promise<void> {
   try {
     const tabId = await activeTabId();
     if (tabId === null) throw new Error('Không tìm thấy tab đang hoạt động.');
-    const payload = await captureTab(tabId);
-    const { document, usedFallback } = parseCapture(payload);
+    const captured = await captureTab(tabId);
+    const fallbackSelection = options.selectionFallback?.trim() ?? '';
+    const payload =
+      fallbackSelection && !captured.selection.trim()
+        ? { ...captured, selection: fallbackSelection }
+        : captured;
+    const { document, usedFallback } = parseCapture(payload, { forceRaw: options.forceRaw });
     if (!document.text.trim()) {
       throw new Error(
         'Trang không có nội dung chữ để đọc. Hãy bôi đen phần cần lấy hoặc dùng “Dán văn bản”.',
       );
     }
     const elapsed = Math.round(performance.now() - started);
+    const methodNote = options.forceRaw
+      ? ' (DOM thô theo yêu cầu)'
+      : usedFallback
+        ? ' (DOM thô dự phòng)'
+        : '';
     await persistDocument(
       document,
-      `Đã đọc ${formatCharCount(document.charCount)} trong ${elapsed} ms${
-        usedFallback ? ' (DOM thô dự phòng)' : ''
-      }.`,
+      `Đã đọc ${formatCharCount(document.charCount)} trong ${elapsed} ms${methodNote}.`,
     );
   } catch (error) {
     showToast('error', messageOf(error));

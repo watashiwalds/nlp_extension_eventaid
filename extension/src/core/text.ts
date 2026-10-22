@@ -1,3 +1,5 @@
+import { MAX_SUMMARY_ITEMS } from '../shared/contracts';
+
 /** Tiện ích văn bản thuần — dùng chung cho capture, form và UI. */
 
 export function normalizeWhitespace(input: string): string {
@@ -33,8 +35,8 @@ export function parseListInput(value: string, maxItems = 20): string[] {
   ).slice(0, maxItems);
 }
 
-/** Mỗi dòng là một ý tóm tắt; bỏ ký hiệu bullet; tối đa 5 ý. */
-export function parseSummaryInput(value: string, maxItems = 5): string[] {
+/** Mỗi dòng là một ý tóm tắt; bỏ ký hiệu bullet. Mặc định 50 ý cho nhập tay; LLM có thể truyền 5. */
+export function parseSummaryInput(value: string, maxItems = MAX_SUMMARY_ITEMS): string[] {
   return value
     .split(/\n+/)
     .map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim())

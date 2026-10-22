@@ -37,7 +37,7 @@ function profileFormView(state: AppState): string {
     <form id="profile-form" class="card form" novalidate>
       <div class="field ${errors.name ? 'field--error' : ''}">
         <label class="field__label" for="profile-name">Tên <span class="required">*</span></label>
-        <input class="input" id="profile-name" name="name" value="${escapeAttr(values.name)}" maxlength="80" placeholder="Ví dụ: Nguyễn Minh An" autofocus>
+        <input class="input" id="profile-name" name="name" value="${escapeAttr(values.name)}" maxlength="80" placeholder="Ví dụ: Nguyễn Minh An">
         ${errors.name ? `<p class="field__error">${escapeHtml(errors.name)}</p>` : ''}
       </div>
       <div class="grid-2">

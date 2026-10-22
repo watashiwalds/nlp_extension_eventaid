@@ -4,7 +4,7 @@ import { parseListInput } from '../../core/text';
 import { deleteProfile, saveEvent, saveProfile } from '../../platform/storage/db';
 import { EMPTY_PROFILE_DRAFT, editingProfile, showToast, store } from '../store';
 import type { ProfileDraft } from '../store';
-import { messageOf, valueOf } from './shared';
+import { focusFirstError, messageOf, valueOf } from './shared';
 
 export function openProfileForm(profileId?: string): void {
   const state = store.get();
@@ -65,6 +65,7 @@ export async function saveProfileFromForm(form: HTMLFormElement): Promise<void> 
       ...state,
       profileForm: { ...state.profileForm, values: draft, errors: result.errors },
     }));
+    focusFirstError('profile-form');
     showToast('error', 'Kiểm tra lại các trường được đánh dấu.');
     return;
   }

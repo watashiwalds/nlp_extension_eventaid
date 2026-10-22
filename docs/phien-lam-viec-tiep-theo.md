@@ -7,43 +7,71 @@
 
 ---
 
+## 0. Kết quả phiên triển khai (2026-10-22)
+
+Toàn bộ VĐ-01…VĐ-08 đã được sửa trong mã demo. Trạng thái kiểm tra:
+
+| Hạng mục | Kết quả |
+|---|---|
+| `npm run typecheck` | ✅ 0 lỗi |
+| `npm run lint` | ✅ 0 lỗi |
+| `npm test` | ✅ 40 test / 6 file (thêm `tests/platform/parse.test.ts`) |
+| `npm run build` | ✅ `dist/` tạo thành công, manifest có `contextMenus` |
+| Kiểm thủ công trên Chrome | ⏳ **Chưa chạy lại trong phiên này** — xem checklist cập nhật |
+
+**Quyết định cho các câu hỏi §5:**
+
+1. **Tóm tắt:** cap an toàn **50 ý**; LLM sau này vẫn truyền `maxItems = 5`.
+   `script.md` Appendix A và `DEVIATIONS.md` đã sync.
+2. **Context menu:** không thêm permission `notifications`. Nếu `sidePanel.open()` bị Chrome
+   từ chối, ghi cờ + badge **!**; người dùng mở panel thủ công, panel tự tiêu thụ cờ.
+3. **Vùng click:** đã áp dụng toàn bộ nghi phạm đã biết (gradient, toast, busy, hit area,
+   transform khi `:active`). Cần người dùng xác nhận lại control cụ thể nếu vẫn lệch.
+4. **Focus:** bỏ `autofocus`; chỉ focus ô lỗi đầu tiên sau validate; thêm `:focus-visible`;
+   `Esc` đóng form đang mở.
+5. **DOM thô:** tạo **document mới**, đặt active, giữ bản cũ để so sánh.
+6. **Tóm tắt dài:** hiển thị đầy đủ trong chi tiết (không cắt sau 5 ý).
+
+---
+
 ## 1. Mốc hiện tại
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Nhánh / commit | `main` · `6fe8378` — *Human manual test completed with additional review* |
+| Nhánh / commit | `main` · trên `e125766` — *docs: thêm hướng dẫn phiên làm việc tiếp theo* (phiên này chưa commit) |
 | Demo | `extension/` chạy được, load unpacked từ `extension/dist` |
-| Quality gate | `npm run typecheck`, `npm run lint`, `npm test` (34 test), `npm run build` đều xanh |
-| Kiểm thử thủ công | **36/40 mục đạt**; 4 mục chưa kiểm thử; 8 vấn đề UX/kỹ thuật cần xử lý |
+| Quality gate | `npm run typecheck`, `npm run lint`, `npm test` (40 test), `npm run build` đều xanh |
+| Kiểm thử thủ công | **Chưa chạy lại sau thay đổi**; checklist đã cập nhật kỳ vọng mới |
+| Vấn đề | **8/8 VĐ đã sửa trong mã**; 5 mục cần xác nhận lại trên Chrome thật |
 | Phạm vi | Không ML/LLM, không nhắc việc, không Gmail/PDF — xem `docs/DEVIATIONS.md` |
 
 ### 4 mục checklist chưa kiểm thử
 
 | ID | Mục | Lý do | Cách kiểm |
 |---|---|---|---|
-| KT-01 | Trang SPA → badge **DOM thô** | Chưa có trang mẫu phù hợp | Dùng một trang render bằng JS (dashboard/localhost), hoặc tạo fixture tạm `test-pages/spa.html` phục vụ qua `python3 -m http.server` |
-| KT-02 | Dán email có ngày giờ → lưu đúng | Không thấy nút dán (xem VĐ-04) | Sửa VĐ-04 rồi thử lại |
-| KT-03 | Dán nội dung trống → toast lỗi | Cùng lý do KT-02 | Sửa VĐ-04 rồi thử lại |
-| KT-04 | Side panel ~320px không tràn ngang | Đang tràn ở ô ngày giờ (xem VĐ-06) | Sửa VĐ-06 rồi thử ở 320 / 360 / 400px |
+| KT-01 | Trang SPA → badge **DOM thô** | Chưa có trang mẫu phù hợp; đã thêm nút **Dùng nội dung thô** + test parse | Dùng một trang render bằng JS (dashboard/localhost), hoặc fixture `test-pages/spa.html` phục vụ qua `python3 -m http.server` |
+| KT-02 | Dán email có ngày giờ → lưu đúng | Đã sửa VĐ-04 (nút dán luôn hiện) | Chạy lại trên Chrome |
+| KT-03 | Dán nội dung trống → toast lỗi | Đã sửa VĐ-04 | Chạy lại trên Chrome |
+| KT-04 | Side panel 320/360/400px không tràn ngang | Đã sửa VĐ-06 (CSS) | Kéo hẹp side panel và kiểm tra |
 
 ### 8 vấn đề người dùng ghi nhận
 
-| ID | Ưu tiên | Tóm tắt | File chính |
+| ID | Ưu tiên | Tóm tắt | Trạng thái |
 |---|---|---|---|
-| VĐ-04 | **P0** | Không thấy nút dán / hướng dẫn dán | `src/ui/views/overview.ts` |
-| VĐ-06 | **P0** | Tràn ngang khi nhập ngày bắt đầu / kết thúc | `src/ui/styles.css` |
-| VĐ-02 | **P0** | Nút “Xem toàn bộ” nên hiển thị mọi lúc | `src/ui/views/overview.ts` |
-| VĐ-05 | **P0** | Vùng click không ổn định, lệch khỏi nút | `src/ui/styles.css`, `components.ts` |
-| VĐ-07 | P1 | Tóm tắt không nên giới hạn 5 ý khi nhập tay | `contracts.ts`, `core/forms.ts`, `core/text.ts` |
-| VĐ-01 | P1 | Chưa rõ điều kiện dùng DOM thô; cần nút “Dùng nội dung thô” | `capture/parse.ts`, `actions/documents.ts`, `overview.ts` |
-| VĐ-03 | P1 | Bôi đen → chuột phải → “Quét sự kiện” | `manifest.config.ts`, `background/index.ts` |
-| VĐ-08 | P2 | Một số focus khi Tab không cần thiết | `views/*.ts`, `styles.css` |
+| VĐ-04 | **P0** | Không thấy nút dán / hướng dẫn dán | ✅ đã sửa |
+| VĐ-06 | **P0** | Tràn ngang khi nhập ngày bắt đầu / kết thúc | ✅ đã sửa |
+| VĐ-02 | **P0** | Nút “Xem toàn bộ” nên hiển thị mọi lúc | ✅ đã sửa |
+| VĐ-05 | **P0** | Vùng click không ổn định, lệch khỏi nút | ✅ đã sửa; cần xác nhận |
+| VĐ-07 | P1 | Tóm tắt không nên giới hạn 5 ý khi nhập tay | ✅ đã sửa |
+| VĐ-01 | P1 | Chưa rõ điều kiện dùng DOM thô; cần nút “Dùng nội dung thô” | ✅ đã sửa |
+| VĐ-03 | P1 | Bôi đen → chuột phải → “Quét sự kiện” | ✅ đã thêm; cần test Chrome |
+| VĐ-08 | P2 | Một số focus khi Tab không cần thiết | ✅ đã sửa |
 
 ---
 
 ## 2. Backlog chi tiết
 
-### VĐ-04 — Nút “Dán văn bản” luôn hiển thị (P0)
+### VĐ-04 — Nút “Dán văn bản” luôn hiển thị (P0) — ✅ đã sửa
 
 **Hiện trạng:** `overview.ts` chỉ đặt nút `open-paste` trong empty state (khi chưa có
 document). Khi đã đọc một trang, hàng actions chỉ còn **Tạo sự kiện / Quét lại / Xoá**,
@@ -70,7 +98,7 @@ nên không có đường vào form dán.
 
 ---
 
-### VĐ-06 — Hết tràn ngang ô ngày giờ (P0)
+### VĐ-06 — Hết tràn ngang ô ngày giờ (P0) — ✅ đã sửa
 
 **Hiện trạng:** `.grid-2` chia 2 cột; `input[type="datetime-local"]` của Chrome có
 min-width nội tại lớn, làm grid item rộng hơn cột → side panel xuất hiện thanh cuộn ngang.
@@ -117,7 +145,7 @@ input[type='datetime-local'] {
 
 ---
 
-### VĐ-02 — “Xem toàn bộ” luôn hiển thị (P0)
+### VĐ-02 — “Xem toàn bộ” luôn hiển thị (P0) — ✅ đã sửa
 
 **Hiện trạng:** nút chỉ render khi `hidden > 0 || state.expandedDocument`, nên với
 document ngắn hoàn toàn không có nút.
@@ -144,7 +172,7 @@ yêu cầu; hoặc disable kèm tooltip “Nội dung đã hiển thị đầy �
 
 ---
 
-### VĐ-05 — Ổn định vùng click (P0)
+### VĐ-05 — Ổn định vùng click (P0) — ✅ đã sửa, cần xác nhận
 
 **Hiện trạng:** người dùng báo “click area không ổn định (không nằm đúng trong khu vực
 hiển thị của nút)”. Chưa xác định được control cụ thể — **phải tái hiện trước khi sửa**.
@@ -198,7 +226,7 @@ Cân nhắc bỏ `transform` khi `:active`, hoặc đổi sang `scale(0.98)`.
 
 ---
 
-### VĐ-07 — Bỏ giới hạn 5 ý khi nhập tay (P1)
+### VĐ-07 — Bỏ giới hạn 5 ý khi nhập tay (P1) — ✅ đã sửa
 
 **Hiện trạng:** giới hạn 5 nằm ở 3 nơi:
 
@@ -235,7 +263,7 @@ Cân nhắc bỏ `transform` khi `:active`, hoặc đổi sang `scale(0.98)`.
 
 ---
 
-### VĐ-01 — Làm rõ DOM thô + nút “Dùng nội dung thô” (P1)
+### VĐ-01 — Làm rõ DOM thô + nút “Dùng nội dung thô” (P1) — ✅ đã sửa
 
 **Hiện trạng:** `parseCapture` dùng Readability; chỉ fallback khi:
 
@@ -277,7 +305,7 @@ Fallback lấy `dom.body.textContent` và gắn `extractionMethod: 'raw_dom'`. U
 
 ---
 
-### VĐ-03 — Context menu “Quét sự kiện” cho vùng bôi đen (P1)
+### VĐ-03 — Context menu “Quét sự kiện” cho vùng bôi đen (P1) — ✅ đã sửa, cần test Chrome
 
 **Mục tiêu:** bôi đen → chuột phải → **Quét sự kiện** → side panel mở và đọc đúng vùng chọn.
 
@@ -339,7 +367,7 @@ Fallback lấy `dom.body.textContent` và gắn `extractionMethod: 'raw_dom'`. U
 
 ---
 
-### VĐ-08 — Dọn focus / keyboard (P2)
+### VĐ-08 — Dọn focus / keyboard (P2) — ✅ đã sửa
 
 **Hiện trạng:** form sự kiện và hồ sơ dùng `autofocus`; input/select có `outline: none`
 nhưng thay bằng box-shadow; button/tab dùng outline mặc định của trình duyệt. Người dùng
@@ -376,14 +404,14 @@ click chuột, hay thứ tự tab? Ghi câu trả lời vào mục 5.
 
 ## 3. Thứ tự thực hiện đề xuất
 
-| Bước | Việc | Commit gợi ý |
-|---|---|---|
-| 1 | VĐ-04 + VĐ-02 + VĐ-06 (quick wins, cùng file overview/CSS) | `fix(ui): luôn hiện nút dán & xem toàn bộ, hết tràn ngang` |
-| 2 | VĐ-05: tái hiện, sửa overlay/hit area | `fix(ui): ổn định vùng click trong side panel` |
-| 3 | VĐ-01: forceRaw + alert + test parse | `feat(capture): chủ động dùng DOM thô` |
-| 4 | VĐ-07: bỏ giới hạn tóm tắt thủ công + đồng bộ docs | `feat(events): bỏ giới hạn 5 ý khi nhập tay` |
-| 5 | VĐ-03: context menu + test Chrome | `feat(context-menu): quét vùng chọn` |
-| 6 | VĐ-08 + chạy lại toàn bộ checklist, cập nhật kết quả | `fix(a11y): focus bàn phím; cập nhật checklist` |
+| Bước | Việc | Commit gợi ý | Trạng thái |
+|---|---|---|---|
+| 1 | VĐ-04 + VĐ-02 + VĐ-06 (quick wins, cùng file overview/CSS) | `fix(ui): luôn hiện nút dán & xem toàn bộ, hết tràn ngang` | ✅ |
+| 2 | VĐ-05: tái hiện, sửa overlay/hit area | `fix(ui): ổn định vùng click trong side panel` | ✅ (cần xác nhận) |
+| 3 | VĐ-01: forceRaw + alert + test parse | `feat(capture): chủ động dùng DOM thô` | ✅ |
+| 4 | VĐ-07: bỏ giới hạn tóm tắt thủ công + đồng bộ docs | `feat(events): bỏ giới hạn 5 ý khi nhập tay` | ✅ |
+| 5 | VĐ-03: context menu + test Chrome | `feat(context-menu): quét vùng chọn` | ✅ (cần test Chrome) |
+| 6 | VĐ-08 + chạy lại toàn bộ checklist, cập nhật kết quả | `fix(a11y): focus bàn phím; cập nhật checklist` | ✅ mã; ⏳ checklist thủ công |
 
 Sau mỗi bước: chạy quality gate, cập nhật `docs/kiem-thu-demo.md`, commit nhỏ.
 
@@ -407,14 +435,15 @@ Kiểm thử thủ công: làm theo `docs/kiem-thu-demo.md`; thêm mục cho VĐ
 
 ## 5. Câu hỏi cần chốt với người dùng
 
-1. **Tóm tắt:** cap an toàn 50 ý hay bỏ hoàn toàn giới hạn? Có cập nhật `script.md`
-   Appendix A (1–5 → “1–5 với LLM, thủ công không giới hạn”) không?
-2. **Context menu:** nếu `sidePanel.open()` không chạy từ menu, chấp nhận fallback
-   “mở panel thủ công” hay thêm permission `notifications` để báo?
-3. **Vùng click:** control nào bị lệch? Có thể gửi kèm ảnh/video hoặc các bước tái hiện.
-4. **Focus:** chính xác điều gì khó chịu — autofocus, outline khi click, hay tab order?
-5. **DOM thô:** tạo document mới hay thay thế document hiện tại?
-6. **Hiển thị tóm tắt dài:** hiện tất cả hay thu gọn sau 5 ý kèm “Xem thêm”?
+> Đã chốt trong phiên 2026-10-22 — xem §0. Nếu người dùng muốn khác, sửa lại mục này
+> trước khi đổi mã.
+
+1. **Tóm tắt:** cap an toàn 50 ý; `script.md` Appendix A đã ghi “1–5 với LLM, nhập tay cap 50”.
+2. **Context menu:** fallback badge **!** + mở panel thủ công; không thêm `notifications`.
+3. **Vùng click:** đã sửa các nghi phạm đã biết; nếu vẫn lệch cần control cụ thể + kích thước.
+4. **Focus:** đã bỏ autofocus, thêm focus ô lỗi đầu tiên, `:focus-visible`, `Esc`.
+5. **DOM thô:** tạo document mới, giữ bản cũ.
+6. **Hiển thị tóm tắt dài:** hiện tất cả trong chi tiết.
 
 ---
 
@@ -434,10 +463,9 @@ Kiểm thử thủ công: làm theo `docs/kiem-thu-demo.md`; thêm mục cho VĐ
 
 ## 7. Definition of Done cho phiên tới
 
-- [ ] 4 mục KT-01…KT-04 đạt (hoặc có lý do chưa đạt được ghi rõ).
-- [ ] 8 VĐ được sửa hoặc quyết định hoãn kèm lý do.
-- [ ] `typecheck`, `lint`, `test`, `build` xanh; có test mới cho VĐ-01/VĐ-07.
-- [ ] `docs/kiem-thu-demo.md` cập nhật checkbox + mục “VẤN ĐỀ” trạng thái mới.
-- [ ] `docs/DEVIATIONS.md` / `script.md` / `README.md` đồng bộ nếu có thay đổi schema,
-      permission hoặc hành vi.
+- [x] 8 VĐ được sửa (mã + kiểm tra tự động).
+- [x] `typecheck`, `lint`, `test` (40 test), `build` xanh; có test mới cho VĐ-01/VĐ-07.
+- [x] `docs/kiem-thu-demo.md` cập nhật checkbox + mục “VẤN ĐỀ” trạng thái mới.
+- [x] `docs/DEVIATIONS.md` / `script.md` / `README.md` / `extension/README.md` đồng bộ.
+- [ ] 4 mục KT-01…KT-04: logic/UI đã sửa; **cần chạy lại thủ công trên Chrome** (lý do: phiên này không thao tác được trình duyệt).
 - [ ] Commit sạch trên `main`, không chứa `dist/` hay `node_modules/`.

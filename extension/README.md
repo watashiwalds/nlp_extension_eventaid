@@ -31,12 +31,12 @@ Load unpacked từ `dist/`.
 | `src/platform/capture/tab.ts` | `executeScript` đọc HTML/vùng chọn của tab |
 | `src/platform/capture/parse.ts` | Readability + fallback DOM thô + dán tay |
 | `src/platform/storage/db.ts` | Wrapper IndexedDB, validate khi đọc/ghi, export/import |
-| `src/platform/background/index.ts` | Service worker: cấu hình side panel |
+| `src/platform/background/index.ts` | Service worker: cấu hình side panel + menu chuột phải cho vùng chọn |
 | `src/ui/sidepanel.*` | UI chính 3 tab + Cài đặt, event delegation |
 | `src/ui/actions/*` | Nghiệp vụ UI: capture, CRUD, filter, export/import |
 | `src/ui/views/*` | View functions trả về HTML (không framework) |
 | `src/ui/popup.*` | Popup: quét nhanh + mở side panel |
-| `tests/` | Vitest: core + smoke UI (jsdom + fake-indexeddb) |
+| `tests/` | Vitest: core + parse + smoke UI (jsdom + fake-indexeddb) |
 
 ## Quy ước
 

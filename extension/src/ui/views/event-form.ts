@@ -57,7 +57,7 @@ export function eventFormView(state: AppState): string {
     <form id="event-form" class="card form" novalidate>
       <div class="field ${errors.title ? 'field--error' : ''}">
         <label class="field__label" for="event-title">Tiêu đề <span class="required">*</span></label>
-        <input class="input" id="event-title" name="title" value="${escapeAttr(values.title)}" maxlength="120" placeholder="Ví dụ: Họp nhóm đồ án tại thư viện" autofocus>
+        <input class="input" id="event-title" name="title" value="${escapeAttr(values.title)}" maxlength="120" placeholder="Ví dụ: Họp nhóm đồ án tại thư viện">
         ${errors.title ? `<p class="field__error">${escapeHtml(errors.title)}</p>` : ''}
       </div>
 
@@ -95,7 +95,7 @@ export function eventFormView(state: AppState): string {
       <div class="field ${errors.summary ? 'field--error' : ''}">
         <label class="field__label" for="event-summary">Tóm tắt</label>
         <textarea class="input input--textarea" id="event-summary" name="summary" rows="4" placeholder="Mỗi dòng một ý: chủ đề, yêu cầu, địa điểm, kết quả sau sự kiện…">${escapeHtml(values.summary)}</textarea>
-        <p class="field__hint">Tối đa 5 ý, mỗi dòng một ý.</p>
+        <p class="field__hint">Mỗi dòng một ý, tối đa 50 ý khi nhập tay.</p>
         ${errors.summary ? `<p class="field__error">${escapeHtml(errors.summary)}</p>` : ''}
       </div>
 

@@ -11,10 +11,10 @@ Repo này chứa cả bộ tài liệu kế hoạch (gốc) và mã nguồn demo
 
 | # | Tính năng | Cách hoạt động |
 |---|---|---|
-| 1 | **Đọc nội dung trang web** | Bấm nút → `activeTab` + `scripting.executeScript` lấy HTML → **Mozilla Readability**; thất bại thì rơi về **DOM thô**; nếu có vùng bôi đen thì ưu tiên vùng bôi đen |
+| 1 | **Đọc nội dung trang web** | Bấm nút → `activeTab` + `scripting.executeScript` lấy HTML → **Mozilla Readability**; thất bại thì rơi về **DOM thô**; có thể chủ động **Dùng nội dung thô**; nếu có vùng bôi đen thì ưu tiên vùng bôi đen (kể cả qua menu chuột phải **Quét sự kiện từ vùng chọn**) |
 | 2 | **Hiển thị nội dung đọc được** | Tiêu đề, nguồn, phương thức đọc, số ký tự, cờ cắt bớt, toàn văn (thu gọn/mở rộng), chọn nguồn gần đây |
 | 3 | **Quản lý hồ sơ** | Tạo/sửa/xoá hồ sơ: tên, chức vị, đơn vị, email, biệt danh, từ khoá, ghi chú |
-| 4 | **Tạo sự kiện thủ công** | Đủ 7 trường trong `base_idea.md`, trạng thái `nhap → dang_theo_doi → hoan_thanh/huy`, gắn hồ sơ + nguồn trích, cờ “cần kiểm tra” khi thiếu dữ liệu |
+| 4 | **Tạo sự kiện thủ công** | Đủ 7 trường trong `base_idea.md`, trạng thái `nhap → dang_theo_doi → hoan_thanh/huy`, gắn hồ sơ + nguồn trích, cờ “cần kiểm tra” khi thiếu dữ liệu; tóm tắt nhập tay tối đa 50 ý (LLM sau này 1–5) |
 | 5 | **Quản lý dữ liệu** | Lọc/tìm sự kiện, xuất–nhập JSON, xoá toàn bộ dữ liệu |
 
 **Chưa có (đúng phạm vi demo):** classifier, LLM cục bộ, nhắc việc (`alarms`/`notifications`), Gmail/PDF/DOCX, tự động so khớp hồ sơ, tự động trích xuất sự kiện.
@@ -35,6 +35,7 @@ npm run build
 1. Mở `chrome://extensions` → bật **Developer mode** → **Load unpacked** → chọn `extension/dist`.
 2. Mở một trang web bất kỳ (bài báo, thông báo lịch, email dạng web).
 3. Bấm icon extension → **Quét trang đang mở** (side panel tự mở và đọc trang), hoặc mở side panel rồi bấm nút quét ở góc phải.
+   Có thể bôi đen một đoạn trên trang → chuột phải → **Quét sự kiện từ vùng chọn**.
 4. Tạo **hồ sơ**, sau đó tạo **sự kiện** từ nội dung vừa đọc (hoặc nhập tay hoàn toàn).
 
 > `dist/` không được commit. Mỗi lần đổi code: `npm run build` rồi bấm **Reload** ở `chrome://extensions`.
@@ -47,7 +48,7 @@ npm run build
 | `npm run build` | `tsc --noEmit` + `vite build` → `dist/` |
 | `npm run typecheck` | TypeScript strict, 0 lỗi |
 | `npm run lint` | ESLint (flat config) |
-| `npm test` | Vitest: 34 test (core + smoke test UI bằng jsdom) |
+| `npm test` | Vitest: 40 test (core + parse + smoke test UI bằng jsdom) |
 | `npm run icons` | Sinh lại icon PNG |
 
 ---
@@ -83,8 +84,8 @@ npm run build
 
 ## 4. Quyền & quyền riêng tư
 
-- Permissions: `activeTab`, `scripting`, `storage`, `sidePanel`. **Không** có host permission, **không** gọi mạng.
-- Chỉ đọc khi người dùng bấm; Readability chạy trong side panel, không inject thư viện vào trang.
+- Permissions: `activeTab`, `scripting`, `storage`, `sidePanel`, `contextMenus`. **Không** có host permission, **không** gọi mạng.
+- Chỉ đọc khi người dùng bấm hoặc chọn menu chuột phải; Readability chạy trong side panel, không inject thư viện vào trang.
 - CSP giữ `script-src 'self'`, không remote code, không WASM.
 - Toàn bộ nội dung động được escape trước khi chèn vào `innerHTML`.
 

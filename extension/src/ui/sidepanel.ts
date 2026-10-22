@@ -1,5 +1,6 @@
-import { PENDING_CAPTURE_KEY } from '../shared/constants';
+import { ACTION_TITLE, PENDING_CAPTURE_KEY } from '../shared/constants';
 import type { EventStatus } from '../shared/contracts';
+import type { PendingCapture } from '../shared/messages';
 import { hideToast, loadAll, store } from './store';
 import type { Tab } from './store';
 import { renderApp } from './render';
@@ -79,8 +80,11 @@ function handleClick(event: MouseEvent): void {
     case 'capture-page':
       void captureCurrentPage();
       break;
+    case 'capture-raw':
+      void captureCurrentPage({ forceRaw: true });
+      break;
     case 'open-paste':
-      store.set({ pasteOpen: true });
+      store.set({ tab: 'overview', pasteOpen: true });
       break;
     case 'close-paste':
       store.set({ pasteOpen: false });
@@ -194,24 +198,46 @@ function handleChange(event: Event): void {
 
 let consuming = false;
 
+function clearActionHint(): void {
+  void chrome.action.setBadgeText({ text: '' });
+  void chrome.action.setTitle({ title: ACTION_TITLE });
+}
+
 async function consumePendingCapture(): Promise<void> {
   if (consuming) return;
   consuming = true;
   try {
     const bag = await chrome.storage.session.get(PENDING_CAPTURE_KEY);
-    if (!bag[PENDING_CAPTURE_KEY]) return;
+    const pending = bag[PENDING_CAPTURE_KEY] as PendingCapture | undefined;
+    if (!pending) return;
     await chrome.storage.session.remove(PENDING_CAPTURE_KEY);
-    await captureCurrentPage();
+    await captureCurrentPage({
+      selectionFallback: pending.mode === 'selection' ? pending.selectionText : undefined,
+    });
   } catch (error) {
     console.warn('[sidepanel] Không xử lý được yêu cầu quét', error);
   } finally {
     consuming = false;
+    clearActionHint();
+  }
+}
+
+function handleKeydown(event: KeyboardEvent): void {
+  if (event.key !== 'Escape') return;
+  const state = store.get();
+  if (state.eventForm.open) {
+    closeEventForm();
+  } else if (state.profileForm.open) {
+    closeProfileForm();
+  } else if (state.pasteOpen) {
+    store.set({ pasteOpen: false });
   }
 }
 
 root.addEventListener('click', handleClick);
 root.addEventListener('submit', handleSubmit);
 root.addEventListener('change', handleChange);
+root.addEventListener('keydown', handleKeydown);
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === 'session' && changes[PENDING_CAPTURE_KEY]?.newValue) {

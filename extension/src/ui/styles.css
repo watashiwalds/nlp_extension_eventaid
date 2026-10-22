@@ -271,7 +271,7 @@ code {
 }
 
 .btn:active {
-  transform: translateY(1px);
+  transform: scale(0.98);
 }
 
 .btn--primary {
@@ -337,8 +337,8 @@ code {
 .icon-btn {
   display: inline-grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -359,9 +359,12 @@ code {
 }
 
 .link-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
   border: 0;
   background: none;
-  padding: 0;
+  padding: 0 2px;
   color: var(--primary);
   font: inherit;
   font-size: 12px;
@@ -412,6 +415,8 @@ code {
 .input,
 .select {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 36px;
   padding: 7px 10px;
   border: 1px solid var(--border-strong);
@@ -440,6 +445,11 @@ code {
   line-height: 1.55;
 }
 
+input[type='datetime-local'] {
+  width: 100%;
+  min-width: 0;
+}
+
 .field--error .input,
 .field--error .select {
   border-color: var(--danger);
@@ -447,8 +457,12 @@ code {
 
 .grid-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.grid-2 > .field {
+  min-width: 0;
 }
 
 .form__actions {
@@ -517,8 +531,12 @@ code {
 
 .filters__row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+.filters__row > * {
+  min-width: 0;
 }
 
 .select--compact {
@@ -640,6 +658,7 @@ code {
   border: 1px solid var(--border);
   font-size: 12.5px;
   color: var(--text-soft);
+  overflow-wrap: anywhere;
 }
 
 .doc-text p {
@@ -656,6 +675,7 @@ code {
   inset: auto 0 0 0;
   height: 36px;
   background: linear-gradient(transparent, var(--surface-2));
+  pointer-events: none;
 }
 
 .doc-text--expanded {
@@ -802,9 +822,13 @@ code {
 
 .detail-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin: 0;
+}
+
+.detail-grid > div {
+  min-width: 0;
 }
 
 .detail-grid dt {
@@ -1213,6 +1237,7 @@ code {
   font-size: 12px;
   box-shadow: var(--shadow-pop);
   z-index: 30;
+  pointer-events: none;
   animation: toast-in 0.18s ease-out;
 }
 
@@ -1235,7 +1260,8 @@ code {
   font-size: 15px;
   line-height: 1;
   cursor: pointer;
-  padding: 0 2px;
+  padding: 0 4px;
+  pointer-events: auto;
 }
 
 @keyframes toast-in {
@@ -1266,6 +1292,7 @@ code {
   z-index: 25;
   max-width: calc(100% - 24px);
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .spinner {
@@ -1357,7 +1384,21 @@ code {
   color: var(--muted);
 }
 
-@media (max-width: 340px) {
+/* ------------------------------ accessibility ----------------------------- */
+
+.btn:focus-visible,
+.icon-btn:focus-visible,
+.tab:focus-visible,
+.link-btn:focus-visible,
+.stat:focus-visible,
+.event-card__main:focus-visible,
+.mini-event:focus-visible,
+.toast__close:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 420px) {
   .grid-2,
   .detail-grid,
   .filters__row {

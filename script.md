@@ -255,7 +255,7 @@ Văn bản chính (sau lọc nhiễu) → Relevance classification (có chứa "
 | # | Người dùng | Hệ thống |
 |---|---|---|
 | 1 | — | **Xử lý xong** → **mở Full UI, hiển thị danh sách sự kiện trích được và chờ approve từ người dùng**. |
-| 2 | Xem danh sách. | Mỗi thẻ sự kiện hiển thị đủ cấu trúc theo `base_idea.md`: **thời điểm bắt đầu; kết thúc/thời lượng; nhãn (công vụ, giải trí, cá nhân, kỷ niệm...); tiêu đề; nội dung tóm gọn 1–5 ý (chủ đề chính, yêu cầu, địa điểm, kết quả sau sự kiện); hồ sơ liên quan; nguồn trích**. Các trường chưa chắc chắn được gắn nhãn "chưa xác định" thay vì đoán. |
+| 2 | Xem danh sách. | Mỗi thẻ sự kiện hiển thị đủ cấu trúc theo `base_idea.md`: **thời điểm bắt đầu; kết thúc/thời lượng; nhãn (công vụ, giải trí, cá nhân, kỷ niệm...); tiêu đề; nội dung tóm gọn 1–5 ý với LLM (nhập tay có thể nhiều hơn, demo cap 50); hồ sơ liên quan; nguồn trích**. Các trường chưa chắc chắn được gắn nhãn "chưa xác định" thay vì đoán. |
 | 3 | Bấm vào một sự kiện để xem chi tiết + **đoạn văn bản gốc trích dẫn** (bấm được để mở lại nguồn). | Hiển thị chi tiết, làm nổi phần pipeline tự đánh dấu cần kiểm tra (VD: "chưa rõ năm", "múi giờ giả định theo máy"). |
 | 4 | **Sửa nhanh** tại chỗ (tiêu đề, thời gian, nhãn...) nếu trích sai. | Cập nhật bản nháp; ghi nhận chỉnh sửa để cải thiện chất lượng trích xuất. |
 | 5 | **Chọn các sự kiện muốn theo dõi và nhấn Xác nhận** (bỏ chọn những sự kiện không cần). | Chỉ duyệt các mục được chọn. |
@@ -427,7 +427,7 @@ interface Event {
   end?: TimeValue;             // Thời điểm kết thúc / Thời lượng
   label: "công_vụ" | "giải_trí" | "cá_nhân" | "kỷ_niệm" | string;
   title: string;
-  summary: string[];           // 1–5 ý: chủ đề chính, yêu cầu, địa điểm, kết quả sau sự kiện
+  summary: string[];           // 1–5 ý với LLM; nhập tay không giới hạn 5 (demo cap 50)
   relatedProfiles: string[];   // Hồ sơ liên quan (trong số hồ sơ người dùng đã thiết lập)
   sources: SourceRef[];        // Nguồn trích (có thể nhiều nguồn khi gộp trùng lặp)
 

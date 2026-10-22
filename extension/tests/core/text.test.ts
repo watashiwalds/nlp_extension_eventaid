@@ -32,9 +32,10 @@ describe('text', () => {
     expect(parseListInput('a,b,c', 2)).toEqual(['a', 'b']);
   });
 
-  it('tách tóm tắt, bỏ bullet và giới hạn 5 ý', () => {
+  it('tách tóm tắt, bỏ bullet và mặc định cho phép 50 ý', () => {
     expect(parseSummaryInput('- Ý một\n2. Ý hai\n• Ý ba')).toEqual(['Ý một', 'Ý hai', 'Ý ba']);
-    expect(parseSummaryInput('1\n2\n3\n4\n5\n6')).toHaveLength(5);
+    expect(parseSummaryInput('1\n2\n3\n4\n5\n6')).toHaveLength(6);
+    expect(parseSummaryInput('1\n2\n3\n4\n5\n6', 5)).toHaveLength(5);
     expect(parseSummaryInput('   ')).toEqual([]);
   });
 });
