@@ -5,6 +5,9 @@
 >
 > Kế hoạch VĐ-01…VĐ-08 của phiên trước đã hoàn tất; tóm tắt ở **Phụ lục A**.
 > Tài liệu này thay thế kế hoạch cũ và chia việc còn lại thành **2 phiên độc lập**.
+>
+> **Lớp trích xuất bằng LLM cục bộ** không nằm trong phạm vi hai phiên dưới đây;
+> kế hoạch riêng ở [`ke-hoach-llm-trich-xuat.md`](./ke-hoach-llm-trich-xuat.md).
 
 ---
 

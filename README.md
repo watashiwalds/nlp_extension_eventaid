@@ -115,3 +115,4 @@ Checklist thủ công (theo kịch bản KS): [`docs/kiem-thu-demo.md`](docs/kie
 Xem lộ trình đầy đủ trong [`ke_hoach_phat_trien.md`](ke_hoach_phat_trien.md) §9.
 Kế hoạch ngắn hạn chia 2 phiên: [`docs/phien-lam-viec-tiep-theo.md`](docs/phien-lam-viec-tiep-theo.md).
 Đánh giá khoảng cách tới llama.cpp: [`docs/thiet-ke-demo-va-san-sang-llama-cpp.md`](docs/thiet-ke-demo-va-san-sang-llama-cpp.md).
+Kế hoạch thi công lớp trích xuất bằng LLM cục bộ: [`docs/ke-hoach-llm-trich-xuat.md`](docs/ke-hoach-llm-trich-xuat.md).

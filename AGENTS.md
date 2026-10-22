@@ -33,6 +33,7 @@ Both feed one **Document Processing Layer** and one **NLP Pipeline**.
 | `docs/kiem-thu-demo.md` | Manual test checklist mapped to KS scenarios. | Vietnamese |
 | `docs/phien-lam-viec-tiep-theo.md` | Handoff for the next session: manual test results, open issues, fix plan. | Vietnamese |
 | `docs/thiet-ke-demo-va-san-sang-llama-cpp.md` | Demo architecture summary + readiness assessment for local llama.cpp event extraction. | Vietnamese |
+| `docs/ke-hoach-llm-trich-xuat.md` | Implementation plan for the local LLM extraction layer (contracts, offscreen job, prompt, slices, eval). Source of truth for *LLM scope/order*. | Vietnamese |
 | `.github/workflows/ci.yml` | Quality gate: typecheck, lint, test, build. | YAML |
 
 > **All documentation is written in Vietnamese.** Keep new prose in Vietnamese unless explicitly told otherwise.
