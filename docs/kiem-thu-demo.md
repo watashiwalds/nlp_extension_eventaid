@@ -3,9 +3,10 @@
 Chạy trước khi demo/báo cáo. Mỗi mục ghi rõ kịch bản `script.md` tương ứng.
 Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./phien-lam-viec-tiep-theo.md).
 
-> **Trạng thái phiên triển khai (2026-10-22):** 8 vấn đề VĐ-01…VĐ-08 đã được sửa trong mã.
-> `typecheck`, `lint`, `test` (40 test), `build` đều xanh. Các ô `[ ]` bên dưới là việc
-> **cần chạy lại trên Chrome thật** sau khi build — chưa được đánh dấu đạt trong phiên này.
+> **Rà soát thủ công (2026-10-22):** người dùng đã đi qua toàn bộ checklist. Các ô `[ ]`
+> còn lại là mục **chưa đạt hoặc chưa xác nhận lại**, không phải chưa từng kiểm.
+> Hai tồn đọng mới (VĐ-09, VĐ-10) và 6 gợi ý cải thiện (YC-01…YC-06) được xử lý trong
+> **2 phiên** — xem [`phien-lam-viec-tiep-theo.md`](./phien-lam-viec-tiep-theo.md).
 
 ## 0. Chuẩn bị
 
@@ -80,26 +81,59 @@ Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./p
 |---|---|---|
 | VĐ-01 | Chưa rõ điều kiện dùng DOM thô | ✅ Đã sửa: cảnh báo khi `raw_dom` + nút **Dùng nội dung thô** (`forceRaw`), test `tests/platform/parse.test.ts` |
 | VĐ-02 | Nút “Xem toàn bộ” nên hiển thị mọi lúc | ✅ Đã sửa: luôn render khi có document; test smoke |
-| VĐ-03 | Bôi đen → chuột phải → “Quét sự kiện” | ✅ Đã thêm `contextMenus` + menu vùng chọn; cần xác nhận `sidePanel.open()` trên Chrome thật |
+| VĐ-03 | Bôi đen → chuột phải → “Quét sự kiện” | ✅ Đã thêm `contextMenus` + menu vùng chọn; đã rà soát thủ công |
 | VĐ-04 | Không thấy nút dán | ✅ Đã sửa: nút **Dán văn bản** luôn có trong card document; test smoke |
-| VĐ-05 | Click area không ổn định | ✅ Đã giảm nguyên nhân: bỏ chặn click của gradient/toast/busy, tăng hit area icon/link, bỏ dịch nút khi bấm; cần kiểm thủ công |
-| VĐ-06 | Tràn ngang khi nhập ngày giờ | ✅ Đã sửa: `minmax(0, 1fr)`, `min-width: 0`, stack 1 cột ≤ 420px; cần kiểm ở 320/360/400px |
+| VĐ-05 | Click area không ổn định | ✅ Đã giảm nguyên nhân: bỏ chặn click của gradient/toast/busy, tăng hit area icon/link, bỏ dịch nút khi bấm; đã rà soát thủ công |
+| VĐ-06 | Tràn ngang khi nhập ngày giờ | 🟡 Đã sửa grid nhưng UI hẹp vẫn tràn → mở lại thành **VĐ-10** |
 | VĐ-07 | Tóm tắt không giới hạn 5 ý khi nhập tay | ✅ Đã sửa: cap 50 ý; LLM sau này truyền `maxItems = 5`; đã sync `script.md` + `DEVIATIONS.md` |
 | VĐ-08 | Một số Tab focus không cần thiết | ✅ Đã sửa: bỏ `autofocus`, focus ô lỗi đầu tiên sau validate, thêm `:focus-visible`, Esc đóng form |
 
-**Ghi chú:** các mục ✅ là thay đổi mã đã qua test tự động/build. Các kiểm tra cần Chrome thật
-(menu chuột phải, kéo side panel, vùng click) được liệt kê ở §1, §2, §7 và cần chạy lại thủ công.
+**Ghi chú:** người dùng đã rà soát thủ công ngày 2026-10-22. Các mục `[ ]` còn lại là
+**chưa đạt hoặc chưa xác nhận lại**; VĐ-06 được mở lại thành **VĐ-10** (ngày/giờ vẫn tràn
+khi UI hẹp). Kế hoạch xử lý: [`phien-lam-viec-tiep-theo.md`](./phien-lam-viec-tiep-theo.md).
 
 ## Vấn đề tồn đọng
 
-- Trang web động (Gmail) vượt ngưỡng giới hạn của chức năng quét + raw DOM
-- Giao diện chọn ngày và chọn giờ chi tiết vẫn tràn khi UI hẹp
+| ID | Nội dung | Ưu tiên | Phiên |
+|---|---|---|---|
+| VĐ-09 | Trang web động (Gmail) vượt ngưỡng giới hạn của chức năng quét + raw DOM | **P0** | 2 |
+| VĐ-10 | Giao diện chọn ngày và chọn giờ chi tiết vẫn tràn khi UI hẹp | **P0** | 1 |
 
 ## Gợi ý cải thiện
 
-- Ưu tiên hiển thị sự kiện gần nhất chưa diễn ra thay vì xếp toàn bộ sự kiện theo thời gian tuyệt đối.
-- Thêm context menu "Quét nội dung trên trang" khi chuột phải, kích hoạt chức năng tương tự nút "Quét trang đang mở" của UI nhỏ.
-- Cho phép người dùng tạo nhãn tuỳ chỉnh.
-- Tab "Tổng quan" hiển thị kế hoạch của từng hồ sơ theo dạng tab.
-- UI "Quét nội dung" nằm trong tab riêng.
-- Lược bỏ các chuỗi liên quan đến hệ thống (ví dụ: demo, trong IndexedDB,...) khỏi các phần UI thông thường, thêm mục "Về phiên bản này" trong tab "Cài đặt" cho các thông tin đó.
+| ID | Nội dung | Ưu tiên | Phiên |
+|---|---|---|---|
+| YC-01 | Ưu tiên hiển thị sự kiện gần nhất chưa diễn ra thay vì xếp toàn bộ theo thời gian tuyệt đối | P1 | 1 |
+| YC-02 | Thêm context menu **“Quét nội dung trên trang”** khi chuột phải, kích hoạt chức năng tương tự nút **Quét trang đang mở** | P1 | 1 |
+| YC-03 | Cho phép người dùng tạo nhãn tuỳ chỉnh | P1 | 2 |
+| YC-04 | Tab **Tổng quan** hiển thị kế hoạch của từng hồ sơ theo dạng tab | P1 | 1 |
+| YC-05 | UI **“Quét nội dung”** nằm trong tab riêng | P1 | 1 |
+| YC-06 | Lược bỏ chuỗi hệ thống (“demo”, “IndexedDB”…) khỏi UI thường; thêm **“Về phiên bản này”** trong Cài đặt | P2 | 1 |
+
+## Kiểm thử bổ sung cho 2 phiên tới
+
+### Phiên 1
+
+- [ ] **KT-05** — Ở 320/360/400px: form sự kiện không tràn ngang; chọn được ngày + giờ;
+      sửa sự kiện cũ vẫn giữ đúng thời điểm.
+- [ ] **KT-06** — Chuột phải vùng trống trên trang → **Quét nội dung trên trang** → panel
+      mở, quét đúng trang và **bỏ qua** vùng bôi đen cũ.
+- [ ] **KT-07** — Scan từ header/popup → tự chuyển sang tab **Quét nội dung**; tab này có
+      đủ nút quét lại, dùng nội dung thô, dán, xoá.
+- [ ] **KT-08** — Tổng quan có tab “Tất cả” + từng hồ sơ; chọn hồ sơ chỉ hiện sự kiện của
+      hồ sơ đó; xoá hồ sơ đang chọn → về “Tất cả”.
+- [ ] **KT-09** — Sự kiện ngày mai đứng trên sự kiện tháng trước; nhóm đã qua gần nhất
+      trước; sự kiện chưa có thời điểm nằm cuối.
+- [ ] **KT-10** — UI thường không còn “demo”/“IndexedDB”/“Readability”; Cài đặt có mục
+      **Về phiên bản này** mở/đóng được.
+
+### Phiên 2
+
+- [ ] **KT-11** — Tạo sự kiện với 2 nhãn tuỳ chỉnh → lưu, hiện chip, sửa được; lọc và tìm
+      theo nhãn; xuất rồi nhập lại khôi phục đúng.
+- [ ] **KT-12** — Nhập tệp JSON cũ (không có `tags`) → không lỗi, tags rỗng.
+- [ ] **KT-13** — Gmail: mở một thư → quét trang → có nội dung thư (hoặc thông báo hướng
+      dẫn rõ); bôi đen trên Gmail vẫn quét đúng vùng chọn.
+- [ ] **KT-14** — Trang SPA/dashboard + bài báo thường: không hồi quy; trang quá lớn có
+      cảnh báo cắt bớt, không treo.
+- [ ] **KT-15** — Nhãn vượt 5 hoặc dài quá 24 ký tự → lỗi rõ, không lưu.

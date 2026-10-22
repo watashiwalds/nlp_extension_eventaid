@@ -68,7 +68,7 @@ npm run build
 │  ├─ DEVIATIONS.md              # Demo khác kế hoạch ở đâu và vì sao
 │  ├─ chuc-nang-demo-vs-chinh-thuc.md # Đối chiếu chức năng kế hoạch vs demo
 │  ├─ kiem-thu-demo.md           # Checklist kiểm thử thủ công theo KS
-│  └─ phien-lam-viec-tiep-theo.md # Bàn giao: việc còn lại + hướng sửa
+│  └─ phien-lam-viec-tiep-theo.md # Kế hoạch 2 phiên tiếp theo
 ├─ extension/                    # Mã nguồn demo
 │  ├─ src/shared/                # contracts.ts (Zod), messages.ts, constants.ts
 │  ├─ src/core/                  # Thuần TS: dates, events, profiles, forms, text
@@ -112,3 +112,4 @@ Checklist thủ công (theo kịch bản KS): [`docs/kiem-thu-demo.md`](docs/kie
 4. Gmail read-only + PDF/DOCX ở sprint cuối.
 
 Xem lộ trình đầy đủ trong [`ke_hoach_phat_trien.md`](ke_hoach_phat_trien.md) §9.
+Kế hoạch ngắn hạn chia 2 phiên: [`docs/phien-lam-viec-tiep-theo.md`](docs/phien-lam-viec-tiep-theo.md).
