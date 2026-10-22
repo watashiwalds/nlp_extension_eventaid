@@ -24,11 +24,12 @@ Load unpacked từ `dist/`.
 | `src/shared/messages.ts` | Hợp đồng message giữa các context |
 | `src/shared/constants.ts` | Nhãn tiếng Việt, giới hạn kích thước, key storage |
 | `src/core/dates.ts` | Parse/format ngày giờ, tách–ghép ô ngày/giờ, nhãn tương đối, thời lượng |
-| `src/core/events.ts` | Tạo/cập nhật sự kiện, state machine, lọc/sắp xếp, lọc theo hồ sơ |
+| `src/core/events.ts` | Tạo/cập nhật sự kiện, state machine, lọc/sắp xếp, lọc theo hồ sơ và nhãn tuỳ chỉnh |
 | `src/core/profiles.ts` | Tạo/cập nhật/tìm hồ sơ |
 | `src/core/forms.ts` | Validate form bằng Zod, map lỗi về từng trường |
-| `src/core/text.ts` | Chuẩn hoá, hash, tách tóm tắt/danh sách |
-| `src/platform/capture/tab.ts` | `executeScript` đọc HTML/vùng chọn của tab |
+| `src/core/text.ts` | Chuẩn hoá, hash, tách tóm tắt/danh sách/nhãn tuỳ chỉnh |
+| `src/platform/capture/page-snapshot.ts` | Hàm tự chứa inject vào tab: chọn landmark, lọc menu/khung ẩn, cờ trang động/cắt bớt |
+| `src/platform/capture/tab.ts` | `executeScript` chạy page snapshot (HTML đã lọc + vùng chọn) |
 | `src/platform/capture/parse.ts` | Readability + fallback DOM thô + dán tay |
 | `src/platform/storage/db.ts` | Wrapper IndexedDB, validate khi đọc/ghi, export/import |
 | `src/platform/background/index.ts` | Service worker: cấu hình side panel + menu chuột phải vùng chọn/cấp trang |
@@ -36,7 +37,7 @@ Load unpacked từ `dist/`.
 | `src/ui/actions/*` | Nghiệp vụ UI: capture, CRUD, filter, export/import |
 | `src/ui/views/*` | View functions trả về HTML (không framework); `capture.ts` cho tab quét nội dung |
 | `src/ui/popup.*` | Popup: quét nhanh + mở side panel |
-| `tests/` | Vitest: core + parse + smoke UI (jsdom + fake-indexeddb) |
+| `tests/` | Vitest: core + parse + page snapshot + smoke UI (jsdom + fake-indexeddb) |
 
 ## Quy ước
 

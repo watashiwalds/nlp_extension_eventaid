@@ -252,7 +252,7 @@ sự kiện ngày mai trong tab Sự kiện.
 - [ ] Sự kiện ngày mai đứng trên sự kiện tháng trước.
 - [ ] Trong nhóm đã qua, sự kiện gần nhất đứng trước.
 - [ ] Sự kiện chưa có `start` nằm cuối, không bị mất khi lọc.
-- [ ] `filterEvents` theo trạng thái/nhãn/từ khoá vẫn giữ thứ tự mới.
+- [x] `filterEvents` theo trạng thái/nhãn/từ khoá vẫn giữ thứ tự mới.
 
 ---
 
@@ -329,6 +329,21 @@ Không hứa “đọc được mọi trang Gmail”; nếu không đọc đư�
 | 4 | S2-01b — form/filter/display (P1) | `feat(ui): nhập, lọc và hiển thị nhãn tuỳ chỉnh` |
 | 5 | S2-03 — regression + docs | `docs: cập nhật kiểm thử và đối chiếu sau phiên 2` |
 
+### Kết quả phiên 2 (2026-10-22)
+
+| Bước | Task | Trạng thái | Ghi chú |
+|---|---|---|---|
+| 1 | S2-02a — lọc nội dung chính | ✅ | `platform/capture/page-snapshot.ts` chọn `main`/landmark, xoá menu/khung ẩn, fallback body, cờ `likelyDynamic`/`htmlTruncated` |
+| 2 | S2-02b — thông báo/giới hạn | ✅ | `tab.ts` dùng snapshot; toast hướng dẫn khi trang chưa render/quá lớn/rỗng; không còn chặn cứng 4M |
+| 3 | S2-01a — schema + core tags | ✅ | `Event.tags` (default `[]`), `parseTagsInput`, lọc/tìm theo tags |
+| 4 | S2-01b — form/filter/display | ✅ | Ô **Nhãn tuỳ chỉnh**, chip ở card/chi tiết, select lọc tag, giữ `label` cố định |
+| 5 | S2-03 — regression + docs | ✅ | 63 test; cập nhật checklist, DEVIATIONS, README, đối chiếu |
+| 6 | Quality gate | ✅ | `typecheck`, `lint`, `test` (63), `build` đều xanh |
+| 7 | Kiểm thủ công Gmail/SPA | ⏳ | Cần Chrome thật; code đã sẵn sàng, ghi trung thực là best-effort |
+
+**Trạng thái:** phần mã nguồn và tài liệu của Phiên 2 đã xong. Chỉ còn KT-13/KT-14
+(Gmail + SPA/bài báo trên Chrome thật) để nghiệm thu thủ công.
+
 ---
 
 ### S2-01 — YC-03: Nhãn tuỳ chỉnh (P1)
@@ -375,12 +390,12 @@ Lý do:
 
 **Nghiệm thu:**
 
-- [ ] Tạo sự kiện với 2 nhãn tuỳ chỉnh → lưu, hiện chips ở card/chi tiết.
-- [ ] Sửa sự kiện → tags load đúng, sửa/xoá được.
-- [ ] Lọc theo tag; tìm kiếm theo tag; “Tất cả” trả lại đầy đủ.
-- [ ] Quá 5 tags hoặc tag > 24 ký tự → lỗi rõ, không lưu.
-- [ ] Nhập tệp JSON cũ (không có tags) → không lỗi, tags rỗng.
-- [ ] Xuất rồi nhập lại → tags khôi phục đúng.
+- [x] Tạo sự kiện với 2 nhãn tuỳ chỉnh → lưu, hiện chips ở card/chi tiết.
+- [x] Sửa sự kiện → tags load đúng, sửa/xoá được.
+- [x] Lọc theo tag; tìm kiếm theo tag; “Tất cả” trả lại đầy đủ.
+- [x] Quá 5 tags hoặc tag > 24 ký tự → lỗi rõ, không lưu.
+- [x] Nhập tệp JSON cũ (không có tags) → không lỗi, tags rỗng.
+- [x] Xuất rồi nhập lại → tags khôi phục đúng.
 
 **Test:** `tests/core/text.test.ts` (parse/dedupe/cap), `tests/core/events.test.ts`
 (filter/search), `tests/core/forms.test.ts` (validate), `tests/shared/contracts.test.ts`
@@ -436,11 +451,11 @@ hướng dẫn bôi đen/dán thay vì báo lỗi chung.
 **Nghiệm thu:**
 
 - [ ] Gmail (best-effort): document chứa tiêu đề/nội dung thư, không phải toàn bộ menu;
-      nếu không đạt, ghi rõ lý do và luồng bôi đen/dán vẫn hoạt động.
-- [ ] Trang bài báo: kết quả Readability không đổi.
-- [ ] Trang động chưa render: có thông báo hành động, không crash.
-- [ ] Trang quá lớn: không treo; có cảnh báo cắt bớt.
-- [ ] Không thêm host permission; CSP không đổi.
+      nếu không đạt, ghi rõ lý do và luồng bôi đen/dán vẫn hoạt động. *(chờ Chrome thật)*
+- [x] Trang bài báo: kết quả Readability không đổi. *(test fixture + parse xanh)*
+- [x] Trang động chưa render: có thông báo hành động, không crash.
+- [x] Trang quá lớn: không treo; có cảnh báo cắt bớt.
+- [x] Không thêm host permission; CSP không đổi.
 
 **Rủi ro & fallback:**
 
@@ -466,12 +481,12 @@ hướng dẫn bôi đen/dán thay vì báo lỗi chung.
 
 ### Definition of Done — Phiên 2
 
-- [ ] S2-01, S2-02 hoàn tất; S2-03 cập nhật đủ.
-- [ ] Quality gate xanh; test mới cho tags + page snapshot.
-- [ ] Không có thay đổi schema ngoài `tags` (có default, tương thích ngược).
-- [ ] Kết quả Gmail được ghi trung thực; giới hạn được ghi trong `DEVIATIONS.md`.
-- [ ] Checklist, README, bảng đối chiếu đồng bộ.
-- [ ] Commit sạch trên `main`.
+- [x] S2-01, S2-02 hoàn tất; S2-03 cập nhật đủ (KT-13/14 chờ Chrome thật).
+- [x] Quality gate xanh; test mới cho tags + page snapshot.
+- [x] Không có thay đổi schema ngoài `tags` (có default, tương thích ngược).
+- [x] Kết quả Gmail được ghi trung thực; giới hạn được ghi trong `DEVIATIONS.md`.
+- [x] Checklist, README, bảng đối chiếu đồng bộ.
+- [x] Commit sạch trên `main`.
 
 ---
 

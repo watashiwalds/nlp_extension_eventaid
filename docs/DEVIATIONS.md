@@ -10,18 +10,20 @@ nhằm giữ demo chạy được trong 1 buổi, nhưng vẫn giữ đúng hợ
 | `versionHistory` | Có (KS-12 cập nhật nguồn) | **Chưa có** | Cần so sánh nguồn cũ/mới — ngoài phạm vi demo |
 | Tóm tắt sự kiện | LLM trả 1–5 ý | **Nhập tay tối đa 50 ý**; LLM sau này vẫn truyền `maxItems = 5` | Giữ đúng yêu cầu UX: người dùng không bị chặn ở 5 ý. Cap 50 chỉ để tránh dữ liệu rác |
 | DOM thô | Chỉ fallback khi Readability thất bại | Thêm nút **Dùng nội dung thô** (`forceRaw`) tạo document `raw_dom` mới | Người dùng chủ động chọn khi Readability bỏ sót nội dung; giữ bản cũ để so sánh |
+| Trang động / Gmail | Gmail API read-only + parser riêng | **Best-effort** đọc trang Gmail đang mở: lọc `main`/landmark, bỏ menu/khung ẩn trước khi chạy Readability; không đọc iframe/shadow DOM | Không thêm host permission/OAuth. Nếu Gmail đổi DOM hoặc chưa render, UI hướng dẫn bôi đen/dán. Ghi nhận là best-effort, không hứa đọc mọi thư |
+| Nhãn tuỳ chỉnh | 5 nhãn phân loại cố định | Thêm `Event.tags: string[]` (tối đa 5, mỗi nhãn ≤ 24 ký tự); **giữ nguyên** `label` | Không phá 7 trường/JSON cũ; bản ghi cũ thiếu `tags` được đọc với `[]` |
 | Quét vùng chọn | Content script + thao tác trên UI | **Menu chuột phải** “Quét sự kiện từ vùng chọn” (`contextMenus`) | Đúng góp ý UX; không thêm host permission |
 | Quét cả trang | Nút trên panel/popup | Thêm **menu chuột phải cấp trang** “Quét nội dung trên trang”; bỏ qua vùng bôi đen còn sót | Dùng nhanh không cần mở popup; vẫn là thao tác người dùng chủ động |
 | Form ngày/giờ | Một ô `datetime-local` | **Tách ô ngày + ô giờ**; `EventDraft` giữ 4 chuỗi ngày/giờ | Ô native rộng tối thiểu gây tràn side panel 320–400px (VĐ-10) |
 | Mở panel từ menu | `sidePanel.open()` trong user gesture | Nếu Chrome từ chối, ghi cờ + badge **!** thay vì thêm permission `notifications` | Giữ bộ permission tối thiểu; người dùng mở panel thủ công |
 | Nhắc việc | `chrome.alarms` + `notifications`, 2 nút | Trường `notifications` tồn tại nhưng **luôn rỗng** | Tránh gợi ý sai rằng đã có nhắc việc |
-| Gmail / PDF / DOCX | Sprint S5 | Không có; dùng **Dán văn bản** | Cần OAuth + parser riêng |
-| Content script | `src/platform/content` inject Readability | `scripting.executeScript` lấy HTML, **Readability chạy trong side panel** | Tránh phải bundle thư viện vào content script; vẫn chỉ dùng `activeTab`. Khi cần bắt vùng chọn phức tạp/SPA, chuyển sang content script |
+| Gmail / PDF / DOCX | Sprint S5 | Không có Gmail API; Gmail chỉ đọc **best-effort** qua trang web đang mở, PDF/DOCX dùng **Dán văn bản** | Cần OAuth + parser riêng |
+| Content script | `src/platform/content` inject Readability | `scripting.executeScript` chạy `page-snapshot.ts` (lọc landmark/nhiễu), **Readability chạy trong side panel** | Tránh phải bundle thư viện vào content script; vẫn chỉ dùng `activeTab`. Khi cần bắt vùng chọn phức tạp/SPA, chuyển sang content script |
 | Offscreen document | Chạy classifier + LLM | Không có | Không có tác vụ dài |
 | Job queue / pipeline | `Job`, state machine, resume sau SW restart | Không có job nền | Đọc trang là thao tác đồng bộ, vài trăm ms |
 | `Settings` store | `settings` | Có trong DB nhưng demo chưa dùng; cờ quét dùng `chrome.storage.session` | — |
 | Classifier | `public/models/classifier.json` | Không có | — |
-| Test | Vitest + checklist KS | Vitest (47 test, gồm smoke UI bằng jsdom + parse Readability/forceRaw) + checklist | Không có Playwright như kế hoạch |
+| Test | Vitest + checklist KS | Vitest (63 test, gồm smoke UI bằng jsdom, parse Readability/forceRaw, page snapshot và tags) + checklist | Không có Playwright như kế hoạch |
 | Thông báo UI | 2 nút theo giới hạn Chrome | Không có | — |
 
 ## Điểm **không** lệch

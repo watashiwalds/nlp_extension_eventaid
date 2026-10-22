@@ -426,6 +426,7 @@ interface Event {
   start: TimeValue;            // Thời điểm bắt đầu
   end?: TimeValue;             // Thời điểm kết thúc / Thời lượng
   label: "công_vụ" | "giải_trí" | "cá_nhân" | "kỷ_niệm" | string;
+  tags: string[];             // Nhãn tuỳ chỉnh; mặc định [] khi bản ghi cũ thiếu trường này
   title: string;
   summary: string[];           // 1–5 ý với LLM; nhập tay không giới hạn 5 (demo cap 50)
   relatedProfiles: string[];   // Hồ sơ liên quan (trong số hồ sơ người dùng đã thiết lập)
@@ -461,6 +462,7 @@ interface SourceRef {
   "id": "evt_20261021_hop_dua_an",
   "title": "Họp dự án XLNNTN — chốt kế hoạch tuần",
   "label": "công_vụ",
+  "tags": ["đồ án", "họp nhóm"],
   "start": { "value": "2026-10-21T09:00:00+07:00", "raw": "9h sáng thứ Tư tới" },
   "end":   { "value": "2026-10-21T10:30:00+07:00" },
   "summary": [

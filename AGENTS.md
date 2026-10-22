@@ -145,6 +145,7 @@ Completion is triggered **automatically** when the end time passes (service work
 `readability` | `raw_dom` | `selection` | `parser`.
 
 ### Other key fields
+- `tags: string[]` — custom tags (max 5, each ≤ 24 chars; default `[]` for older records). Kept separate from the fixed `label` enum.
 - `validation.uncertain[]` — e.g. `nam_chua_ro`, `mui_gio_gia_dinh`.
 - `notifications.{milestones, fired, mute}` — milestones: `1_tuan_truoc` / `1_ngay_truoc` / `ngay_dien_ra`.
 - `completedAt`, `versionHistory` (populated by KS-12 updates).
@@ -228,9 +229,9 @@ Use Vietnamese in docs, but map to these English concepts:
 
 ## 11. Current status
 
-- **Demo (implemented):** `extension/` — page capture (Readability + raw DOM fallback + forced raw + selection + context-menu selection + **context-menu page scan**), **dedicated capture tab**, document viewer, profile CRUD, manual event CRUD (7 fields, status machine, source refs, uncertain flags), **per-profile plans on overview**, **date/time split inputs**, **upcoming-first event ordering**, JSON export/import. **No ML/LLM, no reminders, no Gmail.**
-- **Verified:** `npm run typecheck`, `npm run lint`, `npm test` (47 tests incl. jsdom smoke test and parse tests), `npm run build` all pass; `dist/` loads unpacked.
-- **Manual checks pending:** re-run `docs/kiem-thu-demo.md` in Chrome for context menu (page + selection), side-panel widths 320/360/400px, and click areas.
+- **Demo (implemented):** `extension/` — page capture (filtered **page snapshot** with landmark/noise removal + Readability + raw DOM fallback + forced raw + selection + context-menu selection + **context-menu page scan**), **dedicated capture tab**, document viewer, profile CRUD, manual event CRUD (7 fields + **custom tags**, status machine, source refs, uncertain flags), **per-profile plans on overview**, **date/time split inputs**, **upcoming-first event ordering**, JSON export/import. **No ML/LLM, no reminders, no Gmail API.**
+- **Verified:** `npm run typecheck`, `npm run lint`, `npm test` (63 tests incl. jsdom smoke, parse, page-snapshot and tag tests), `npm run build` all pass; `dist/` loads unpacked.
+- **Manual checks pending:** re-run `docs/kiem-thu-demo.md` in Chrome for context menu (page + selection), side-panel widths 320/360/400px, click areas, Gmail best-effort capture, and SPA/regression checks (KT-13/KT-14).
 - **Build plan:** `ke_hoach_phat_trien.md` — 7 sprints / 14 weeks; web first, Gmail in the final sprint.
 - **Tech stack:** locked in §3 (TypeScript + Vite, no UI framework, local llama.cpp server, linear classifier).
 - **Quality gate:** `tsc --noEmit` + ESLint + Vitest + `vite build`; `dist/` is the load-unpacked target.

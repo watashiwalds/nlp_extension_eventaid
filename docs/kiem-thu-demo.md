@@ -5,8 +5,11 @@ Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./p
 
 > **Rà soát thủ công (2026-10-22):** người dùng đã đi qua toàn bộ checklist. Các ô `[ ]`
 > còn lại là mục **chưa đạt hoặc chưa xác nhận lại**, không phải chưa từng kiểm.
-> Hai tồn đọng mới (VĐ-09, VĐ-10) và 6 gợi ý cải thiện (YC-01…YC-06) được xử lý trong
-> **2 phiên** — xem [`phien-lam-viec-tiep-theo.md`](./phien-lam-viec-tiep-theo.md).
+> VĐ-10 và YC-01…YC-06 đã xử lý trong **2 phiên** — xem
+> [`phien-lam-viec-tiep-theo.md`](./phien-lam-viec-tiep-theo.md).
+> **Phiên 2 (2026-10-22):** đã thêm nhãn tuỳ chỉnh + lọc nội dung chính cho trang động.
+> KT-11/12/15 có test tự động; KT-13 (Gmail thật) và KT-14 (SPA/bài báo trên Chrome)
+> vẫn cần xác nhận thủ công.
 
 ## 0. Chuẩn bị
 
@@ -99,6 +102,9 @@ khi UI hẹp). Kế hoạch xử lý: [`phien-lam-viec-tiep-theo.md`](./phien-la
 | VĐ-09 | Trang web động (Gmail) vượt ngưỡng giới hạn của chức năng quét + raw DOM | **P0** | 2 |
 | VĐ-10 | Giao diện chọn ngày và chọn giờ chi tiết vẫn tràn khi UI hẹp | **P0** | 1 |
 
+**Trạng thái phiên 2:** VĐ-09 đã xử lý ở mức **best-effort** (page snapshot lọc landmark/nhiễu,
+cắt HTML lớn kèm cảnh báo, hướng dẫn khi trang chưa render). Không thêm Gmail API/OAuth.
+
 ## Gợi ý cải thiện
 
 | ID | Nội dung | Ưu tiên | Phiên |
@@ -109,6 +115,9 @@ khi UI hẹp). Kế hoạch xử lý: [`phien-lam-viec-tiep-theo.md`](./phien-la
 | YC-04 | Tab **Tổng quan** hiển thị kế hoạch của từng hồ sơ theo dạng tab | P1 | 1 |
 | YC-05 | UI **“Quét nội dung”** nằm trong tab riêng | P1 | 1 |
 | YC-06 | Lược bỏ chuỗi hệ thống (“demo”, “IndexedDB”…) khỏi UI thường; thêm **“Về phiên bản này”** trong Cài đặt | P2 | 1 |
+
+**Trạng thái phiên 2:** YC-03 đã có — nhãn tuỳ chỉnh `tags` (tối đa 5) tách khỏi `label`;
+nhập trong form sự kiện, hiện chip, lọc và tìm kiếm được.
 
 ## Kiểm thử bổ sung cho 2 phiên tới
 
@@ -141,11 +150,14 @@ khi UI hẹp). Kế hoạch xử lý: [`phien-lam-viec-tiep-theo.md`](./phien-la
 
 ### Phiên 2
 
-- [ ] **KT-11** — Tạo sự kiện với 2 nhãn tuỳ chỉnh → lưu, hiện chip, sửa được; lọc và tìm
-      theo nhãn; xuất rồi nhập lại khôi phục đúng.
-- [ ] **KT-12** — Nhập tệp JSON cũ (không có `tags`) → không lỗi, tags rỗng.
+- [x] **KT-11** — Tạo sự kiện với 2 nhãn tuỳ chỉnh → lưu, hiện chip, sửa được; lọc và tìm
+      theo nhãn; xuất rồi nhập lại khôi phục đúng. *(test `text`/`events`/`forms`/`contracts` + smoke UI)*
+- [x] **KT-12** — Nhập tệp JSON cũ (không có `tags`) → không lỗi, tags rỗng.
+      *(test `tests/shared/contracts.test.ts`)*
 - [ ] **KT-13** — Gmail: mở một thư → quét trang → có nội dung thư (hoặc thông báo hướng
-      dẫn rõ); bôi đen trên Gmail vẫn quét đúng vùng chọn.
+      dẫn rõ); bôi đen trên Gmail vẫn quét đúng vùng chọn. *(chờ kiểm trên Chrome thật;
+      demo chỉ đọc best-effort, không có Gmail API)*
 - [ ] **KT-14** — Trang SPA/dashboard + bài báo thường: không hồi quy; trang quá lớn có
-      cảnh báo cắt bớt, không treo.
-- [ ] **KT-15** — Nhãn vượt 5 hoặc dài quá 24 ký tự → lỗi rõ, không lưu.
+      cảnh báo cắt bớt, không treo. *(fixture + test page snapshot đã xanh; chờ kiểm Chrome)*
+- [x] **KT-15** — Nhãn vượt 5 hoặc dài quá 24 ký tự → lỗi rõ, không lưu.
+      *(test `parseTagsInput` + `buildEventFromForm`)*
