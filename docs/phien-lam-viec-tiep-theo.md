@@ -122,10 +122,10 @@ min-content width / popup lịch rộng, gây tràn khi side panel hẹp.
 
 **Nghiệm thu:**
 
-- [ ] Ở 320/360/400px không có thanh cuộn ngang; hai ô ngày/giờ hiển thị trọn.
-- [ ] Sự kiện cũ có `start`/`end` vẫn load và hiển thị đúng.
-- [ ] Bỏ trống vẫn lưu được (cờ “chưa xác định”); `end < start` vẫn báo lỗi.
-- [ ] Bàn phím nhập được cả ngày và giờ; không mất dữ liệu khi validate lỗi.
+- [x] Ở 320/360/400px không có thanh cuộn ngang; hai ô ngày/giờ hiển thị trọn.
+- [x] Sự kiện cũ có `start`/`end` vẫn load và hiển thị đúng.
+- [x] Bỏ trống vẫn lưu được (cờ “chưa xác định”); `end < start` vẫn báo lỗi.
+- [x] Bàn phím nhập được cả ngày và giờ; không mất dữ liệu khi validate lỗi.
 
 ---
 
@@ -154,10 +154,10 @@ thống kê vừa quét nội dung nên khá nặng.
 
 **Nghiệm thu:**
 
-- [ ] Tab Quét nội dung hiển thị document, nút quét lại, dùng nội dung thô, dán, xoá.
-- [ ] Quét thành công từ header hoặc popup tự chuyển sang tab Quét nội dung.
-- [ ] Form dán chỉ mở trong tab Quét nội dung.
-- [ ] Tổng quan không còn card nội dung dài; không vỡ layout.
+- [x] Tab Quét nội dung hiển thị document, nút quét lại, dùng nội dung thô, dán, xoá.
+- [x] Quét thành công từ header hoặc popup tự chuyển sang tab Quét nội dung.
+- [x] Form dán chỉ mở trong tab Quét nội dung.
+- [x] Tổng quan không còn card nội dung dài; không vỡ layout.
 
 ---
 
@@ -190,10 +190,10 @@ nhanh mà không phải mở popup.
 
 **Nghiệm thu:**
 
-- [ ] Chuột phải trên vùng trống → thấy **Quét nội dung trên trang**.
-- [ ] Panel đóng → bấm menu → panel mở và quét đúng trang, bỏ qua selection cũ.
-- [ ] Panel đang mở → quét lại, không tạo document trùng.
-- [ ] Menu vùng chọn vẫn hoạt động như cũ; không thêm permission mới.
+- [x] Chuột phải trên vùng trống → thấy **Quét nội dung trên trang**.
+- [x] Panel đóng → bấm menu → panel mở và quét đúng trang, bỏ qua selection cũ.
+- [x] Panel đang mở → quét lại, không tạo document trùng.
+- [x] Menu vùng chọn vẫn hoạt động như cũ; không thêm permission mới.
 
 ---
 
@@ -221,10 +221,10 @@ kế hoạch riêng của từng người.
 
 **Nghiệm thu:**
 
-- [ ] Có 2 hồ sơ → thấy tab “Tất cả”, tên từng hồ sơ; bấm qua lại đúng.
-- [ ] Chọn hồ sơ → chỉ hiện sự kiện có `relatedProfiles` chứa id đó.
-- [ ] Hồ sơ không có sự kiện → empty state + gợi ý tạo sự kiện.
-- [ ] Xoá hồ sơ đang chọn → tự về “Tất cả”, không crash.
+- [x] Có 2 hồ sơ → thấy tab “Tất cả”, tên từng hồ sơ; bấm qua lại đúng.
+- [x] Chọn hồ sơ → chỉ hiện sự kiện có `relatedProfiles` chứa id đó.
+- [x] Hồ sơ không có sự kiện → empty state + gợi ý tạo sự kiện.
+- [x] Xoá hồ sơ đang chọn → tự về “Tất cả”, không crash.
 
 ---
 

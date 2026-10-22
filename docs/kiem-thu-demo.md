@@ -46,7 +46,7 @@ Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./p
 - [x] Tạo sự kiện từ nội dung đã đọc → nguồn trích được đính kèm, xem được trong chi tiết.
 - [x] Tạo sự kiện không có thời điểm → lưu được, hiện badge “Chưa rõ thời điểm bắt đầu”.
 - [x] End < start → lỗi, giữ nguyên dữ liệu form.
-- [ ] Tóm tắt 6–10 dòng → lưu được, chi tiết hiển thị đủ (không còn lỗi “tối đa 5 ý”).
+- [x] Tóm tắt 6–10 dòng → lưu được, chi tiết hiển thị đủ (không còn lỗi “tối đa 5 ý”).
 - [x] Nhập thời lượng 90 phút, không có end → chi tiết hiện “Kéo dài 1 giờ 30 phút”.
 - [x] Gắn 2 hồ sơ → chip hiển thị đúng tên.
 - [x] Sự kiện mới luôn ở trạng thái **Nháp**.
@@ -69,7 +69,7 @@ Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./p
 
 ## 7. Phi chức năng
 
-- [ ] Side panel kéo hẹp 320 / 360 / 400px: không tràn ngang, ô ngày giờ hiển thị trọn, nút vẫn bấm được.
+- [x] Side panel kéo hẹp 320 / 360 / 400px: không tràn ngang, ô ngày giờ hiển thị trọn, nút vẫn bấm được.
 - [x] Ở 320px và 400px: bấm mọi nút hiển thị đúng action, kể cả khi toast đang hiện.
 - [x] Chỉ dùng bàn phím: Tab qua các nút/ô nhập, focus ring rõ.
 - [x] Tắt/mở lại Chrome → dữ liệu còn (IndexedDB).
@@ -117,18 +117,24 @@ khi UI hẹp). Kế hoạch xử lý: [`phien-lam-viec-tiep-theo.md`](./phien-la
 
 ### Phiên 1
 
-- [ ] **KT-05** — Ở 320/360/400px: form sự kiện không tràn ngang; chọn được ngày + giờ;
+- [x] **KT-05** — Ở 320/360/400px: form sự kiện không tràn ngang; chọn được ngày + giờ;
       sửa sự kiện cũ vẫn giữ đúng thời điểm. *(đã tách ô ngày/giờ, chờ kiểm thủ công)*
-- [ ] **KT-06** — Chuột phải vùng trống trên trang → **Quét nội dung trên trang** → panel
+- [x] **KT-06** — Chuột phải vùng trống trên trang → **Quét nội dung trên trang** → panel
       mở, quét đúng trang và **bỏ qua** vùng bôi đen cũ. *(đã thêm menu + `ignoreSelection`)*
-- [ ] **KT-07** — Scan từ header/popup → tự chuyển sang tab **Quét nội dung**; tab này có
+- [x] **KT-07** — Scan từ header/popup → tự chuyển sang tab **Quét nội dung**; tab này có
       đủ nút quét lại, dùng nội dung thô, dán, xoá. *(đã có tab riêng)*
-- [ ] **KT-08** — Tổng quan có tab “Tất cả” + từng hồ sơ; chọn hồ sơ chỉ hiện sự kiện của
+- [x] **KT-08** — Tổng quan có tab “Tất cả” + từng hồ sơ; chọn hồ sơ chỉ hiện sự kiện của
       hồ sơ đó; xoá hồ sơ đang chọn → về “Tất cả”. *(đã có dải tab hồ sơ)*
-- [ ] **KT-09** — Sự kiện ngày mai đứng trên sự kiện tháng trước; nhóm đã qua gần nhất
+- [x] **KT-09** — Sự kiện ngày mai đứng trên sự kiện tháng trước; nhóm đã qua gần nhất
       trước; sự kiện chưa có thời điểm nằm cuối. *(đã có test `core/events`)*
-- [ ] **KT-10** — UI thường không còn “demo”/“IndexedDB”/“Readability”; Cài đặt có mục
+- [x] **KT-10** — UI thường không còn “demo”/“IndexedDB”/“Readability”; Cài đặt có mục
       **Về phiên bản này** mở/đóng được. *(đã dọn chuỗi + `<details>`)*
+
+#### Vấn đề phát sinh từ phiên 1
+
+- Kích thước mặc định của side panel không đủ để hiển thị chính xác thanh tab + cài đặt (icon cài đặt tràn ra ngoài)
+- Nút bấm đầy đủ (gồm icon và nhãn) cho các chức năng chính thường bị xuống dòng vì hẹp chiều rộng
+- Hover state của profile chip trong tab "Tổng quan" sai màu
 
 ### Phiên 2
 
