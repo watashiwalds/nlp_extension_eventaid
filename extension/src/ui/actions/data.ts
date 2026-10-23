@@ -1,5 +1,6 @@
 import type { EventStatus, Label } from '../../shared/contracts';
 import { clearAll, exportAll, importAll } from '../../platform/storage/db';
+import { DEFAULT_LLM_SETTINGS } from '../../platform/storage/settings';
 import { EMPTY_EVENT_DRAFT, EMPTY_PROFILE_DRAFT, loadAll, showToast, store } from '../store';
 import { messageOf, valueOf } from './shared';
 
@@ -62,6 +63,8 @@ export function clearAllData(): void {
           errors: {},
         },
         profileForm: { open: false, editingId: null, values: EMPTY_PROFILE_DRAFT, errors: {} },
+        llm: DEFAULT_LLM_SETTINGS,
+        llmHealth: null,
       });
       showToast('success', 'Đã xoá toàn bộ dữ liệu cục bộ.');
     } catch (error) {

@@ -1,7 +1,15 @@
 import { EventSchema } from '../shared/contracts';
-import type { Event, EventStatus, Label, SourceRef } from '../shared/contracts';
+import type {
+  Event,
+  EventOrigin,
+  EventStatus,
+  ExtractionMeta,
+  Label,
+  SourceRef,
+} from '../shared/contracts';
 import { durationMinutes, parseLocalDateTime, toInputValue } from './dates';
 import { newId } from './ids';
+import { dedupe } from './text';
 
 export interface EventInput {
   title: string;
@@ -10,11 +18,20 @@ export interface EventInput {
   tags?: string[];
   /** `YYYY-MM-DDTHH:mm` hoặc null khi chưa xác định. */
   startValue: string | null;
+  /** Chuỗi gốc khi `startValue` là null (LLM trả "15/11 lúc 8h"); mặc định = startValue. */
+  startRaw?: string | null;
   endValue: string | null;
+  endRaw?: string | null;
   durationMinutesInput: number | null;
   summary: string[];
   relatedProfiles: string[];
   sources: SourceRef[];
+  /** `'manual'` (mặc định) hoặc `'llm'`. */
+  origin?: EventOrigin;
+  /** Chỉ có khi `origin === 'llm'`. */
+  extractionMeta?: ExtractionMeta;
+  /** Khoá `uncertain` do pipeline sinh (vd. `nam_chua_ro`), hợp nhất với kết quả suy ra. */
+  extraUncertain?: string[];
 }
 
 export interface EventFilter {
@@ -83,31 +100,36 @@ function buildEvent(
         ? input.durationMinutesInput
         : null;
 
-  const candidate = {
+  const candidate: Record<string, unknown> = {
     id: base.id,
     title: input.title,
     label: input.label,
     tags: input.tags ?? [],
-    start: { value: startValue, raw: input.startValue },
-    end: endValue ? { value: endValue, raw: input.endValue } : null,
+    start: { value: startValue, raw: input.startRaw ?? input.startValue },
+    end: endValue ? { value: endValue, raw: input.endRaw ?? input.endValue } : null,
     durationMinutes: duration,
     summary: input.summary,
     relatedProfiles: input.relatedProfiles,
     sources: input.sources,
     status: base.status,
     validation: {
-      uncertain: deriveUncertain({
-        startValue,
-        endValue,
-        duration,
-        relatedProfiles: input.relatedProfiles,
-      }),
+      uncertain: dedupe([
+        ...deriveUncertain({
+          startValue,
+          endValue,
+          duration,
+          relatedProfiles: input.relatedProfiles,
+        }),
+        ...(input.extraUncertain ?? []),
+      ]),
     },
     notifications: { milestones: [], fired: [], mute: false },
-    origin: 'manual' as const,
+    origin: input.origin ?? 'manual',
     createdAt: base.createdAt,
     updatedAt: now.toISOString(),
   };
+
+  if (input.extractionMeta) candidate.extractionMeta = input.extractionMeta;
 
   return EventSchema.parse(candidate);
 }
@@ -125,7 +147,16 @@ export function makeEvent(input: EventInput, now: Date = new Date()): Event {
 }
 
 export function updateEvent(event: Event, input: EventInput, now: Date = new Date()): Event {
-  return buildEvent(input, { id: event.id, createdAt: event.createdAt, status: event.status }, now);
+  return buildEvent(
+    {
+      ...input,
+      // Sửa nội dung không được làm mất dấu "máy đề xuất" của bản ghi.
+      origin: input.origin ?? event.origin,
+      extractionMeta: input.extractionMeta ?? event.extractionMeta,
+    },
+    { id: event.id, createdAt: event.createdAt, status: event.status },
+    now,
+  );
 }
 
 export const TRANSITIONS: Record<EventStatus, EventStatus[]> = {

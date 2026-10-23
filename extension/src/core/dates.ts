@@ -26,6 +26,77 @@ export function toInputValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+const LOCAL_ISO = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?$/;
+const OFFSET_ISO =
+  /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/i;
+
+function validParts(year: number, month: number, day: number, hour: number, minute: number, second: number): boolean {
+  const check = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  return (
+    check.getUTCFullYear() === year &&
+    check.getUTCMonth() === month - 1 &&
+    check.getUTCDate() === day &&
+    check.getUTCHours() === hour &&
+    check.getUTCMinutes() === minute &&
+    check.getUTCSeconds() === second
+  );
+}
+
+function partsInTimeZone(instant: Date, timezone: string): string | null {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(instant);
+    const get = (type: string): string => parts.find((part) => part.type === type)?.value ?? '';
+    return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Nhận các biến thể ISO mà model hay trả (`YYYY-MM-DDTHH:mm`, có giây, có `Z`
+ * hoặc offset) và quy về `YYYY-MM-DDTHH:mm` theo múi giờ đã chọn.
+ * Trả `null` nếu ngày không có thật — tuyệt đối không tự sửa thành ngày khác.
+ */
+export function normalizeIsoLocal(value: string, timezone = 'Asia/Ho_Chi_Minh'): string | null {
+  const text = value.trim();
+
+  const offset = OFFSET_ISO.exec(text);
+  if (offset) {
+    const [, y, m, d, h, min, sec, zone] = offset;
+    const year = Number(y);
+    const month = Number(m);
+    const day = Number(d);
+    const hour = Number(h);
+    const minute = Number(min);
+    const second = Number(sec ?? '0');
+    if (!validParts(year, month, day, hour, minute, second)) return null;
+
+    const normalizedZone =
+      zone?.toUpperCase() === 'Z'
+        ? 'Z'
+        : zone?.includes(':')
+          ? zone
+          : `${zone?.slice(0, 3)}:${zone?.slice(3)}`;
+    const instant = new Date(`${y}-${m}-${d}T${h}:${min}:${second.toString().padStart(2, '0')}${normalizedZone}`);
+    return Number.isNaN(instant.getTime()) ? null : partsInTimeZone(instant, timezone);
+  }
+
+  const local = LOCAL_ISO.exec(text);
+  if (!local) return null;
+  const [, y, m, d, h, min] = local;
+  const candidate = `${y}-${m}-${d}T${h}:${min}`;
+  const parsed = parseLocalDateTime(candidate);
+  return parsed && toInputValue(parsed) === candidate ? candidate : null;
+}
+
 export interface DateTimeParts {
   date: string;
   time: string;

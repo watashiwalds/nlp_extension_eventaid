@@ -13,6 +13,8 @@ export {
   saveEventFromForm,
   toggleEventAction,
 } from './events';
+export { cancelExtractionAction, extractEventsAction } from './extract';
+export { checkLlmHealthAction, saveLlmSettingsFromForm } from './settings';
 export {
   closeProfileForm,
   deleteProfileAction,

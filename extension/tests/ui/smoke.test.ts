@@ -42,6 +42,7 @@ describe('render side panel', () => {
     expect(html).toContain('Thông báo lịch bảo vệ');
     expect(html).toContain('Văn bản dán');
     expect(html).toContain('Tạo sự kiện');
+    expect(html).toContain('data-action="extract-events"');
     expect(html).toContain('Hội đồng gồm 3 giảng viên');
     expect(html).toContain('Dán văn bản');
     expect(html).toContain('Xem toàn bộ');
@@ -162,7 +163,9 @@ describe('render side panel', () => {
     const settings = renderApp(store.get());
     expect(settings).toContain('Xuất JSON');
     expect(settings).toContain('Về phiên bản này');
-    expect(settings).toContain('Không gửi dữ liệu đi đâu');
+    expect(settings).toContain('máy chủ mô hình chạy trên chính máy bạn');
+    expect(settings).toContain('llm-settings-form');
+    expect(settings).toContain('Kiểm tra kết nối');
   });
 
   it('Tổng quan có tab hồ sơ và lọc kế hoạch theo hồ sơ', () => {

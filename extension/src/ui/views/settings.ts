@@ -1,8 +1,102 @@
 import { METHOD_TEXT, SOURCE_TEXT } from '../../shared/constants';
 import type { AppState } from '../store';
 import { activeDocument } from '../store';
-import { badge, escapeHtml, icon, secondaryButton, sectionHeader } from '../components';
+import {
+  badge,
+  escapeHtml,
+  field,
+  icon,
+  secondaryButton,
+  sectionHeader,
+  textInput,
+} from '../components';
 import { formatCharCount } from '../format';
+
+function llmServerCard(state: AppState): string {
+  const llm = state.llm;
+  const health = state.llmHealth;
+  const healthBox = health
+    ? `<p class="alert ${health.status === 'ok' ? 'alert--success' : health.status === 'error' ? 'alert--danger' : ''}">
+        ${health.status === 'checking' ? '<span class="spinner"></span>' : icon(health.status === 'ok' ? 'check' : 'alert')}
+        <span>${escapeHtml(health.message)}</span>
+      </p>`
+    : '';
+
+  return `<section class="card">
+    ${sectionHeader('Máy chủ mô hình')}
+    <p class="muted small">Trích sự kiện bằng mô hình chạy trên chính máy bạn. Bản này chỉ cấp quyền tới <code>http://127.0.0.1:8080</code>.</p>
+    <form id="llm-settings-form" class="form" novalidate>
+      ${field({
+        id: 'llm-endpoint',
+        label: 'Địa chỉ máy chủ',
+        control: textInput('llm-endpoint', 'endpoint', llm.endpoint, {
+          placeholder: 'http://127.0.0.1:8080',
+        }),
+        hint: 'Địa chỉ của llama-server. Đổi cổng khác sẽ cần cập nhật quyền của tiện ích.',
+      })}
+      ${field({
+        id: 'llm-model',
+        label: 'Tên model (không bắt buộc)',
+        control: textInput('llm-model', 'model', llm.model, { placeholder: 'Để trống = model đang nạp' }),
+        hint: 'Để trống để dùng đúng model llama-server đang nạp; chỉ nhập khi muốn ghi đè nhãn gửi kèm.',
+      })}
+      ${field({
+        id: 'llm-api-key',
+        label: 'API key',
+        control: textInput('llm-api-key', 'apiKey', llm.apiKey, {
+          type: 'password',
+          placeholder: 'Để trống nếu máy chủ không đặt khoá',
+        }),
+        hint: 'Chỉ lưu trên máy này và gửi trong header Authorization.',
+      })}
+      <details class="about">
+        <summary>Nâng cao</summary>
+        <div class="grid-2">
+          ${field({
+            id: 'llm-temperature',
+            label: 'Temperature',
+            control: textInput('llm-temperature', 'temperature', String(llm.temperature), {
+              type: 'number',
+            }),
+          })}
+          ${field({
+            id: 'llm-max-tokens',
+            label: 'Token tối đa',
+            control: textInput('llm-max-tokens', 'maxTokens', String(llm.maxTokens), {
+              type: 'number',
+            }),
+          })}
+          ${field({
+            id: 'llm-timeout',
+            label: 'Timeout (ms)',
+            control: textInput('llm-timeout', 'timeoutMs', String(llm.timeoutMs), {
+              type: 'number',
+            }),
+          })}
+          ${field({
+            id: 'llm-chunk-chars',
+            label: 'Ký tự mỗi đoạn',
+            control: textInput('llm-chunk-chars', 'chunkChars', String(llm.chunkChars), {
+              type: 'number',
+            }),
+          })}
+          ${field({
+            id: 'llm-max-chunks',
+            label: 'Số đoạn tối đa',
+            control: textInput('llm-max-chunks', 'maxChunks', String(llm.maxChunks), {
+              type: 'number',
+            }),
+          })}
+        </div>
+      </details>
+      <div class="form__actions">
+        <button type="submit" class="btn btn--primary">${icon('check')}<span>Lưu cài đặt</span></button>
+        ${secondaryButton('check-llm', 'Kiểm tra kết nối', 'link')}
+      </div>
+      ${healthBox}
+    </form>
+  </section>`;
+}
 
 export function settingsView(state: AppState): string {
   const doc = activeDocument(state);
@@ -13,6 +107,8 @@ export function settingsView(state: AppState): string {
         <p class="muted small">Dữ liệu được lưu trên thiết bị này.</p>
       </div>
     </div>
+
+    ${llmServerCard(state)}
 
     <section class="card">
       ${sectionHeader('Dữ liệu cục bộ')}
@@ -46,7 +142,7 @@ export function settingsView(state: AppState): string {
       ${sectionHeader('Quyền riêng tư')}
       <ul class="bullets">
         <li><strong>Chỉ đọc khi bạn bấm.</strong> Trang chỉ được đọc khi bạn chủ động quét hoặc chọn menu chuột phải; không đọc nền.</li>
-        <li><strong>Không gửi dữ liệu đi đâu.</strong> Nội dung trang, hồ sơ và sự kiện chỉ nằm trên máy này; ứng dụng không gọi mạng.</li>
+        <li><strong>Chỉ gửi tới máy của bạn.</strong> Nội dung chỉ được gửi tới máy chủ mô hình chạy trên chính máy bạn (<code>127.0.0.1</code>); không có máy chủ từ xa.</li>
       </ul>
     </section>
 
@@ -61,11 +157,11 @@ export function settingsView(state: AppState): string {
         </dl>
         <p class="small"><strong>Giới hạn hiện tại</strong></p>
         <ul class="bullets small">
-          <li>Sự kiện do bạn nhập tay; chưa có trích xuất tự động bằng mô hình.</li>
+          <li>Sự kiện do máy đề xuất vẫn ở trạng thái Nháp cho tới khi bạn duyệt.</li>
           <li>Chưa có nhắc việc theo mốc thời gian.</li>
           <li>Chưa đọc trực tiếp Gmail hay tệp PDF/DOCX — hãy dùng “Dán văn bản”.</li>
         </ul>
-        <p class="small muted">Khi bổ sung mô hình, mọi xử lý vẫn sẽ chạy trên máy này và nội dung sẽ không được gửi ra ngoài.</p>
+        <p class="small muted">Mọi suy luận chạy trên máy này; nội dung không được gửi ra ngoài.</p>
       </details>
     </section>
   </div>`;

@@ -34,6 +34,8 @@ Both feed one **Document Processing Layer** and one **NLP Pipeline**.
 | `docs/phien-lam-viec-tiep-theo.md` | Handoff for the next session: manual test results, open issues, fix plan. | Vietnamese |
 | `docs/thiet-ke-demo-va-san-sang-llama-cpp.md` | Demo architecture summary + readiness assessment for local llama.cpp event extraction. | Vietnamese |
 | `docs/ke-hoach-llm-trich-xuat.md` | Implementation plan for the local LLM extraction layer (contracts, offscreen job, prompt, slices, eval). Source of truth for *LLM scope/order*. | Vietnamese |
+| `docs/kiem-tra-slice-b.md` | Slice B acceptance record: provider, settings, side-panel run, real-model results, UI checks, and known gaps. | Vietnamese |
+| `docs/ke-hoach-sau-nghiem-thu-b.md` | Post-acceptance plan for Slice B: event-first profile matching, deferred items, and verification steps. | Vietnamese |
 | `.github/workflows/ci.yml` | Quality gate: typecheck, lint, test, build. | YAML |
 
 > **All documentation is written in Vietnamese.** Keep new prose in Vietnamese unless explicitly told otherwise.
@@ -58,7 +60,7 @@ The demo deliberately contains **no classifier/LLM** (manual events only) — se
 | Validation | **Zod** | Runtime validation of LLM output and messages; types inferred from schemas |
 | Page extraction | **`@mozilla/readability`** (npm) | Bundled by Vite |
 | Classifier | **scikit-learn TF-IDF + Logistic Regression** → JSON → TS inference | No ONNX Runtime / WASM |
-| LLM | **llama.cpp server** via `fetch` (`127.0.0.1:8080`) | `InferenceProvider` interface; `MockProvider` for UI work |
+| LLM | **llama.cpp server** via `fetch` (`127.0.0.1:8080`) | `InferenceProvider` interface; model-agnostic (empty model = loaded model); `MockProvider` for UI work |
 | Training / eval | **Python + scikit-learn + pandas** | `tools/train_classifier.py`, `tools/eval/` |
 | Tests | **Vitest** + manual KS checklist | No Playwright in the MVP |
 
@@ -231,14 +233,16 @@ Use Vietnamese in docs, but map to these English concepts:
 
 ## 11. Current status
 
-- **Demo (implemented):** `extension/` — page capture (filtered **page snapshot** with landmark/noise removal + Readability + raw DOM fallback + forced raw + selection + context-menu selection + **context-menu page scan**), **dedicated capture tab**, document viewer, profile CRUD, manual event CRUD (7 fields + **custom tags**, status machine, source refs, uncertain flags), **per-profile plans on overview**, **date/time split inputs**, **upcoming-first event ordering**, JSON export/import. **No ML/LLM, no reminders, no Gmail API.**
-- **Verified:** `npm run typecheck`, `npm run lint`, `npm test` (72 tests incl. jsdom smoke, parse, page-snapshot and tag tests), `npm run build` all pass; `dist/` loads unpacked.
+- **Demo (implemented):** `extension/` — page capture (filtered **page snapshot** with landmark/noise removal + Readability + raw DOM fallback + forced raw + selection + context-menu selection + **context-menu page scan**), **dedicated capture tab**, document viewer, profile CRUD, manual event CRUD (7 fields + **custom tags**, status machine, source refs, uncertain flags), **per-profile plans on overview**, **date/time split inputs**, **upcoming-first event ordering**, JSON export/import, and **direct local LLM extraction from the side panel** (Slice B: llama.cpp provider, per-chunk progress, cancel, drafts saved as `nhap`). **No offscreen/notifications, no Gmail API.**
+- **Verified:** `npm run typecheck`, `npm run lint`, `npm test` (161 tests / 19 files incl. jsdom smoke, parse, page-snapshot, tag, extraction-core, profile-match, provider and settings tests), `npm run build` all pass; `dist/` loads unpacked.
+- **LLM extraction (Slices A + B done, accepted 2026-10-23):** contracts carry `origin`/`extractionMeta`/`EventCandidate`/`ExtractionJob`/`LlmSettings`; `src/core/extraction/**` has chunk/prompt/schema/normalize/dedup/pipeline + `profile-match` + `MockProvider`; `src/core/ports/inference.ts` defines `InferenceProvider`; `src/platform/inference/llama-cpp.ts` implements it (health + `/v1/models`, timeout, abort, OpenAI-schema first with fallback, `enable_thinking:false`). Settings form + connection check exist. **Verified against llama.cpp build b10101 with Qwen3.5-4B Q5_K_S (8k context): 6 sample docs, 0 invented dates, 0.3–8.6 s/doc; prompt v2 at measurement time, now prompt v3; only OpenAI `response_format` actually enforces the schema. Chrome UI E2E passed; real-model rerun with v3/profile matching passed 2026-10-23 (9 events, 0 duplicates, 0 invented dates, 0.26–8.4 s/doc; missing-year guard added to `normalizeDateTime`); Slices C–E remain** (`docs/ke-hoach-llm-trich-xuat.md` §9.3, `docs/kiem-tra-slice-b.md`).
+- **Post-acceptance fix done:** event-first extraction + deterministic profile matching after normalize (SB-01, prompt v3); truncation toast also hints at increasing limits (SB-03). See `docs/ke-hoach-sau-nghiem-thu-b.md`. Review UI and paraphrase dedup are deferred to Slice D.
 - **Manual checks pending:** re-run `docs/kiem-thu-demo.md` in Chrome for context menu (page + selection), side-panel widths 320/360/400px, click areas, Gmail best-effort capture, and SPA/regression checks (KT-13/KT-14).
 - **Build plan:** `ke_hoach_phat_trien.md` — 7 sprints / 14 weeks; web first, Gmail in the final sprint.
 - **Tech stack:** locked in §3 (TypeScript + Vite, no UI framework, local llama.cpp server, linear classifier).
 - **Quality gate:** `tsc --noEmit` + ESLint + Vitest + `vite build`; `dist/` is the load-unpacked target.
-- **Inference:** CPU-only; Qwen2.5-1.5B Q4 by default, 3B optional; p95 target 35–60s per page.
+- **Inference:** local `llama-server`; **no hard-coded model name** (empty setting uses the loaded model). Verified with Qwen3.5-4B Q5_K_S, 8k context, `enable_thinking:false`; measured 0.3–8.6 s per short doc. p95 target remains 35–60 s per page.
 - **Storage:** results are saved as drafts (`nhap`); user review moves them to `dang_theo_doi`.
 - **Frontend design scope:** frozen at **P0**, **light mode only**, notification UI capped at **2 buttons** (Chrome Notification API limit; a 3rd action moves into the side panel).
 - **Open follow-ups:** golden set + classifier dataset; OAuth verification requirements; confirmation of Chrome notification button limit; sync `proposed_technical.md` with the new pipeline.
-- **Next demo steps:** keyword classifier → llama.cpp + offscreen → `alarms`/`notifications` → Gmail/PDF/DOCX (see `README.md` §6).
+- **Next demo steps:** offscreen + `alarms`/`notifications` (Slice C) → review/dedup UI (Slice D) → quality measurement (Slice E) → Gmail/PDF/DOCX (see `README.md` §6).

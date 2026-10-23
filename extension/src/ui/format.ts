@@ -13,6 +13,11 @@ export function formatCharCount(count: number): string {
   return `${new Intl.NumberFormat('vi-VN').format(count)} ký tự`;
 }
 
+/** Câu nhắc khi tài liệu dài hơn giới hạn trích xuất. */
+export function truncationText(processedChars: number): string {
+  return `Chỉ xử lý khoảng ${formatCharCount(processedChars)} đầu tiên. Tăng "Số đoạn tối đa" hoặc "Ký tự mỗi đoạn" trong Cài đặt nếu cần.`;
+}
+
 /** Chuyển văn bản thuần thành các đoạn HTML đã escape (giữ xuống dòng). */
 export function paragraphs(text: string): string {
   return text

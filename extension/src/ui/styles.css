@@ -1253,6 +1253,28 @@ input[type='datetime-local'] {
   color: var(--danger);
 }
 
+.alert--success {
+  background: var(--success-soft);
+  border: 1px solid #abefc6;
+  color: var(--success);
+}
+
+.extraction-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.extraction-card__head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.extraction-card p {
+  margin-top: 8px;
+}
+
 .warn-text {
   color: var(--warning);
   font-weight: 600;

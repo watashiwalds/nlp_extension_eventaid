@@ -31,7 +31,8 @@ function captureMeta(state: AppState): string {
 function documentCard(state: AppState): string {
   const doc = activeDocument(state);
   const actions = doc
-    ? `${primaryButton('new-event', 'Tạo sự kiện', 'plus')}
+    ? `${primaryButton('extract-events', 'Trích sự kiện', 'scan', state.extraction ? 'disabled' : '')}
+       ${secondaryButton('new-event', 'Tạo sự kiện', 'plus')}
        ${secondaryButton('capture-page', 'Quét lại', 'scan')}
        ${secondaryButton('capture-raw', 'Dùng nội dung thô', 'layers')}
        ${secondaryButton('open-paste', 'Dán văn bản', 'copy')}
@@ -120,6 +121,25 @@ function pasteForm(): string {
   </section>`;
 }
 
+function extractionCard(state: AppState): string {
+  const progress = state.extraction;
+  if (!progress) return '';
+  const counter = progress.chunkCount
+    ? `<span class="muted small">Đoạn ${progress.chunkIndex}/${progress.chunkCount}</span>`
+    : '';
+  return `<section class="card extraction-card" role="status" aria-live="polite">
+    <div class="extraction-card__head">
+      <span class="spinner"></span>
+      <div>
+        <strong>${escapeHtml(progress.stage)}</strong>
+        ${counter}
+      </div>
+      <button type="button" class="btn btn--small btn--danger-ghost" data-action="cancel-extraction">Huỷ</button>
+    </div>
+    <p class="muted small">Máy chủ mô hình chạy trên chính máy bạn. Giữ side panel mở cho tới khi trích xong.</p>
+  </section>`;
+}
+
 function cleanupRow(state: AppState): string {
   const unlinked = unlinkedDocuments(state.documents, state.events);
   if (unlinked.length === 0) return '';
@@ -144,6 +164,7 @@ export function captureView(state: AppState): string {
       ${primaryButton('capture-page', 'Quét trang đang mở', 'scan')}
     </div>
     ${documentCard(state)}
+    ${extractionCard(state)}
     ${cleanupRow(state)}
     ${state.pasteOpen ? pasteForm() : ''}
   </div>`;

@@ -42,6 +42,11 @@ export const UNCERTAIN_TEXT: Record<string, string> = {
   chua_ro_ket_thuc: 'Chưa rõ thời điểm kết thúc',
   chua_ro_dia_diem: 'Chưa rõ địa điểm',
   chua_ro_ho_so: 'Chưa gắn hồ sơ liên quan',
+  /** Bổ sung cho lớp trích xuất LLM (kế hoạch §5.2). */
+  nam_chua_ro: 'Chưa rõ năm',
+  gio_chua_ro: 'Chưa rõ giờ',
+  ngay_tuong_doi: 'Ngày suy ra từ cách nói tương đối',
+  do_tin_cay_thap: 'Độ tin cậy thấp',
 };
 
 export const MILESTONE_TEXT = {
@@ -55,6 +60,9 @@ export const MAX_DOCUMENT_CHARS = 200_000;
 export const DOCUMENT_PREVIEW_CHARS = 6_000;
 
 export const PENDING_CAPTURE_KEY = 'pending_capture';
+
+/** Khoá job trích xuất trong `chrome.storage.session` (tự xoá khi đóng trình duyệt). */
+export const EXTRACTION_JOB_KEY = 'extraction_job';
 
 /** ID menu chuột phải cho vùng bôi đen (VĐ-03). */
 export const SELECTION_MENU_ID = 'scan-selection';

@@ -8,7 +8,9 @@ import { activeDocument } from './store';
 import {
   applyFilterFromForm,
   captureCurrentPage,
+  cancelExtractionAction,
   changeStatusAction,
+  checkLlmHealthAction,
   clearAllData,
   clearFilter,
   closeEventForm,
@@ -18,10 +20,12 @@ import {
   deleteProfileAction,
   deleteUnlinkedDocumentsAction,
   exportData,
+  extractEventsAction,
   importData,
   openEventForm,
   openProfileForm,
   saveEventFromForm,
+  saveLlmSettingsFromForm,
   savePastedText,
   saveProfileFromForm,
   selectDocument,
@@ -86,6 +90,15 @@ function handleClick(event: MouseEvent): void {
       break;
     case 'capture-raw':
       void captureCurrentPage({ forceRaw: true });
+      break;
+    case 'extract-events':
+      void extractEventsAction();
+      break;
+    case 'cancel-extraction':
+      cancelExtractionAction();
+      break;
+    case 'check-llm':
+      void checkLlmHealthAction();
       break;
     case 'open-paste':
       store.set({ tab: 'capture', pasteOpen: true });
@@ -181,6 +194,10 @@ function handleSubmit(event: SubmitEvent): void {
   }
   if (form.id === 'profile-form') {
     void saveProfileFromForm(form);
+    return;
+  }
+  if (form.id === 'llm-settings-form') {
+    void saveLlmSettingsFromForm(form);
     return;
   }
   if (form.id === 'filter-form') {

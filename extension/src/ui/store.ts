@@ -1,6 +1,14 @@
-import type { Event, EventStatus, Label, NormalizedDocument, Profile } from '../shared/contracts';
+import type {
+  Event,
+  EventStatus,
+  Label,
+  LlmSettings,
+  NormalizedDocument,
+  Profile,
+} from '../shared/contracts';
 import type { FormErrors } from '../core/forms';
 import { listDocuments, listEvents, listProfiles } from '../platform/storage/db';
+import { DEFAULT_LLM_SETTINGS, loadLlmSettings } from '../platform/storage/settings';
 
 /** Store pub/sub tối giản — không dùng Redux/Zustand. */
 export function createStore<T>(initial: T) {
@@ -80,6 +88,19 @@ export interface ProfileFormState {
   errors: FormErrors;
 }
 
+/** Kết quả kiểm tra kết nối máy chủ mô hình (hiển thị ngay dưới form). */
+export interface LlmHealthState {
+  status: 'checking' | 'ok' | 'error';
+  message: string;
+}
+
+/** Tiến trình một lần trích, hiển thị ở tab Quét nội dung. */
+export interface ExtractionState {
+  stage: string;
+  chunkIndex: number;
+  chunkCount: number;
+}
+
 export interface AppState {
   tab: Tab;
   status: 'loading' | 'ready' | 'error';
@@ -96,6 +117,9 @@ export interface AppState {
   expandedEventId: string | null;
   expandedDocument: boolean;
   pasteOpen: boolean;
+  llm: LlmSettings;
+  llmHealth: LlmHealthState | null;
+  extraction: ExtractionState | null;
   toast: Toast | null;
   busy: string | null;
 }
@@ -145,6 +169,9 @@ export const store = createStore<AppState>({
   expandedEventId: null,
   expandedDocument: false,
   pasteOpen: false,
+  llm: DEFAULT_LLM_SETTINGS,
+  llmHealth: null,
+  extraction: null,
   toast: null,
   busy: null,
 });
@@ -167,10 +194,11 @@ export function editingProfile(state: AppState): Profile | null {
 
 export async function loadAll(): Promise<void> {
   try {
-    const [documents, profiles, events] = await Promise.all([
+    const [documents, profiles, events, llm] = await Promise.all([
       listDocuments(),
       listProfiles(),
       listEvents(),
+      loadLlmSettings(),
     ]);
     const current = store.get();
     const mergedDocuments = mergeById(documents, current.documents, (doc) => doc.documentId).sort(
@@ -188,6 +216,7 @@ export async function loadAll(): Promise<void> {
       documents: mergedDocuments,
       profiles: mergedProfiles,
       events: mergedEvents,
+      llm,
       activeDocumentId: activeId,
       overviewProfileId:
         current.overviewProfileId &&
