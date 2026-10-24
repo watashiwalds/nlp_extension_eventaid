@@ -1,6 +1,5 @@
-import { ACTION_TITLE, EXTRACTION_JOB_KEY, PENDING_CAPTURE_KEY, PENDING_OPEN_KEY } from '../shared/constants';
+import { EXTRACTION_JOB_KEY, PENDING_CAPTURE_KEY, PENDING_OPEN_KEY } from '../shared/constants';
 import type { EventStatus } from '../shared/contracts';
-import type { PendingCapture, PendingOpen } from '../shared/messages';
 import { parseStoredJob } from '../platform/background/jobs';
 import { hideToast, loadAll, store } from './store';
 import type { Tab } from './store';
@@ -9,6 +8,7 @@ import { activeDocument } from './store';
 import {
   applyFilterFromForm,
   applyJob,
+  bulkApproveDrafts,
   captureCurrentPage,
   cancelExtractionAction,
   changeStatusAction,
@@ -17,21 +17,31 @@ import {
   clearFilter,
   closeEventForm,
   closeProfileForm,
+  consumePendingCapture,
+  consumePendingOpen,
   deleteActiveDocumentAction,
   deleteEventAction,
   deleteProfileAction,
+  deleteSelectedDrafts,
   deleteUnlinkedDocumentsAction,
+  enterReviewMode,
+  exitReviewMode,
   exportData,
   extractEventsAction,
   importData,
+  keepBothDuplicates,
+  openDuplicateEvent,
   openEventForm,
   openProfileForm,
   saveEventFromForm,
   saveLlmSettingsFromForm,
   savePastedText,
   saveProfileFromForm,
+  selectAllVisibleDrafts,
   selectDocument,
   syncExtractionJob,
+  syncReviewSelectionUi,
+  toggleDraftSelection,
   toggleEventAction,
 } from './actions';
 
@@ -47,6 +57,7 @@ function render(): void {
   const currentView = root.querySelector('#view');
   if (currentView instanceof HTMLElement) scrollTop = currentView.scrollTop;
   root.innerHTML = renderApp(store.get());
+  syncReviewSelectionUi(root);
   const nextView = root.querySelector('#view');
   if (nextView instanceof HTMLElement) nextView.scrollTop = scrollTop;
 }
@@ -134,6 +145,24 @@ function handleClick(event: MouseEvent): void {
       break;
     case 'toggle-event':
       if (id) toggleEventAction(id);
+      break;
+    case 'enter-review':
+      enterReviewMode();
+      break;
+    case 'exit-review':
+      exitReviewMode();
+      break;
+    case 'approve-selected-drafts':
+      void bulkApproveDrafts();
+      break;
+    case 'delete-selected-drafts':
+      void deleteSelectedDrafts();
+      break;
+    case 'keep-both-duplicates':
+      keepBothDuplicates(id, trigger.dataset.otherId ?? '');
+      break;
+    case 'open-duplicate':
+      if (id) openDuplicateEvent(id);
       break;
     case 'set-status': {
       const status = trigger.dataset.status;
@@ -224,57 +253,18 @@ function handleChange(event: Event): void {
     return;
   }
 
+  if (target.dataset.action === 'toggle-draft') {
+    toggleDraftSelection(target.dataset.id ?? '');
+    return;
+  }
+
+  if (target.dataset.action === 'select-all-drafts') {
+    selectAllVisibleDrafts(target instanceof HTMLInputElement && target.checked);
+    return;
+  }
+
   const filterForm = target.closest<HTMLFormElement>('#filter-form');
   if (filterForm) applyFilterFromForm(filterForm);
-}
-
-let consuming = false;
-
-function clearActionHint(): void {
-  void chrome.action.setBadgeText({ text: '' });
-  void chrome.action.setTitle({ title: ACTION_TITLE });
-}
-
-async function consumePendingOpen(): Promise<void> {
-  try {
-    const bag = await chrome.storage.session.get(PENDING_OPEN_KEY);
-    const pending = bag[PENDING_OPEN_KEY] as PendingOpen | undefined;
-    if (!pending) return;
-    await chrome.storage.session.remove(PENDING_OPEN_KEY);
-    store.set((state) => ({
-      ...state,
-      tab: pending.tab,
-      eventForm: { ...state.eventForm, open: false },
-      profileForm: { ...state.profileForm, open: false },
-      eventFilter: isStatus(pending.status)
-        ? { ...state.eventFilter, status: pending.status }
-        : state.eventFilter,
-    }));
-    clearActionHint();
-  } catch (error) {
-    console.warn('[sidepanel] Không mở được tab từ notification', error);
-  }
-}
-
-async function consumePendingCapture(): Promise<void> {
-  if (consuming) return;
-  consuming = true;
-  try {
-    const bag = await chrome.storage.session.get(PENDING_CAPTURE_KEY);
-    const pending = bag[PENDING_CAPTURE_KEY] as PendingCapture | undefined;
-    if (!pending) return;
-    await chrome.storage.session.remove(PENDING_CAPTURE_KEY);
-    await captureCurrentPage(
-      pending.mode === 'page'
-        ? { ignoreSelection: true }
-        : { selectionFallback: pending.mode === 'selection' ? pending.selectionText : undefined },
-    );
-  } catch (error) {
-    console.warn('[sidepanel] Không xử lý được yêu cầu quét', error);
-  } finally {
-    consuming = false;
-    clearActionHint();
-  }
 }
 
 function handleKeydown(event: KeyboardEvent): void {
@@ -286,6 +276,8 @@ function handleKeydown(event: KeyboardEvent): void {
     closeProfileForm();
   } else if (state.pasteOpen) {
     store.set({ pasteOpen: false });
+  } else if (state.reviewMode) {
+    exitReviewMode();
   }
 }
 

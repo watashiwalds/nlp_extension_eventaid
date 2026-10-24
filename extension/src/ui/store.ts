@@ -7,6 +7,7 @@ import type {
   Profile,
 } from '../shared/contracts';
 import type { FormErrors } from '../core/forms';
+import { pruneDraftSelectionIds } from '../core/event-review';
 import { listDocuments, listEvents, listProfiles } from '../platform/storage/db';
 import { DEFAULT_LLM_SETTINGS, loadLlmSettings } from '../platform/storage/settings';
 
@@ -112,6 +113,14 @@ export interface AppState {
   profiles: Profile[];
   events: Event[];
   eventFilter: EventFilterState;
+  /** Chế độ Duyệt nháp — chỉ UI state, không lưu DB. */
+  reviewMode: boolean;
+  /** Trạng thái cần khôi phục khi thoát chế độ duyệt. */
+  reviewReturnStatus: EventStatus | 'all';
+  /** Id nháp đang được chọn để duyệt/xoá hàng loạt (chỉ UI state). */
+  selectedDraftIds: string[];
+  /** Cặp gợi ý trùng người dùng đã chọn “Giữ cả hai” (chỉ UI state). */
+  dismissedSuggestionKeys: string[];
   /** Hồ sơ đang xem ở tab Tổng quan; `null` = tất cả. */
   overviewProfileId: string | null;
   eventForm: EventFormState;
@@ -159,6 +168,10 @@ export const store = createStore<AppState>({
   profiles: [],
   events: [],
   eventFilter: { status: 'all', label: 'all', tag: 'all', query: '' },
+  reviewMode: false,
+  reviewReturnStatus: 'all',
+  selectedDraftIds: [],
+  dismissedSuggestionKeys: [],
   overviewProfileId: null,
   eventForm: {
     open: false,
@@ -218,6 +231,7 @@ export async function loadAll(): Promise<void> {
       documents: mergedDocuments,
       profiles: mergedProfiles,
       events: mergedEvents,
+      selectedDraftIds: pruneDraftSelectionIds(current.selectedDraftIds, mergedEvents),
       llm,
       activeDocumentId: activeId,
       overviewProfileId:

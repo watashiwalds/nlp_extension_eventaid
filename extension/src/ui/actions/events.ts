@@ -2,6 +2,7 @@ import type { EventStatus, SourceRef } from '../../shared/contracts';
 import { buildEventFromForm } from '../../core/forms';
 import { joinDateTimeLocal, splitDateTimeLocal } from '../../core/dates';
 import { setEventStatus } from '../../core/events';
+import { pruneDraftSelectionIds } from '../../core/event-review';
 import { deleteEvent, saveEvent } from '../../platform/storage/db';
 import { EMPTY_EVENT_DRAFT, editingEvent, showToast, store } from '../store';
 import type { EventDraft } from '../store';
@@ -186,11 +187,15 @@ export function deleteEventAction(id: string): void {
   void (async () => {
     try {
       await deleteEvent(id);
-      store.set((current) => ({
-        ...current,
-        events: current.events.filter((item) => item.id !== id),
-        expandedEventId: current.expandedEventId === id ? null : current.expandedEventId,
-      }));
+      store.set((current) => {
+        const events = current.events.filter((item) => item.id !== id);
+        return {
+          ...current,
+          events,
+          selectedDraftIds: pruneDraftSelectionIds(current.selectedDraftIds, events),
+          expandedEventId: current.expandedEventId === id ? null : current.expandedEventId,
+        };
+      });
       showToast('success', 'Đã xoá sự kiện.');
     } catch (error) {
       showToast('error', messageOf(error));
@@ -206,10 +211,14 @@ export function changeStatusAction(id: string, status: EventStatus): void {
   void (async () => {
     try {
       await saveEvent(next);
-      store.set((state) => ({
-        ...state,
-        events: state.events.map((item) => (item.id === id ? next : item)),
-      }));
+      store.set((state) => {
+        const events = state.events.map((item) => (item.id === id ? next : item));
+        return {
+          ...state,
+          events,
+          selectedDraftIds: pruneDraftSelectionIds(state.selectedDraftIds, events),
+        };
+      });
       showToast('success', `Đã chuyển sang trạng thái “${STATUS_LABEL[next.status]}”.`);
     } catch (error) {
       showToast('error', messageOf(error));

@@ -55,6 +55,10 @@ export function clearAllData(): void {
         events: [],
         expandedEventId: null,
         overviewProfileId: null,
+        reviewMode: false,
+        reviewReturnStatus: 'all',
+        selectedDraftIds: [],
+        dismissedSuggestionKeys: [],
         eventForm: {
           open: false,
           editingId: null,
@@ -79,16 +83,27 @@ const STATUS_VALUES: Array<EventStatus | 'all'> = ['nhap', 'dang_theo_doi', 'hoa
 const LABEL_VALUES: Array<Label | 'all'> = ['công_vụ', 'giải_trí', 'cá_nhân', 'kỷ_niệm', 'khác', 'all'];
 
 export function applyFilterFromForm(form: HTMLFormElement): void {
+  const state = store.get();
   const statusValue = valueOf(form, 'status');
   const labelValue = valueOf(form, 'label');
   const tagValue = valueOf(form, 'tag').trim();
-  const status = STATUS_VALUES.find((item) => item === statusValue) ?? 'all';
+  const status = state.reviewMode ? 'nhap' : (STATUS_VALUES.find((item) => item === statusValue) ?? 'all');
   const label = LABEL_VALUES.find((item) => item === labelValue) ?? 'all';
   store.set({
     eventFilter: { status, label, tag: tagValue || 'all', query: valueOf(form, 'query') },
+    selectedDraftIds: [],
   });
 }
 
 export function clearFilter(): void {
-  store.set({ eventFilter: { status: 'all', label: 'all', tag: 'all', query: '' } });
+  const state = store.get();
+  store.set({
+    eventFilter: {
+      status: state.reviewMode ? 'nhap' : 'all',
+      label: 'all',
+      tag: 'all',
+      query: '',
+    },
+    selectedDraftIds: [],
+  });
 }

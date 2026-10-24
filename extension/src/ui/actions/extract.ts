@@ -54,6 +54,10 @@ export function applyJob(job: ExtractionJob, notify = true): void {
         ...state,
         tab: 'events',
         eventFilter: { ...state.eventFilter, status: 'nhap' },
+        // Kết quả trích xuất là nháp: mở thẳng chế độ duyệt để người dùng chọn và duyệt.
+        reviewMode: true,
+        reviewReturnStatus: 'all',
+        selectedDraftIds: [],
       })),
     );
   } else if (job.status === 'failed') {

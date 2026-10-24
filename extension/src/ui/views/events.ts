@@ -1,19 +1,11 @@
-import { LABEL_TEXT, STATUS_TEXT, STATUS_TONE, UNCERTAIN_TEXT } from '../../shared/constants';
+import { LABEL_TEXT, STATUS_TEXT } from '../../shared/constants';
 import { LABELS } from '../../shared/contracts';
-import type { DateTimeRef, Event } from '../../shared/contracts';
-import {
-  allEventTags,
-  eventTiming,
-  filterEvents,
-  isOngoing,
-  isOverdue,
-  nextStatusOptions,
-} from '../../core/events';
-import { formatDate, formatDateTimeLong, formatDuration, relativeLabel } from '../../core/dates';
+import { allEventTags, filterEvents } from '../../core/events';
+import { countDrafts, sortDraftsForReview } from '../../core/event-review';
+import { duplicateSuggestionKey, suggestDuplicates } from '../../core/extraction/similar';
+import type { DuplicateSuggestion } from '../../core/extraction/similar';
 import type { AppState } from '../store';
 import {
-  badge,
-  chip,
   emptyState,
   escapeAttr,
   escapeHtml,
@@ -21,191 +13,9 @@ import {
   primaryButton,
   secondaryButton,
 } from '../components';
-import { dayOfMonth, hostnameOf, monthShort, shorten } from '../format';
+import { eventCard } from './event-card';
+import { reviewBar } from './event-review';
 import { eventFormView } from './event-form';
-
-const STATUS_ACTION_LABEL: Record<string, string> = {
-  dang_theo_doi: 'Theo dõi',
-  hoan_thanh: '✓ Đã xong',
-  huy: 'Huỷ',
-  nhap: 'Về nháp',
-};
-
-function profileNames(event: Event, state: AppState): string[] {
-  return event.relatedProfiles
-    .map((id) => state.profiles.find((profile) => profile.id === id)?.name)
-    .filter((name): name is string => Boolean(name));
-}
-
-const TIMING_TEXT: Record<string, string> = {
-  ongoing: 'Đang diễn ra',
-  upcoming: 'Sắp diễn ra',
-  past: 'Đã qua',
-  unknown: 'Chưa xác định',
-};
-
-function timingText(event: Event): string {
-  return TIMING_TEXT[eventTiming(event)] ?? 'Chưa xác định';
-}
-
-function dateRefHtml(ref: DateTimeRef | null, fallback = ''): string {
-  if (!ref) return escapeHtml(fallback) || '<span class="warn-text">Chưa xác định</span>';
-  if (ref.value) return escapeHtml(formatDateTimeLong(ref.value));
-  if (ref.date) {
-    const source = ref.raw ? ` <span class="muted small">(nguồn: ${escapeHtml(ref.raw)})</span>` : '';
-    return `${escapeHtml(formatDate(ref.date))} <span class="muted small">· chưa rõ giờ</span>${source}`;
-  }
-  if (ref.raw) {
-    return `<span class="warn-text">Chưa xác định</span> <span class="muted small">(nguồn: ${escapeHtml(ref.raw)})</span>`;
-  }
-  return escapeHtml(fallback) || '<span class="warn-text">Chưa xác định</span>';
-}
-
-function eventDetail(event: Event, state: AppState): string {
-  const names = profileNames(event, state);
-  const ongoing = isOngoing(event);
-  const endText =
-    event.end?.value || event.end?.date || event.end?.raw
-      ? dateRefHtml(event.end)
-      : event.durationMinutes
-        ? escapeHtml(`Kéo dài ${formatDuration(event.durationMinutes)}`)
-        : '<span class="warn-text">Chưa xác định</span>';
-  const uncertain = event.validation.uncertain;
-
-  return `<div class="event-detail">
-    <dl class="detail-grid">
-      <div><dt>Bắt đầu</dt><dd>${dateRefHtml(event.start)}</dd></div>
-      <div><dt>Kết thúc</dt><dd>${endText}</dd></div>
-      <div><dt>Diễn biến</dt><dd class="${ongoing ? 'ongoing-text' : ''}">${escapeHtml(timingText(event))}</dd></div>
-      <div><dt>Nhãn</dt><dd>${escapeHtml(LABEL_TEXT[event.label])}</dd></div>
-      <div><dt>Cập nhật</dt><dd>${escapeHtml(formatDateTimeLong(event.updatedAt))}</dd></div>
-    </dl>
-
-    <div class="detail-block">
-      <h4>Tóm tắt</h4>
-      ${
-        event.summary.length > 0
-          ? `<ul class="bullets">${event.summary.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>`
-          : `<p class="muted small">Chưa có tóm tắt.</p>`
-      }
-    </div>
-
-    <div class="detail-block">
-      <h4>Nhãn tuỳ chỉnh</h4>
-      ${
-        event.tags.length > 0
-          ? `<div class="chips">${event.tags.map((tag) => chip(tag, 'label')).join('')}</div>`
-          : `<p class="muted small">Chưa có nhãn tuỳ chỉnh.</p>`
-      }
-    </div>
-
-    <div class="detail-block">
-      <h4>Hồ sơ liên quan</h4>
-      ${
-        names.length > 0
-          ? `<div class="chips">${names.map((name) => chip(name, 'label')).join('')}</div>`
-          : `<p class="muted small">Chưa gắn hồ sơ.</p>`
-      }
-    </div>
-
-    <div class="detail-block">
-      <h4>Nguồn trích</h4>
-      ${
-        event.sources.length > 0
-          ? event.sources
-              .map(
-                (source) => `<div class="source-ref">
-                  <div class="source-ref__head">${icon('link')}
-                    ${
-                      source.url
-                        ? `<a href="${escapeAttr(source.url)}" target="_blank" rel="noreferrer noopener">${escapeHtml(shorten(source.title, 60))}</a>`
-                        : `<span>${escapeHtml(shorten(source.title, 60))}</span>`
-                    }
-                    ${source.url ? `<span class="muted small">${escapeHtml(hostnameOf(source.url))}</span>` : ''}
-                  </div>
-                  ${source.quote ? `<blockquote>${escapeHtml(shorten(source.quote, 220))}</blockquote>` : ''}
-                </div>`,
-              )
-              .join('')
-          : `<p class="muted small">Sự kiện tạo thủ công, không có nguồn trích.</p>`
-      }
-    </div>
-
-    ${
-      uncertain.length > 0
-        ? `<div class="detail-block">
-            <h4>Cần kiểm tra</h4>
-            <div class="chips">${uncertain
-              .map((code) => badge(UNCERTAIN_TEXT[code] ?? code, 'warning'))
-              .join('')}</div>
-          </div>`
-        : ''
-    }
-
-    <div class="event-detail__actions">
-      ${nextStatusOptions(event)
-        .map(
-          (status) =>
-            `<button type="button" class="btn btn--small btn--${
-              status === 'huy' ? 'danger-ghost' : 'secondary'
-            }" data-action="set-status" data-status="${status}" data-id="${escapeAttr(event.id)}">${escapeHtml(
-              STATUS_ACTION_LABEL[status] ?? STATUS_TEXT[status],
-            )}</button>`,
-        )
-        .join('')}
-      <span class="spacer"></span>
-      <button type="button" class="icon-btn" data-action="edit-event" data-id="${escapeAttr(event.id)}" title="Sửa sự kiện" aria-label="Sửa sự kiện">${icon('edit')}</button>
-      <button type="button" class="icon-btn icon-btn--danger" data-action="delete-event" data-id="${escapeAttr(event.id)}" title="Xoá sự kiện" aria-label="Xoá sự kiện">${icon('trash')}</button>
-    </div>
-  </div>`;
-}
-
-function eventCard(event: Event, state: AppState): string {
-  const expanded = state.expandedEventId === event.id;
-  const ongoing = isOngoing(event);
-  const overdue = isOverdue(event);
-  const names = profileNames(event, state);
-  const start = event.start.value ?? event.start.date;
-  const firstSummary = event.summary[0];
-  const missingTime = !event.start.value;
-  const hasChips = event.tags.length > 0 || names.length > 0 || missingTime;
-
-  return `<article class="event-card ${expanded ? 'event-card--expanded' : ''} ${overdue ? 'event-card--overdue' : ''} ${ongoing ? 'event-card--ongoing' : ''}">
-    <button type="button" class="event-card__main" data-action="toggle-event" data-id="${escapeAttr(event.id)}" aria-expanded="${expanded}">
-      <span class="date-block">
-        <span class="date-block__day">${start ? dayOfMonth(start) : '—'}</span>
-        <span class="date-block__month">${start ? monthShort(start) : 'CHƯA RÕ'}</span>
-      </span>
-      <span class="event-card__body">
-        <span class="event-card__title-row">
-          <span class="event-card__title">${escapeHtml(event.title)}</span>
-          ${badge(STATUS_TEXT[event.status], STATUS_TONE[event.status])}
-        </span>
-        <span class="event-card__meta">
-          ${
-            ongoing
-              ? '<span class="ongoing-text">Đang diễn ra</span>'
-              : start
-                ? escapeHtml(relativeLabel(start))
-                : '<span class="warn-text">Chưa có thời điểm</span>'
-          }
-          · ${escapeHtml(LABEL_TEXT[event.label])}
-          ${overdue ? ' · <span class="danger-text">đã qua</span>' : ''}
-        </span>
-        ${firstSummary ? `<span class="event-card__summary">${escapeHtml(shorten(firstSummary, 96))}</span>` : ''}
-        ${
-          hasChips
-            ? `<span class="chips">${event.tags.map((tag) => chip(tag, 'label')).join('')}${names
-                .map((name) => chip(name))
-                .join('')}${missingTime ? chip('thiếu thời điểm') : ''}</span>`
-            : ''
-        }
-      </span>
-      <span class="chevron ${expanded ? 'chevron--open' : ''}">${icon('chevron')}</span>
-    </button>
-    ${expanded ? eventDetail(event, state) : ''}
-  </article>`;
-}
 
 function filterBar(state: AppState): string {
   const filter = state.eventFilter;
@@ -213,17 +23,25 @@ function filterBar(state: AppState): string {
   return `<form id="filter-form" class="filters">
     <div class="search">
       ${icon('search')}
-      <input class="input input--search" type="search" name="query" value="${escapeAttr(filter.query)}" placeholder="Tìm theo tiêu đề, tóm tắt, nguồn…">
+      <input class="input input--search" type="search" name="query" value="${escapeAttr(
+        filter.query,
+      )}" placeholder="Tìm theo tiêu đề, tóm tắt, nguồn…">
     </div>
     <div class="filters__row">
-      <select class="select" name="status" aria-label="Lọc theo trạng thái">
-        <option value="all" ${filter.status === 'all' ? 'selected' : ''}>Mọi trạng thái</option>
+      <select class="select" name="status" aria-label="Lọc theo trạng thái" ${
+        state.reviewMode ? 'disabled' : ''
+      }>
+        ${
+          state.reviewMode
+            ? `<option value="nhap" selected>${STATUS_TEXT.nhap}</option>`
+            : `<option value="all" ${filter.status === 'all' ? 'selected' : ''}>Mọi trạng thái</option>
         ${(['nhap', 'dang_theo_doi', 'hoan_thanh', 'huy'] as const)
           .map(
             (status) =>
               `<option value="${status}" ${filter.status === status ? 'selected' : ''}>${STATUS_TEXT[status]}</option>`,
           )
-          .join('')}
+          .join('')}`
+        }
       </select>
       <select class="select" name="label" aria-label="Lọc theo nhãn">
         <option value="all" ${filter.label === 'all' ? 'selected' : ''}>Mọi nhãn</option>
@@ -244,10 +62,35 @@ function filterBar(state: AppState): string {
   </form>`;
 }
 
+function suggestionsFor(
+  eventId: string,
+  suggestions: Map<string, DuplicateSuggestion[]>,
+  dismissed: string[],
+): DuplicateSuggestion[] {
+  return (suggestions.get(eventId) ?? []).filter(
+    (suggestion) => !dismissed.includes(duplicateSuggestionKey(eventId, suggestion.event.id)),
+  );
+}
+
+function reviewEmpty(): string {
+  return emptyState({
+    iconName: 'check',
+    title: 'Đã duyệt hết nháp',
+    description: 'Không còn sự kiện nháp nào khớp bộ lọc hiện tại. Quay lại danh sách để xem toàn bộ lịch.',
+    actions: secondaryButton('exit-review', 'Quay lại danh sách', 'chevron'),
+  });
+}
+
 export function eventsView(state: AppState): string {
   if (state.eventForm.open) return eventFormView(state);
 
-  const visible = filterEvents(state.events, state.eventFilter);
+  const draftCount = countDrafts(state.events);
+  const filtered = filterEvents(state.events, state.eventFilter);
+  const visible = state.reviewMode ? sortDraftsForReview(filtered) : filtered;
+  const suggestions = suggestDuplicates(state.events);
+  const selectedVisible = state.reviewMode
+    ? visible.filter((event) => state.selectedDraftIds.includes(event.id))
+    : [];
   const filtering =
     state.eventFilter.status !== 'all' ||
     state.eventFilter.label !== 'all' ||
@@ -257,25 +100,54 @@ export function eventsView(state: AppState): string {
   return `<div class="stack">
     <div class="view-head">
       <div>
-        <h2>Sự kiện</h2>
-        <p class="muted small">${state.events.length} sự kiện · lưu trên thiết bị này</p>
+        <h2>${state.reviewMode ? 'Duyệt nháp' : 'Sự kiện'}</h2>
+        <p class="muted small">${
+          state.reviewMode
+            ? `${visible.length} nháp đang hiển thị · ${selectedVisible.length} đã chọn`
+            : `${state.events.length} sự kiện · lưu trên thiết bị này`
+        }</p>
       </div>
-      ${primaryButton('new-event', 'Tạo sự kiện', 'plus')}
+      <div class="view-head__actions">
+        ${
+          !state.reviewMode && draftCount > 0
+            ? secondaryButton('enter-review', `Duyệt nháp (${draftCount})`, 'check')
+            : ''
+        }
+        ${state.reviewMode ? '' : primaryButton('new-event', 'Tạo sự kiện', 'plus')}
+      </div>
     </div>
     ${state.events.length > 0 ? filterBar(state) : ''}
     ${
+      state.reviewMode
+        ? reviewBar(visible.length, selectedVisible.length)
+        : ''
+    }
+    ${
       visible.length === 0
-        ? emptyState({
-            iconName: 'calendar',
-            title: filtering ? 'Không có sự kiện phù hợp' : 'Chưa có sự kiện',
-            description: filtering
-              ? 'Thử bỏ bộ lọc hoặc đổi từ khoá tìm kiếm.'
-              : 'Tạo sự kiện thủ công từ nội dung đã đọc, hoặc nhập tay hoàn toàn.',
-            actions: filtering
-              ? secondaryButton('clear-filter', 'Xoá bộ lọc')
-              : primaryButton('new-event', 'Tạo sự kiện đầu tiên', 'plus'),
-          })
-        : `<div class="event-list">${visible.map((event) => eventCard(event, state)).join('')}</div>`
+        ? state.reviewMode
+          ? reviewEmpty()
+          : emptyState({
+              iconName: 'calendar',
+              title: filtering ? 'Không có sự kiện phù hợp' : 'Chưa có sự kiện',
+              description: filtering
+                ? 'Thử bỏ bộ lọc hoặc đổi từ khoá tìm kiếm.'
+                : 'Tạo sự kiện thủ công từ nội dung đã đọc, hoặc nhập tay hoàn toàn.',
+              actions: filtering
+                ? secondaryButton('clear-filter', 'Xoá bộ lọc')
+                : primaryButton('new-event', 'Tạo sự kiện đầu tiên', 'plus'),
+            })
+        : `<div class="event-list">${visible
+            .map((event) =>
+              eventCard(event, state, {
+                selectable: state.reviewMode,
+                selected: state.selectedDraftIds.includes(event.id),
+                suggestions:
+                  event.status === 'nhap'
+                    ? suggestionsFor(event.id, suggestions, state.dismissedSuggestionKeys)
+                    : [],
+              }),
+            )
+            .join('')}</div>`
     }
   </div>`;
 }
