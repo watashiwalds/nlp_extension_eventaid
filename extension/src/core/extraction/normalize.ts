@@ -13,11 +13,11 @@ import type { EventInput } from '../events';
 import { dedupe } from '../text';
 import type { RawEvent } from './schema';
 import type { CandidateRunMeta, NormalizeContext } from './types';
+import { LOW_CONFIDENCE } from './confidence';
+
+export { LOW_CONFIDENCE };
 
 const KNOWN_UNCERTAIN = new Set(Object.keys(UNCERTAIN_TEXT));
-
-/** Ngưỡng dưới đó candidate bị gắn cờ "độ tin cậy thấp". */
-export const LOW_CONFIDENCE = 0.5;
 
 const HAS_YEAR = /\b(?:19|20)\d{2}\b/;
 const HAS_TIME = /\b\d{1,2}\s*(?::\s*\d{2}|h\s*\d{0,2}|giờ)/i;

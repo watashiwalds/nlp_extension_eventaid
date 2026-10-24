@@ -1,6 +1,21 @@
-import type { EventStatus, ExtractionMethod, Label, SourceKind } from './contracts';
+import type { EventOrigin, EventStatus, ExtractionMethod, Label, SourceKind } from './contracts';
 
 export const APP_NAME = 'Lịch trình cá nhân';
+
+/** Nguồn tạo sự kiện — chỉ nói ai tạo, không nói đã kiểm chứng. */
+export const ORIGIN_TEXT: Record<EventOrigin, string> = {
+  llm: 'Máy đề xuất',
+  manual: 'Nhập tay',
+};
+
+/** Ba mức độ tin cậy do model tự báo (không hiển thị phần trăm). */
+export const CONFIDENCE_TEXT: Record<'thap' | 'vua' | 'cao', string> = {
+  thap: 'Thấp',
+  vua: 'Vừa',
+  cao: 'Cao',
+};
+
+export const CONFIDENCE_HINT = 'Model tự báo, không phải xác suất đã hiệu chuẩn.';
 
 export const LABEL_TEXT: Record<Label, string> = {
   công_vụ: 'Công vụ',
