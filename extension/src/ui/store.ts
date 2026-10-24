@@ -96,6 +96,8 @@ export interface LlmHealthState {
 
 /** Tiến trình một lần trích, hiển thị ở tab Quét nội dung. */
 export interface ExtractionState {
+  /** ID job trong `chrome.storage.session`; `'pending'` khi vừa gửi yêu cầu. */
+  jobId?: string;
   stage: string;
   chunkIndex: number;
   chunkCount: number;

@@ -1,5 +1,9 @@
 # Kế hoạch hai phiên tiếp theo
 
+> **Tài liệu lịch sử (2026-10-22).** Kế hoạch dưới đây đã hoàn tất và không còn là bàn giao
+> hiện hành. Việc tiếp theo là **Slice D**, xem
+> [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
+
 > Cập nhật **2026-10-22** sau khi người dùng rà soát thủ công toàn bộ checklist và bổ sung
 > mục **Vấn đề tồn đọng** / **Gợi ý cải thiện** trong [`docs/kiem-thu-demo.md`](./kiem-thu-demo.md).
 >

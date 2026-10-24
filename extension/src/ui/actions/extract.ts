@@ -1,112 +1,131 @@
-import type { Event } from '../../shared/contracts';
-import { candidateToEvent } from '../../core/extraction/normalize';
-import { extractEvents } from '../../core/extraction/pipeline';
-import { eventDedupInput } from '../../core/extraction/dedup';
-import { isAbortedError } from '../../core/ports/inference';
-import { LlamaCppProvider } from '../../platform/inference/llama-cpp';
-import { saveEvent } from '../../platform/storage/db';
-import { truncationText } from '../format';
-import { activeDocument, showToast, store } from '../store';
+import type { ExtractionJob } from '../../shared/contracts';
+import type { RuntimeResponse } from '../../shared/messages';
+import { readJob } from '../../platform/background/jobs';
+import { activeDocument, loadAll, showToast, store } from '../store';
 import { messageOf } from './shared';
 
 /**
- * Slice B: side panel gọi provider TRỰC TIẾP (chưa có offscreen).
- * Pipeline vẫn nằm trong `core/` nên Slice C chỉ đổi "ai gọi", không đổi logic.
+ * Slice C: side panel chỉ gửi yêu cầu; job chạy trong offscreen document.
+ * Side panel có thể đóng/mở lại mà không làm mất tiến trình.
  */
 
-let controller: AbortController | null = null;
+let sending = false;
+let handledJobId: string | null = null;
 
-export function cancelExtractionAction(): void {
-  controller?.abort();
+const ACTIVE_STATUSES: ExtractionJob['status'][] = ['queued', 'running', 'persisting'];
+
+function activeJob(job: ExtractionJob | null): boolean {
+  return job !== null && ACTIVE_STATUSES.includes(job.status);
+}
+
+function doneMessage(job: ExtractionJob): string {
+  const parts =
+    job.savedCount > 0
+      ? [`Đã lưu ${job.savedCount} sự kiện nháp từ máy.`]
+      : ['Không có sự kiện mới để lưu.'];
+  if (job.duplicateCount > 0) parts.push(`Bỏ qua ${job.duplicateCount} sự kiện trùng.`);
+  if (job.truncated) parts.push('Tài liệu dài nên chỉ xử lý phần đầu.');
+  return parts.join(' ');
+}
+
+/** Áp trạng thái job vào store; chỉ báo toast khi job kết thúc trong lúc panel mở. */
+export function applyJob(job: ExtractionJob, notify = true): void {
+  if (activeJob(job)) {
+    store.set({
+      extraction: {
+        jobId: job.jobId,
+        stage: job.stage,
+        chunkIndex: job.chunkIndex,
+        chunkCount: job.chunkCount,
+      },
+    });
+    return;
+  }
+
+  store.set({ extraction: null });
+  if (handledJobId === job.jobId) return;
+  handledJobId = job.jobId;
+
+  if (!notify) return;
+  if (job.status === 'done') {
+    showToast(job.savedCount > 0 ? 'success' : 'info', doneMessage(job));
+    void loadAll().then(() =>
+      store.set((state) => ({
+        ...state,
+        tab: 'events',
+        eventFilter: { ...state.eventFilter, status: 'nhap' },
+      })),
+    );
+  } else if (job.status === 'failed') {
+    showToast('error', job.error ?? 'Trích xuất thất bại.');
+    void loadAll();
+  } else if (job.status === 'cancelled') {
+    showToast('info', 'Đã huỷ trích xuất. Sự kiện đã lưu trước đó vẫn còn trong Nháp.');
+    void loadAll();
+  }
+}
+
+/** Đọc job từ session khi mở side panel; không báo lại toast của job cũ. */
+export async function syncExtractionJob(): Promise<void> {
+  try {
+    const job = await readJob();
+    if (job) applyJob(job, false);
+    else store.set({ extraction: null });
+  } catch (error) {
+    console.warn('[extract] Không đọc được job trích xuất', error);
+  }
 }
 
 export async function extractEventsAction(): Promise<void> {
-  if (controller) return;
+  if (sending || store.get().extraction) return;
 
-  const state = store.get();
-  const document = activeDocument(state);
+  const document = activeDocument(store.get());
   if (!document) {
     showToast('error', 'Chưa có nội dung để trích xuất. Hãy quét trang hoặc dán văn bản trước.');
     return;
   }
 
-  const current = controller = new AbortController();
-  const provider = new LlamaCppProvider({
-    endpoint: state.llm.endpoint,
-    apiKey: state.llm.apiKey,
-    model: state.llm.model,
-    timeoutMs: state.llm.timeoutMs,
+  sending = true;
+  store.set({
+    extraction: {
+      jobId: 'pending',
+      stage: 'Đang chuẩn bị trích xuất…',
+      chunkIndex: 0,
+      chunkCount: 0,
+    },
   });
 
-  store.set({ extraction: { stage: 'Đang kiểm tra máy chủ mô hình…', chunkIndex: 0, chunkCount: 0 } });
+  try {
+    const response = (await chrome.runtime.sendMessage({
+      to: 'background',
+      type: 'RUN_EXTRACTION',
+      documentId: document.documentId,
+    })) as RuntimeResponse | undefined;
+
+    if (!response?.ok) {
+      await syncExtractionJob();
+      showToast('error', response?.error ?? 'Không bắt đầu được lần trích xuất.');
+    }
+  } catch (error) {
+    await syncExtractionJob();
+    showToast('error', messageOf(error));
+  } finally {
+    sending = false;
+  }
+}
+
+export async function cancelExtractionAction(): Promise<void> {
+  const jobId = store.get().extraction?.jobId;
+  if (!jobId || jobId === 'pending') return;
 
   try {
-    const health = await provider.health();
-    if (!health.ok) {
-      showToast('error', health.reason);
-      return;
-    }
-
-    const now = new Date();
-    const outcome = await extractEvents({
-      document,
-      profiles: state.profiles,
-      settings: {
-        chunkChars: state.llm.chunkChars,
-        maxChunks: state.llm.maxChunks,
-        maxTokens: state.llm.maxTokens,
-        temperature: state.llm.temperature,
-      },
-      provider,
-      now,
-      signal: current.signal,
-      existing: state.events.map(eventDedupInput),
-      onProgress: (progress) => store.set({ extraction: progress }),
-    });
-
-    const processedChars = state.llm.chunkChars * outcome.chunkCount;
-    const truncationNote = outcome.truncated ? ` ${truncationText(processedChars)}` : '';
-
-    if (outcome.items.length === 0) {
-      showToast(
-        'info',
-        (outcome.duplicates.length > 0
-          ? 'Tất cả sự kiện tìm thấy đã có trong danh sách.'
-          : 'Không tìm thấy sự kiện lịch trình nào trong nội dung này.') + truncationNote,
-      );
-      return;
-    }
-
-    store.set({
-      extraction: {
-        stage: `Đang lưu ${outcome.items.length} sự kiện…`,
-        chunkIndex: outcome.chunkCount,
-        chunkCount: outcome.chunkCount,
-      },
-    });
-
-    const events: Event[] = outcome.items.map(({ candidate, run }) =>
-      candidateToEvent(candidate, { document, run }, now),
-    );
-    for (const event of events) await saveEvent(event);
-
-    store.set((latest) => ({
-      ...latest,
-      tab: 'events',
-      events: [...events, ...latest.events],
-    }));
-
-    const duplicateNote =
-      outcome.duplicates.length > 0 ? ` Bỏ qua ${outcome.duplicates.length} sự kiện trùng.` : '';
-    showToast('success', `Đã lưu ${events.length} sự kiện nháp từ máy.${duplicateNote}${truncationNote}`);
+    const response = (await chrome.runtime.sendMessage({
+      to: 'background',
+      type: 'CANCEL_EXTRACTION',
+      jobId,
+    })) as RuntimeResponse | undefined;
+    if (response && !response.ok) showToast('error', response.error);
   } catch (error) {
-    if (isAbortedError(error)) {
-      showToast('info', 'Đã huỷ trích xuất. Không lưu sự kiện nào.');
-    } else {
-      showToast('error', messageOf(error));
-    }
-  } finally {
-    if (controller === current) controller = null;
-    store.set({ extraction: null });
+    showToast('error', messageOf(error));
   }
 }

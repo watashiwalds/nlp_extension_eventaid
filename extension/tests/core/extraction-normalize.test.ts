@@ -62,9 +62,10 @@ describe('normalizeDateTime', () => {
     expect(result.uncertain).not.toContain('gio_chua_ro');
   });
 
-  it('chỉ có ngày → value null, gắn gio_chua_ro', () => {
+  it('chỉ có ngày → value null, giữ date, gắn gio_chua_ro', () => {
     const result = normalizeDateTime(null, 'hạn nộp 20/11/2026');
     expect(result.ref.value).toBeNull();
+    expect(result.ref.date).toBe('2026-11-20');
     expect(result.uncertain).toContain('gio_chua_ro');
     expect(result.uncertain).not.toContain('nam_chua_ro');
   });
@@ -72,17 +73,50 @@ describe('normalizeDateTime', () => {
   it('model tự điền ISO khi nguồn thiếu năm → value null, gắn nam_chua_ro', () => {
     const result = normalizeDateTime('2026-11-15T08:00', '8:00 ngày 15/11');
     expect(result.ref.value).toBeNull();
+    expect(result.ref.date).toBeNull();
     expect(result.ref.raw).toBe('8:00 ngày 15/11');
     expect(result.uncertain).toContain('nam_chua_ro');
     expect(result.uncertain).not.toContain('gio_chua_ro');
   });
 
-  it('model tự điền ISO khi nguồn thiếu giờ → value null, gắn gio_chua_ro', () => {
+  it('model tự điền ISO khi nguồn thiếu giờ → value null, giữ date, gắn gio_chua_ro', () => {
     const result = normalizeDateTime('2026-11-20T09:00', 'hạn nộp 20/11/2026');
     expect(result.ref.value).toBeNull();
+    expect(result.ref.date).toBe('2026-11-20');
     expect(result.ref.raw).toBe('hạn nộp 20/11/2026');
     expect(result.uncertain).toContain('gio_chua_ro');
     expect(result.uncertain).not.toContain('nam_chua_ro');
+  });
+
+  it('ngày ISO lệch raw/nguồn → không nhận value', () => {
+    const result = normalizeDateTime(
+      '2026-11-03T09:00',
+      '9:00 ngày 2/11/2026',
+      'Asia/Ho_Chi_Minh',
+      '9:00 ngày 2/11/2026',
+    );
+    expect(result.ref.value).toBeNull();
+    expect(result.ref.date).toBeNull();
+    expect(result.uncertain).toContain('ngay_khong_khop');
+  });
+
+  it('model bỏ raw → chỉ giữ ngày nếu nguồn có, không tin giờ ISO', () => {
+    const result = normalizeDateTime(
+      '2026-11-02T09:00',
+      '',
+      'Asia/Ho_Chi_Minh',
+      '9:00 ngày 2/11/2026',
+    );
+    expect(result.ref.value).toBeNull();
+    expect(result.ref.date).toBe('2026-11-02');
+    expect(result.uncertain).toContain('gio_chua_ro');
+  });
+
+  it('không có raw lẫn nguồn → không tin ISO model tự sinh', () => {
+    const result = normalizeDateTime('2026-11-02T09:00', '');
+    expect(result.ref.value).toBeNull();
+    expect(result.ref.date).toBeNull();
+    expect(result.uncertain).toContain('do_tin_cay_thap');
   });
 
   it('cách nói tương đối → giữ giá trị model quy đổi và gắn ngay_tuong_doi', () => {
@@ -99,7 +133,7 @@ describe('normalizeDateTime', () => {
 
   it('không có mốc nào → value và raw đều null', () => {
     expect(normalizeDateTime(null, '')).toEqual({
-      ref: { value: null, raw: null },
+      ref: { value: null, date: null, raw: null },
       uncertain: [],
     });
   });
@@ -151,6 +185,36 @@ describe('normalizeEvent', () => {
     expect(candidate.end).toBeNull();
     expect(candidate.durationMinutes).toBeNull();
   });
+
+  it('nguồn chỉ có ngày + raw bị hoán đổi → giữ ngày theo nguồn, không bịa giờ', () => {
+    const sourceText = [
+      'Nhân dân có thể nhận vé vào cổng miễn phí cho sự kiện Sao Concert trước ngày 29/10/2026.',
+      'Ngày mở đơn đăng ký vào lúc 25/10/2026.',
+      'Lưu ý.',
+    ].join(' ');
+    const candidate = normalizeEvent(
+      raw({
+        title: 'Đăng ký nhận vé Sao Concert',
+        start: '2026-10-25T00:00',
+        startRaw: 'trước ngày 29/10/2026',
+        end: '2026-10-29T00:00',
+        endRaw: 'Ngày mở đơn đăng ký vào lúc 25/10/2026',
+      }),
+      { ...context(), sourceText },
+    );
+
+    expect(candidate.start.value).toBeNull();
+    expect(candidate.start.date).toBe('2026-10-25');
+    expect(candidate.start.raw).toContain('25/10/2026');
+    expect(candidate.start.raw).not.toContain('29/10/2026');
+    expect(candidate.end?.value).toBeNull();
+    expect(candidate.end?.date).toBe('2026-10-29');
+    expect(candidate.end?.raw).toContain('29/10/2026');
+    expect(candidate.end?.raw).not.toContain('25/10/2026');
+    expect(candidate.uncertain).toContain('gio_chua_ro');
+    expect(candidate.uncertain).not.toContain('ngay_khong_khop');
+    expect(candidate.uncertain).not.toContain('nam_chua_ro');
+  });
 });
 
 describe('candidateToEvent', () => {
@@ -193,6 +257,23 @@ describe('candidateToEvent', () => {
     expect(event.validation.uncertain).toContain('nam_chua_ro');
     expect(event.validation.uncertain).toContain('chua_ro_thoi_diem');
     expect(event.validation.uncertain).toContain('chua_ro_ho_so');
+  });
+
+  it('giữ ngày khi chỉ biết ngày, không biến thành giờ 00:00', () => {
+    const candidate = normalizeEvent(
+      raw({
+        start: '2026-11-20T00:00',
+        startRaw: 'hạn nộp 20/11/2026',
+        end: null,
+        endRaw: '',
+      }),
+      context(),
+    );
+    const event = candidateToEvent(candidate, { document, run }, NOW);
+    expect(event.start.value).toBeNull();
+    expect(event.start.date).toBe('2026-11-20');
+    expect(event.start.raw).toBe('hạn nộp 20/11/2026');
+    expect(event.validation.uncertain).toContain('gio_chua_ro');
   });
 
   it('candidateToEventInput không tự sinh id hay status', () => {

@@ -57,6 +57,21 @@ describe('events', () => {
     expect(event.validation.uncertain).not.toContain('chua_ro_ket_thuc');
   });
 
+  it('biết ngày nhưng chưa biết giờ vẫn xếp lịch, chỉ thiếu cờ giờ', () => {
+    const event = makeEvent(
+      input({ startValue: null, startDate: '2026-10-25', endValue: null, endDate: '2026-10-29' }),
+      NOW,
+    );
+    expect(event.start.value).toBeNull();
+    expect(event.start.date).toBe('2026-10-25');
+    expect(event.end?.date).toBe('2026-10-29');
+    expect(event.validation.uncertain).toContain('gio_chua_ro');
+    expect(event.validation.uncertain).not.toContain('chua_ro_thoi_diem');
+    expect(event.validation.uncertain).not.toContain('chua_ro_ket_thuc');
+    expect(eventTiming(event, NOW)).toBe('upcoming');
+    expect(upcomingEvents([event], NOW).map((item) => item.id)).toEqual([event.id]);
+  });
+
   it('chỉ cho phép chuyển trạng thái hợp lệ', () => {
     const draft = makeEvent(input(), NOW);
     const tracked = setEventStatus(draft, 'dang_theo_doi', NOW);

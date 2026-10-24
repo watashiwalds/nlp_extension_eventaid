@@ -7,7 +7,7 @@ import type {
   Label,
   SourceRef,
 } from '../shared/contracts';
-import { durationMinutes, parseLocalDateTime, toInputValue } from './dates';
+import { durationMinutes, isValidDateOnly, parseLocalDateTime, toInputValue } from './dates';
 import { newId } from './ids';
 import { dedupe } from './text';
 
@@ -16,11 +16,15 @@ export interface EventInput {
   label: Label;
   /** Nhãn tuỳ chỉnh; không truyền = không có nhãn (tương thích call-site cũ). */
   tags?: string[];
-  /** `YYYY-MM-DDTHH:mm` hoặc null khi chưa xác định. */
+  /** `YYYY-MM-DDTHH:mm` hoặc null khi chưa xác định giờ. */
   startValue: string | null;
-  /** Chuỗi gốc khi `startValue` là null (LLM trả "15/11 lúc 8h"); mặc định = startValue. */
+  /** `YYYY-MM-DD` khi biết ngày nhưng chưa biết giờ. */
+  startDate?: string | null;
+  /** Chuỗi gốc khi `startValue`/`startDate` là null (LLM trả "15/11 lúc 8h"); mặc định = startValue. */
   startRaw?: string | null;
   endValue: string | null;
+  /** `YYYY-MM-DD` khi biết ngày kết thúc nhưng chưa biết giờ. */
+  endDate?: string | null;
   endRaw?: string | null;
   durationMinutesInput: number | null;
   summary: string[];
@@ -55,7 +59,16 @@ export function eventEndValue(event: Event): string | null {
 
 /** Phân loại theo thời gian thực: đang diễn ra / sắp tới / đã qua / chưa rõ. */
 export function eventTiming(event: Event, now: Date = new Date()): EventTiming {
-  if (!event.start.value) return 'unknown';
+  if (!event.start.value) {
+    if (!event.start.date) return 'unknown';
+    const today = toInputValue(now).slice(0, 10);
+    const endDate = event.end?.date ?? null;
+    if (endDate && today >= event.start.date && today <= endDate) return 'ongoing';
+    if (today < event.start.date) return 'upcoming';
+    if (endDate && today > endDate) return 'past';
+    if (!endDate && today > event.start.date) return 'past';
+    return 'ongoing';
+  }
   const start = new Date(event.start.value).getTime();
   if (Number.isNaN(start)) return 'unknown';
   const endValue = eventEndValue(event);
@@ -75,13 +88,18 @@ export function isOngoing(event: Event, now: Date = new Date()): boolean {
 /** Cờ "chưa chắc chắn" — không bao giờ tự bịa giá trị thiếu. */
 export function deriveUncertain(input: {
   startValue: string | null;
+  startDate: string | null;
   endValue: string | null;
+  endDate: string | null;
   duration: number | null;
   relatedProfiles: string[];
 }): string[] {
   const uncertain: string[] = [];
-  if (!input.startValue) uncertain.push('chua_ro_thoi_diem');
-  if (!input.endValue && input.duration === null) uncertain.push('chua_ro_ket_thuc');
+  if (!input.startValue && !input.startDate) uncertain.push('chua_ro_thoi_diem');
+  if (!input.startValue && input.startDate) uncertain.push('gio_chua_ro');
+  if (!input.endValue && !input.endDate && input.duration === null) {
+    uncertain.push('chua_ro_ket_thuc');
+  }
   if (input.relatedProfiles.length === 0) uncertain.push('chua_ro_ho_so');
   return uncertain;
 }
@@ -93,20 +111,34 @@ function buildEvent(
 ): Event {
   const startValue = input.startValue && parseLocalDateTime(input.startValue) ? input.startValue : null;
   const endValue = input.endValue && parseLocalDateTime(input.endValue) ? input.endValue : null;
+  const startDate =
+    !startValue && input.startDate && isValidDateOnly(input.startDate) ? input.startDate : null;
+  const endDate = !endValue && input.endDate && isValidDateOnly(input.endDate) ? input.endDate : null;
   const duration =
     startValue && endValue
       ? durationMinutes(startValue, endValue)
       : startValue
         ? input.durationMinutesInput
         : null;
+  const hasEnd = Boolean(endValue || endDate || input.endRaw);
 
   const candidate: Record<string, unknown> = {
     id: base.id,
     title: input.title,
     label: input.label,
     tags: input.tags ?? [],
-    start: { value: startValue, raw: input.startRaw ?? input.startValue },
-    end: endValue ? { value: endValue, raw: input.endRaw ?? input.endValue } : null,
+    start: {
+      value: startValue,
+      date: startDate,
+      raw: input.startRaw ?? input.startValue ?? input.startDate ?? null,
+    },
+    end: hasEnd
+      ? {
+          value: endValue,
+          date: endDate,
+          raw: input.endRaw ?? input.endValue ?? input.endDate ?? null,
+        }
+      : null,
     durationMinutes: duration,
     summary: input.summary,
     relatedProfiles: input.relatedProfiles,
@@ -116,7 +148,9 @@ function buildEvent(
       uncertain: dedupe([
         ...deriveUncertain({
           startValue,
+          startDate,
           endValue,
+          endDate,
           duration,
           relatedProfiles: input.relatedProfiles,
         }),
@@ -194,8 +228,8 @@ export function sortEvents(events: Event[], now: Date = new Date()): Event[] {
     const rankB = rank(b);
     if (rankA !== rankB) return rankA - rankB;
     if (rankA === 3) return b.createdAt.localeCompare(a.createdAt);
-    const startA = a.start.value ?? '';
-    const startB = b.start.value ?? '';
+    const startA = a.start.value ?? (a.start.date ? `${a.start.date}T00:00` : '');
+    const startB = b.start.value ?? (b.start.date ? `${b.start.date}T00:00` : '');
     return rankA === 2 ? startB.localeCompare(startA) : startA.localeCompare(startB);
   });
 }

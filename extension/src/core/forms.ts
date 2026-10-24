@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { EventSchema, LabelSchema, MAX_SUMMARY_ITEMS, ProfileSchema } from '../shared/contracts';
 import type { Event, Label, Profile, SourceRef } from '../shared/contracts';
+import { isValidDateOnly } from './dates';
 import { makeEvent, updateEvent } from './events';
 import type { EventInput } from './events';
 import { makeProfile, updateProfile } from './profiles';
@@ -42,8 +43,13 @@ export interface EventFormValues {
   label: string;
   /** Chuỗi thô người dùng nhập, phân tách bởi dấu phẩy; rỗng = không có tags. */
   tags: string;
+  /** `YYYY-MM-DDTHH:mm` khi đủ ngày giờ. */
   start: string;
+  /** `YYYY-MM-DD` khi chỉ biết ngày. */
+  startDate?: string | null;
   end: string;
+  /** `YYYY-MM-DD` khi chỉ biết ngày. */
+  endDate?: string | null;
   duration: string;
   summary: string;
   profileIds: string[];
@@ -77,11 +83,17 @@ export function buildEventFromForm(
   if (tagsParsed.error) errors.tags = tagsParsed.error;
 
   const start = values.start.trim() || null;
+  const startDate = values.startDate?.trim() || null;
   const end = values.end.trim() || null;
+  const endDate = values.endDate?.trim() || null;
   if (start && Number.isNaN(new Date(start).getTime())) errors.start = 'Thời điểm bắt đầu không hợp lệ';
-  if (end && !start) errors.end = 'Cần nhập thời điểm bắt đầu trước';
+  if (startDate && !isValidDateOnly(startDate)) errors.start = 'Ngày bắt đầu không hợp lệ';
+  if ((end || endDate) && !start && !startDate) errors.end = 'Cần nhập thời điểm bắt đầu trước';
   if (start && end && new Date(end).getTime() <= new Date(start).getTime()) {
     errors.end = 'Kết thúc phải sau thời điểm bắt đầu';
+  }
+  if (!start && !end && startDate && endDate && endDate < startDate) {
+    errors.end = 'Ngày kết thúc phải sau ngày bắt đầu';
   }
 
   const durationParsed = parsePositiveInt(values.duration);
@@ -105,7 +117,9 @@ export function buildEventFromForm(
     label: labelParsed.data as Label,
     tags: tagsParsed.tags,
     startValue: start,
+    startDate,
     endValue: end,
+    endDate,
     durationMinutesInput: duration,
     summary: parseSummaryInput(values.summary),
     relatedProfiles: values.profileIds,

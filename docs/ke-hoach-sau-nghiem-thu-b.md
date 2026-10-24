@@ -250,6 +250,32 @@ Nghiệm thu: khi trích tài liệu dài, toast có thêm gợi ý; tài liệu
 
 ---
 
+## 4b. SB-12 — Ngày chỉ có ngày và đối chiếu raw (P0 — đã xong)
+
+**Lỗi:** nguồn chỉ có ngày (ví dụ `25/10/2026`, `29/10/2026`) nhưng model trả
+`2026-10-25T00:00` và hoán đổi `startRaw`/`endRaw`. `normalizeDateTime` cũ bỏ toàn bộ
+`value` vì thiếu giờ, nên sự kiện nháp mất cả ngày lẫn đầu mối.
+
+**Cách sửa:**
+
+1. `DateTimeRefSchema` thêm `date: YYYY-MM-DD | null` (mặc định `null` cho bản ghi cũ).
+2. Thiếu giờ nhưng biết ngày → `value = null`, `date = ngày`. `raw` giữ nguyên nếu khớp;
+   nếu raw bị hoán đổi/lệch thì lấy đoạn nguồn ngắn quanh đúng ngày.
+3. Ngày ISO được đối chiếu với ngày tuyệt đối trong `raw` và đoạn nguồn; lệch →
+   bỏ `value`/`date`, thêm `ngay_khong_khop`.
+4. Giữ `end` khi có `date` dù `start.value` là `null`; thời lượng chỉ tính khi cả hai
+   `value` đều có.
+5. Form sự kiện cho phép chỉ nhập ngày; `eventTiming`, `sortEvents`, `upcomingEvents`
+   và dedup dùng `date` khi `value` trống.
+6. Prompt v4: nhấn mạnh không thêm `00:00`, không hoán đổi raw, chỉ gộp khoảng khi
+   văn bản nói rõ.
+
+**Nghiệm thu:** test hồi quy cho đúng payload `25/10/2026` + `29/10/2026`, raw bị hoán
+đổi, ngày lệch nguồn, raw rỗng, form chỉ có ngày, thời gian/sắp xếp và dedup theo ngày.
+Quality gate xanh; không thêm quyền, không đổi DB, không gọi mạng ngoài llama.cpp.
+
+---
+
 ## 5. Thứ tự thực hiện
 
 | Bước | Việc | Kết quả |

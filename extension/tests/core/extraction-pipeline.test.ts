@@ -82,7 +82,7 @@ describe('pipeline trích xuất', () => {
       runId: outcome.runId,
       provider: 'mock',
       model: 'mock-v1',
-      promptVersion: 'v3',
+      promptVersion: 'v4',
       chunkIndex: 0,
       chunkCount: 1,
     });
@@ -197,10 +197,17 @@ describe('pipeline trích xuất', () => {
 
   it('báo tiến trình theo từng đoạn và khử trùng giữa các đoạn', async () => {
     const progress: ExtractionProgress[] = [];
+    const repeatedDocument: NormalizedDocument = {
+      ...document,
+      text: Array.from(
+        { length: 6 },
+        () => 'Lớp họp nhóm đồ án lúc 9:00 ngày 2/11/2026. Hạn nộp báo cáo giữa kỳ là 20/11.',
+      ).join('\n\n'),
+    };
     const outcome = await extractEvents({
-      document,
+      document: repeatedDocument,
       profiles,
-      settings: { ...settings, chunkChars: 180 },
+      settings: { ...settings, chunkChars: 200 },
       provider: new MockProvider(() => MOCK_EXTRACTION),
       now: NOW,
       onProgress: (item) => progress.push(item),

@@ -28,13 +28,15 @@ Both feed one **Document Processing Layer** and one **NLP Pipeline**.
 | `ke_hoach_thiet_ke_frontend.md` | Minimum frontend design plan for **Penpot** (P0 scope). Source of truth for *UI*. | Vietnamese |
 | `ke_hoach_phat_trien.md` | Development plan: **TypeScript + Vite** stack, data contracts, model strategy, sprints, acceptance criteria. Source of truth for *build order*. | Vietnamese |
 | `README.md` | Repo overview, demo features, how to build/load, next steps. | Vietnamese |
-| `extension/` | Working MV3 demo (TypeScript + Vite, no ML). See `extension/README.md` for the file map. | TypeScript |
+| `extension/` | Working MV3 demo (TypeScript + Vite; local llama.cpp extraction, no classifier). See `extension/README.md` for the file map. | TypeScript |
 | `docs/DEVIATIONS.md` | Where the demo intentionally differs from the plan, and why. | Vietnamese |
 | `docs/kiem-thu-demo.md` | Manual test checklist mapped to KS scenarios. | Vietnamese |
 | `docs/phien-lam-viec-tiep-theo.md` | Handoff for the next session: manual test results, open issues, fix plan. | Vietnamese |
 | `docs/thiet-ke-demo-va-san-sang-llama-cpp.md` | Demo architecture summary + readiness assessment for local llama.cpp event extraction. | Vietnamese |
 | `docs/ke-hoach-llm-trich-xuat.md` | Implementation plan for the local LLM extraction layer (contracts, offscreen job, prompt, slices, eval). Source of truth for *LLM scope/order*. | Vietnamese |
 | `docs/kiem-tra-slice-b.md` | Slice B acceptance record: provider, settings, side-panel run, real-model results, UI checks, and known gaps. | Vietnamese |
+| `docs/kiem-tra-slice-c.md` | Slice C acceptance record: offscreen job, persistence, cancel, notifications, closed checklist. | Vietnamese |
+| `docs/ban-giao-slice-d.md` | Handoff from accepted Slice C to Slice D: reviewed scope, closed decisions, task order, acceptance criteria, KS-08 deviations. | Vietnamese |
 | `docs/ke-hoach-sau-nghiem-thu-b.md` | Post-acceptance plan for Slice B: event-first profile matching, deferred items, and verification steps. | Vietnamese |
 | `.github/workflows/ci.yml` | Quality gate: typecheck, lint, test, build. | YAML |
 
@@ -42,7 +44,7 @@ Both feed one **Document Processing Layer** and one **NLP Pipeline**.
 > This `AGENTS.md` is intentionally in English (agent-facing).
 
 A git repository now exists at the root and the demo code lives in `extension/`. The stack is locked in §3; keep this file in sync when code changes.
-The demo deliberately contains **no classifier/LLM** (manual events only) — see `docs/DEVIATIONS.md` before assuming a pipeline feature exists.
+The demo contains **no classifier** but **does include local LLM extraction** (Slices A–C accepted; see §11) — check `docs/DEVIATIONS.md` before assuming a pipeline feature exists.
 
 ---
 
@@ -121,12 +123,19 @@ Schedule Store / Review UI     (IndexedDB; review & edit; notifications; export)
 Runtime topology (how the pieces actually talk):
 
 ```text
-src/platform/content ──NormalizedDocument──► src/platform/background (SW)
+src/platform/capture ──NormalizedDocument──► IndexedDB / side panel
+                                                  │
+                                                  │ RUN_EXTRACTION / CANCEL_EXTRACTION
+                                                  ▼
+                                      src/platform/background (SW)
+                                      ├─ chrome.storage.session: extraction_job
+                                      └─ offscreen document
                                                   │  ▲
-                                                  ▼  │ progress / result
+                                                  ▼  │ JOB_PROGRESS / JOB_DONE / …
                                       src/platform/offscreen
-                                      ├─ src/core/classifier.ts
-                                      └─ src/platform/offscreen/llm.ts ──HTTP──► llama-server 127.0.0.1:8080
+                                      ├─ src/platform/offscreen/run-job.ts
+                                      ├─ src/core/extraction/pipeline.ts
+                                      └─ src/platform/inference/llama-cpp.ts ──HTTP──► llama-server 127.0.0.1:8080
                                                   │
                                                   ▼
                                       IndexedDB ◄──► src/ui/sidepanel.ts
@@ -150,10 +159,11 @@ Completion is triggered **automatically** when the end time passes (service work
 
 ### Other key fields
 - `tags: string[]` — custom tags (max 5, each ≤ 24 chars; default `[]` for older records). Kept separate from the fixed `label` enum.
-- `validation.uncertain[]` — e.g. `nam_chua_ro`, `mui_gio_gia_dinh`.
+- `validation.uncertain[]` — e.g. `nam_chua_ro`, `gio_chua_ro`, `ngay_khong_khop`, `mui_gio_gia_dinh`.
+- `start`/`end` are `DateTimeRef`: `value` = full local datetime, `date` = `YYYY-MM-DD` when only the date is known, `raw` = source text. Date-only events keep `value: null`; notifications must use `value` only.
 - `notifications.{milestones, fired, mute}` — milestones: `1_tuan_truoc` / `1_ngay_truoc` / `ngay_dien_ra`.
 - `completedAt`, `versionHistory` (populated by KS-12 updates).
-- An event with **no valid `start`** is excluded from notification milestones until the user fills it in.
+- An event with **no `start.value`** (including date-only) is excluded from notification milestones until the user fills in the time.
 
 See **Appendix A** of `script.md` for the documented interfaces. Once code exists, `src/shared/contracts.ts` is the canonical implementation — keep the two in sync.
 
@@ -233,11 +243,11 @@ Use Vietnamese in docs, but map to these English concepts:
 
 ## 11. Current status
 
-- **Demo (implemented):** `extension/` — page capture (filtered **page snapshot** with landmark/noise removal + Readability + raw DOM fallback + forced raw + selection + context-menu selection + **context-menu page scan**), **dedicated capture tab**, document viewer, profile CRUD, manual event CRUD (7 fields + **custom tags**, status machine, source refs, uncertain flags), **per-profile plans on overview**, **date/time split inputs**, **upcoming-first event ordering**, JSON export/import, and **direct local LLM extraction from the side panel** (Slice B: llama.cpp provider, per-chunk progress, cancel, drafts saved as `nhap`). **No offscreen/notifications, no Gmail API.**
-- **Verified:** `npm run typecheck`, `npm run lint`, `npm test` (161 tests / 19 files incl. jsdom smoke, parse, page-snapshot, tag, extraction-core, profile-match, provider and settings tests), `npm run build` all pass; `dist/` loads unpacked.
-- **LLM extraction (Slices A + B done, accepted 2026-10-23):** contracts carry `origin`/`extractionMeta`/`EventCandidate`/`ExtractionJob`/`LlmSettings`; `src/core/extraction/**` has chunk/prompt/schema/normalize/dedup/pipeline + `profile-match` + `MockProvider`; `src/core/ports/inference.ts` defines `InferenceProvider`; `src/platform/inference/llama-cpp.ts` implements it (health + `/v1/models`, timeout, abort, OpenAI-schema first with fallback, `enable_thinking:false`). Settings form + connection check exist. **Verified against llama.cpp build b10101 with Qwen3.5-4B Q5_K_S (8k context): 6 sample docs, 0 invented dates, 0.3–8.6 s/doc; prompt v2 at measurement time, now prompt v3; only OpenAI `response_format` actually enforces the schema. Chrome UI E2E passed; real-model rerun with v3/profile matching passed 2026-10-23 (9 events, 0 duplicates, 0 invented dates, 0.26–8.4 s/doc; missing-year guard added to `normalizeDateTime`); Slices C–E remain** (`docs/ke-hoach-llm-trich-xuat.md` §9.3, `docs/kiem-tra-slice-b.md`).
-- **Post-acceptance fix done:** event-first extraction + deterministic profile matching after normalize (SB-01, prompt v3); truncation toast also hints at increasing limits (SB-03). See `docs/ke-hoach-sau-nghiem-thu-b.md`. Review UI and paraphrase dedup are deferred to Slice D.
-- **Manual checks pending:** re-run `docs/kiem-thu-demo.md` in Chrome for context menu (page + selection), side-panel widths 320/360/400px, click areas, Gmail best-effort capture, and SPA/regression checks (KT-13/KT-14).
+- **Demo (implemented):** `extension/` — page capture (filtered **page snapshot** with landmark/noise removal + Readability + raw DOM fallback + forced raw + selection + context-menu selection + **context-menu page scan**), **dedicated capture tab**, document viewer, profile CRUD, manual event CRUD (7 fields + **custom tags**, status machine, source refs, uncertain flags), **per-profile plans on overview**, **date/time split inputs**, **upcoming-first event ordering**, JSON export/import, and **local LLM extraction in an offscreen job** (Slices B + C: llama.cpp provider, per-chunk progress, persist/reopen, cancel, completion notification, drafts saved as `nhap`). **No Gmail API; event reminders (`chrome.alarms`, KS-10) are not implemented.**
+- **Verified:** `npm run typecheck`, `npm run lint`, `npm test` (180 tests / 21 files incl. jsdom smoke, parse, page-snapshot, tag, extraction-core, profile-match, provider, settings, job-state and offscreen-runner tests), `npm run build` all pass; `dist/` includes `src/platform/offscreen/index.html` and loads unpacked.
+- **LLM extraction (Slices A + B accepted 2026-10-23; Slice C accepted 2026-10-24):** contracts carry `origin`/`extractionMeta`/`EventCandidate`/`ExtractionJob`/`LlmSettings`; `src/core/extraction/**` has chunk/prompt/schema/normalize/dedup/pipeline + `profile-match` + `MockProvider`; `src/core/ports/inference.ts` defines `InferenceProvider`; `src/platform/inference/llama-cpp.ts` implements it (health + `/v1/models`, timeout, abort, OpenAI-schema first with fallback, `enable_thinking:false`). Settings form + connection check exist. **Verified against llama.cpp build b10101 with Qwen3.5-4B Q5_K_S (8k context): 6 sample docs, 0 invented dates, 0.3–8.6 s/doc; prompt v2 at measurement time, now prompt v4; only OpenAI `response_format` actually enforces the schema. Chrome UI E2E passed; real-model rerun with v3/profile matching passed 2026-10-23 (9 events, 0 duplicates, 0 invented dates, 0.26–8.4 s/doc; missing-year guard added to `normalizeDateTime`). Slice C offscreen/notification work passed manual acceptance 2026-10-24; Slice D–E remain** (`docs/ke-hoach-llm-trich-xuat.md` §9.3, `docs/kiem-tra-slice-b.md`, `docs/kiem-tra-slice-c.md`, `docs/ban-giao-slice-d.md`).
+- **Post-acceptance fix done:** event-first extraction + deterministic profile matching after normalize (SB-01, prompt v3); truncation toast also hints at increasing limits (SB-03); date-only sources now keep `DateTimeRef.date` instead of losing the date, ISO dates are checked against the source (`ngay_khong_khop`), and prompt v4 forbids inventing `00:00` (SB-12). See `docs/ke-hoach-sau-nghiem-thu-b.md`. Review UI and paraphrase dedup are deferred to Slice D.
+- **Manual checks pending:** re-run `docs/kiem-thu-demo.md` in Chrome for context menu (page + selection), side-panel widths 320/360/400px, click areas, Gmail best-effort capture, and SPA/regression checks (KT-13/KT-14). Slice C offscreen/notification checks are closed by acceptance (2026-10-24).
 - **Build plan:** `ke_hoach_phat_trien.md` — 7 sprints / 14 weeks; web first, Gmail in the final sprint.
 - **Tech stack:** locked in §3 (TypeScript + Vite, no UI framework, local llama.cpp server, linear classifier).
 - **Quality gate:** `tsc --noEmit` + ESLint + Vitest + `vite build`; `dist/` is the load-unpacked target.
@@ -245,4 +255,4 @@ Use Vietnamese in docs, but map to these English concepts:
 - **Storage:** results are saved as drafts (`nhap`); user review moves them to `dang_theo_doi`.
 - **Frontend design scope:** frozen at **P0**, **light mode only**, notification UI capped at **2 buttons** (Chrome Notification API limit; a 3rd action moves into the side panel).
 - **Open follow-ups:** golden set + classifier dataset; OAuth verification requirements; confirmation of Chrome notification button limit; sync `proposed_technical.md` with the new pipeline.
-- **Next demo steps:** offscreen + `alarms`/`notifications` (Slice C) → review/dedup UI (Slice D) → quality measurement (Slice E) → Gmail/PDF/DOCX (see `README.md` §6).
+- **Next demo steps:** review/dedup UI — **Slice D** (`docs/ban-giao-slice-d.md`) → quality measurement (Slice E) → event reminders (`chrome.alarms`, KS-10) → Gmail/PDF/DOCX (see `README.md` §6).

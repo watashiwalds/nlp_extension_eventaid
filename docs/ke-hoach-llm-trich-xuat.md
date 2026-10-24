@@ -1,10 +1,14 @@
 # Kế hoạch lớp trích xuất sự kiện bằng LLM cục bộ
 
-> **Mốc tham chiếu:** `main` @ `3cafd8f` (2026-10-22); quality gate xanh với **159 test / 19 file** (2026-10-23).
+> **Mốc tham chiếu:** `main` @ `d360d52` + working tree (2026-10-23); quality gate xanh với **180 test / 21 file** (2026-10-23).
 > **Trạng thái:** **Slice A + B đã xong phần code, đã chạy provider/pipeline với `llama-server` thật** (Qwen3.5-4B Q5_K_S, build b10101) và **đã được nghiệm thu ngày 2026-10-23**. Xem §1.2, §9.3 và §10.
 > **Sau nghiệm thu:** đã sửa lỗi khớp hồ sơ (SB-01) theo hướng event-first, prompt v3;
-> ghi nhận ở [`ke-hoach-sau-nghiem-thu-b.md`](./ke-hoach-sau-nghiem-thu-b.md).
-> Các lát C–E còn là kế hoạch: **chưa có offscreen, notification, Gmail hay duyệt hàng loạt**.
+> sau đó thêm ngày chỉ có ngày (`DateTimeRef.date`) và đối chiếu ngày với nguồn, prompt v4.
+> Ghi nhận ở [`ke-hoach-sau-nghiem-thu-b.md`](./ke-hoach-sau-nghiem-thu-b.md).
+> **Slice C đã nghiệm thu ngày 2026-10-24:** job chạy trong offscreen, lưu trạng thái vào
+> `chrome.storage.session`, huỷ được, mở lại side panel vẫn thấy tiến trình và có
+> notification khi xong. Bản ghi kiểm tra: [`kiem-tra-slice-c.md`](./kiem-tra-slice-c.md).
+> **Slice D là việc tiếp theo**; bàn giao và phạm vi ở [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
 > **Phạm vi:** nối `llama-server` (llama.cpp) vào demo hiện có để trích sự kiện, duyệt và lưu.
 > Tài liệu này **không thay thế** `ke_hoach_phat_trien.md` (build order) hay `script.md`
 > (hành vi); nó là bản chi tiết hoá cho lớp LLM sau khi đã chốt phạm vi với người dùng.
@@ -105,7 +109,7 @@ không gọi mạng, không sửa UI. Mục tiêu là chốt hình dạng dữ l
 | Ngày giờ **bịa** (không có trong nguồn, không suy ra được) | **0** | Rà bộ mẫu |
 | Thời gian xử lý p95 | ≤ 90 s/trang | `extractionMeta.latencyMs` |
 | Thời gian duyệt | ≤ 2 phút/trang | Bấm giờ khi kiểm thử thủ công |
-| Trùng lặp khi quét lại cùng trang | 0 bản ghi mới | Quét 2 lần, so số `events` |
+| Trùng lặp khi quét lại cùng trang (cùng output) | 0 bản ghi mới | Quét 2 lần với cùng kết quả model, so số `events`; paraphrase được phép tạo nháp nhưng phải gợi ý trùng |
 
 ### 2.3. Không làm trong phạm vi này
 
@@ -176,7 +180,7 @@ Ghi chú migration:
 export const EventCandidateSchema = z.object({
   title: z.string().trim().min(1).max(120),
   label: LabelSchema,
-  start: DateTimeRefSchema,          // value = null nếu thiếu ngày hoặc giờ
+  start: DateTimeRefSchema,          // value = null nếu thiếu giờ; date = YYYY-MM-DD nếu biết ngày
   end: DateTimeRefSchema.nullable(),
   durationMinutes: z.number().int().positive().nullable(),
   summary: z.array(z.string().trim().min(1).max(300)).max(5),
@@ -270,17 +274,21 @@ EventCandidate[]
 
 ### 5.2. Chuẩn hoá ngày giờ
 
-| Nguồn | Ví dụ | `start.value` | `uncertain` |
-|---|---|---|---|
-| Đủ ngày + giờ | "9:00 ngày 2/11/2026" | `2026-11-02T09:00` | — |
-| Thiếu năm | "15/11 lúc 8h" | `null` (giữ `raw`) | `nam_chua_ro` |
-| Chỉ có ngày | "hạn nộp 20/11" | `null` | `gio_chua_ro` |
-| Tương đối | "thứ 3 tuần sau" | tính được thì điền | `ngay_tuong_doi` |
-| Khoảng | "từ 8h đến 11h ngày 5/11" | start + end | — |
+| Nguồn | Ví dụ | `start.value` | `start.date` | `uncertain` |
+|---|---|---|---|---|
+| Đủ ngày + giờ | "9:00 ngày 2/11/2026" | `2026-11-02T09:00` | `null` | — |
+| Thiếu năm | "15/11 lúc 8h" | `null` | `null` (giữ `raw`) | `nam_chua_ro` |
+| Chỉ có ngày | "hạn nộp 20/11/2026" | `null` | `2026-11-20` | `gio_chua_ro` |
+| Tương đối | "thứ 3 tuần sau" | tính được thì điền | `null` | `ngay_tuong_doi` |
+| Khoảng | "từ 8h đến 11h ngày 5/11" | start + end | `null` | — |
 
-Nguyên tắc: **không điền giá trị không có trong nguồn**. Thiếu năm hoặc thiếu giờ thì
-`value = null`, giữ `raw`, và thêm khoá `uncertain` — sự kiện vẫn được đề xuất (recall),
-chỉ không tham gia nhắc việc cho tới khi người dùng điền.
+Nguyên tắc: **không điền giá trị không có trong nguồn**. Thiếu năm thì `value = null`,
+`date = null`, giữ `raw`. Thiếu giờ nhưng biết ngày thì `value = null`, `date = YYYY-MM-DD`,
+giữ `raw` nếu khớp (nếu raw lệch, lấy đoạn nguồn quanh đúng ngày); không tự thêm `00:00`.
+Sự kiện vẫn được đề xuất (recall), chỉ không tham gia nhắc việc cho tới khi người dùng điền giờ.
+
+Ngày ISO do model trả được đối chiếu với ngày tuyệt đối trong `raw` và đoạn nguồn đã gửi
+model. Nếu nguồn có ngày nhưng không khớp, `value` và `date` bị bỏ, thêm `ngay_khong_khop`.
 
 Bổ sung `UNCERTAIN_TEXT` trong `shared/constants.ts`:
 
@@ -289,6 +297,7 @@ nam_chua_ro: 'Chưa rõ năm',
 gio_chua_ro: 'Chưa rõ giờ',
 ngay_tuong_doi: 'Ngày suy ra từ cách nói tương đối',
 do_tin_cay_thap: 'Độ tin cậy thấp',
+ngay_khong_khop: 'Ngày không khớp với nguồn',
 ```
 
 ### 5.3. Cổng suy luận
@@ -323,7 +332,7 @@ export interface InferenceProvider {
 
 ## 6. Prompt và schema đầu ra
 
-### 6.1. System prompt (v3)
+### 6.1. System prompt (v4)
 
 ```text
 Bạn là bộ trích xuất sự kiện lịch trình từ văn bản tiếng Việt.
@@ -333,19 +342,25 @@ Hôm nay: {today} ({weekday}). Múi giờ: Asia/Ho_Chi_Minh (UTC+7).
 
 Quy tắc:
 1. Chỉ trả về sự kiện lịch trình có thật trong văn bản; không suy diễn sự kiện không tồn tại.
-2. Ngày tương đối quy đổi theo "Hôm nay". Thiếu năm hoặc thiếu giờ thì để null,
-   giữ nguyên chuỗi gốc ở startRaw/endRaw và ghi khoá tương ứng vào uncertain.
-3. summary gồm 1–5 ý, mỗi ý tối đa 25 từ, chỉ dùng thông tin có trong văn bản.
-4. quote là đoạn nguyên văn ngắn nhất (≤ 40 từ) chứa thời điểm và tên sự kiện. Nếu văn
+2. Ngày tương đối quy đổi theo "Hôm nay". Thiếu năm hoặc thiếu giờ thì để start/end = null,
+   giữ nguyên chuỗi gốc ở startRaw/endRaw và ghi nam_chua_ro/gio_chua_ro.
+3. Không tự thêm 00:00 cho ngày chỉ có ngày.
+4. startRaw phải là đúng đoạn mô tả start; endRaw phải là đúng đoạn mô tả end.
+5. Chỉ tạo start + end khi văn bản nói rõ một khoảng; hai mốc riêng lẻ là hai sự kiện.
+6. summary gồm 1–5 ý, mỗi ý tối đa 25 từ, chỉ dùng thông tin có trong văn bản.
+7. quote là đoạn nguyên văn ngắn nhất (≤ 40 từ) chứa thời điểm và tên sự kiện. Nếu văn
    bản có tên người liên quan, chọn đoạn chứa cả tên người đó.
-5. confidence từ 0 đến 1, phản ánh độ chắc chắn của toàn bộ sự kiện.
-6. Không có sự kiện nào thì trả {"events": []}.
-7. Chỉ trả JSON đúng schema, không giải thích, không markdown.
+8. confidence từ 0 đến 1, phản ánh độ chắc chắn của toàn bộ sự kiện.
+9. Không có sự kiện nào thì trả {"events": []}.
+10. Chỉ trả JSON đúng schema, không giải thích, không markdown.
 ```
 
 > **v3 (sau nghiệm thu Phiên B):** bỏ danh sách hồ sơ khỏi prompt. Model chỉ trích sự kiện;
 > `relatedProfiles` được khớp tất định sau `normalize` bằng `core/extraction/profile-match.ts`.
 > Nhờ vậy hồ sơ tạo sau không còn bị bỏ sót và prompt không phình theo số hồ sơ.
+>
+> **v4:** thêm ví dụ chỉ có ngày và ví dụ khoảng rõ ràng; nhấn mạnh không tự thêm `00:00`
+> và không hoán đổi `startRaw`/`endRaw`.
 
 User message:
 
@@ -355,10 +370,11 @@ User message:
 </document>
 ```
 
-- Few-shot: 2 ví dụ ngắn — một thông báo lớp có 2 sự kiện, một email không có sự kiện.
-- `PROMPT_VERSION = 'v3'` được lưu vào `extractionMeta` để so sánh giữa các lần đo.
+- Few-shot: 4 ví dụ ngắn — thông báo lớp có 2 sự kiện, chỉ có ngày, khoảng rõ ràng,
+  email không có sự kiện.
+- `PROMPT_VERSION = 'v4'` được lưu vào `extractionMeta` để so sánh giữa các lần đo.
   v2 thêm nhắc đếm thứ cẩn thận cho ngày tương đối; v3 bỏ hồ sơ khỏi prompt và chuyển
-  sang khớp hồ sơ sau khi trích.
+  sang khớp hồ sơ sau khi trích; v4 thêm ngày chỉ có ngày và ánh xạ raw rõ ràng.
 
 ### 6.2. JSON Schema cho `response_format`
 
@@ -432,7 +448,7 @@ qua nó, lớp Zod + retry vẫn là lưới an toàn cuối cùng.
 Người dùng bấm "Trích sự kiện"
   │
   ▼
-Side panel ──START_EXTRACTION──► Service worker
+Side panel ──RUN_EXTRACTION──► Service worker
   │                                   │ tạo job trong chrome.storage.session
   │                                   │ ensure offscreen (hasDocument/createDocument)
   │                                   ▼
@@ -442,9 +458,9 @@ Side panel ──START_EXTRACTION──► Service worker
   │                                   │ ghi Event(status='nhap', origin='llm') vào IndexedDB
   │                                   ▼
   │                            sendMessage(JOB_DONE) ──► SW
-  │                                                               │ cập nhật job + notification
+  │                                                               │ đóng offscreen, cập nhật job + notification
   │◄──────── chrome.storage.onChanged(job) ──────────────────────┘
-  │      job.status = 'done' → loadAll() → tab Sự kiện
+  │      job.status = 'done' → loadAll() → tab Sự kiện, lọc Nháp
   ▼
 Notification "Đã trích xong N sự kiện" ──► mở side panel
 ```
@@ -460,58 +476,53 @@ queued ──► running ──► persisting ──► done
 
 - `stage` là chuỗi tiếng Việt hiển thị thẳng: `"Đang đọc đoạn 2/3…"`,
   `"Đang lưu 4 sự kiện…"`, `"Máy chủ mô hình chưa sẵn sàng"`.
-- Huỷ: SW ghi `status='cancelled'` vào storage **và** gửi `CANCEL_JOB` tới offscreen
-  (offscreen không đọc được `chrome.storage`). Offscreen kiểm tra cờ giữa các đoạn và
-  `AbortController.abort()` request đang chạy.
+- Huỷ: SW gửi `CANCEL_EXTRACTION` tới offscreen (offscreen không đọc
+  `chrome.storage`), đóng offscreen rồi ghi `status='cancelled'` ngay — không chờ
+  `JOB_CANCELLED`, để job không kẹt nếu offscreen đã chết. Offscreen
+  `AbortController.abort()` request đang chạy và kiểm tra `signal` trước mỗi lần ghi DB;
+  message hoàn tất đến muộn bị bỏ qua.
 - Tắt trình duyệt: `chrome.storage.session` bị xoá → job biến mất, offscreen bị đóng.
   Đúng yêu cầu, **không** cần dọn thủ công.
 
 ### 7.4. Hợp đồng message
 
-Mở rộng `src/shared/messages.ts` (giữ các message cũ):
+Mở rộng `src/shared/messages.ts` (giữ các message cũ). Message job dùng trường `to`
+thay vì `target`; đây là union duy nhất được validate bằng `RuntimeMessageSchema`:
 
 ```ts
-export type Request =
-  | { type: 'OPEN_SIDE_PANEL'; tabId?: number }
-  | { type: 'DOCUMENTS_CHANGED' }
-  | { type: 'PROFILES_CHANGED' }
-  | { type: 'EVENTS_CHANGED' }
-  | { type: 'START_EXTRACTION'; documentId: string }
-  | { type: 'CANCEL_EXTRACTION'; jobId: string };
-
-export type OffscreenRequest =
-  | { target: 'offscreen'; type: 'RUN_JOB'; job: ExtractionJob; payload: ExtractionPayload }
-  | { target: 'offscreen'; type: 'CANCEL_JOB'; jobId: string };
-
-export type OffscreenEvent =
-  | { target: 'background'; type: 'JOB_PROGRESS'; jobId: string; stage: string;
+export type RuntimeMessage =
+  | { to: 'background'; type: 'RUN_EXTRACTION'; documentId: string }
+  | { to: 'background'; type: 'CANCEL_EXTRACTION'; jobId: string }
+  | { to: 'offscreen'; type: 'RUN_EXTRACTION'; jobId: string; documentId: string }
+  | { to: 'offscreen'; type: 'CANCEL_EXTRACTION'; jobId: string }
+  | { to: 'background'; type: 'JOB_PROGRESS'; jobId: string;
+      status: 'running' | 'persisting'; stage: string;
       chunkIndex: number; chunkCount: number }
-  | { target: 'background'; type: 'JOB_DONE'; jobId: string; candidateCount: number }
-  | { target: 'background'; type: 'JOB_FAILED'; jobId: string; error: string };
-
-/** Toàn bộ dữ liệu offscreen cần; offscreen không đọc được chrome.storage. */
-export interface ExtractionPayload {
-  document: NormalizedDocument;
-  profiles: Profile[];
-  settings: LlmSettings;
-  /** ISO của thời điểm chạy — dùng để quy đổi "mai", "tuần sau" ổn định. */
-  now: string;
-  timezone: string;
-}
+  | { to: 'background'; type: 'JOB_DONE'; jobId: string; candidateCount: number;
+      savedCount: number; duplicateCount: number; chunkCount: number; truncated: boolean }
+  | { to: 'background'; type: 'JOB_FAILED'; jobId: string; error: string }
+  | { to: 'background'; type: 'JOB_CANCELLED'; jobId: string };
 ```
 
-Quy ước: mọi listener kiểm tra `target` trước khi xử lý, để SW và offscreen không
+Offscreen **không** nhận toàn bộ payload qua message: nó đọc `documentId`, profiles,
+events và `LlmSettings` từ IndexedDB (cùng origin extension), nên không có
+`ExtractionPayload` trong code thực tế.
+
+Quy ước: mọi listener kiểm tra `to` trước khi xử lý, để SW và offscreen không
 xử lý nhầm message của nhau.
 
 ### 7.5. Notification
 
 - Quyền `notifications`; icon `icons/icon128.png`.
-- Tối đa **2 nút** (giới hạn của Chrome): `Duyệt ngay`, `Để sau`.
-- Bấm nút hoặc bấm thân notification → `chrome.sidePanel.open({ windowId })`.
-  **Rủi ro cần kiểm chứng:** `sidePanel.open()` yêu cầu user gesture; nếu bị từ chối
-  khi gọi từ notification, lùi về: mở popup + badge `!` (cơ chế đã có trong
-  `background/index.ts`).
-- Không dùng notification cho lỗi; lỗi hiển thị trong side panel.
+- Notification kết quả trích xuất dùng **1 nút** (`Xem sự kiện nháp` /
+  `Mở bảng điều khiển`). Nhắc việc sự kiện (KS-10) sau này mới dùng tối đa 2 nút.
+- Bấm nút hoặc bấm thân notification → ghi cờ `pending_open` vào
+  `chrome.storage.session` rồi gọi `chrome.sidePanel.open({ windowId })` **ngay, không
+  await trước đó** để giữ user gesture.
+  **Rủi ro cần kiểm chứng:** nếu Chrome từ chối, lùi về badge `!`; side panel vẫn đọc
+  cờ `pending_open` khi người dùng mở thủ công.
+- Có notification cho cả job lỗi (kèm nút mở bảng điều khiển), vì người dùng có thể đã
+  đóng side panel trong lúc chạy.
 
 ---
 
@@ -527,11 +538,23 @@ xử lý nhầm message của nhau.
 
 ### 8.2. Tab "Sự kiện"
 
-- Badge **"Máy đề xuất"** cho `origin === 'llm'`, kèm `confidence` dạng phần trăm.
-- Nhóm ưu tiên: nháp từ máy → nháp thủ công → còn lại.
-- Nút **"Duyệt tất cả nháp từ máy"** (một click, dùng `setEventStatus` cho từng bản ghi).
-- Hiển thị `quote` trong chi tiết sự kiện để đối chiếu nguồn.
-- Nếu còn thời gian: checkbox chọn từng sự kiện + "Duyệt mục đã chọn".
+- Badge **"Máy đề xuất"** cho `origin === 'llm'`; sự kiện nhập tay không gắn badge.
+- `confidence` hiển thị **ba mức Thấp / Vừa / Cao** (`<0.5`, `0.5–<0.8`, `≥0.8`),
+  **không hiển thị phần trăm**; chú thích rõ đây là model tự báo, không phải xác suất
+  đã hiệu chuẩn. Sự kiện nhập tay không có confidence.
+- **Chế độ Duyệt nháp** (`reviewMode`, chỉ UI): chỉ hiện `status === 'nhap'`; thứ tự
+  `llm` (ưu tiên confidence thấp/`uncertain`/chưa gắn hồ sơ) → `llm` còn lại → `manual`;
+  không đổi `sortEvents()` toàn cục.
+- **Checkbox chọn nháp là bắt buộc** (không phải tuỳ chọn): chọn một phần, chọn tất cả mục
+  đang hiển thị (checkbox tổng có `indeterminate`), và nút **"Duyệt mục đã chọn"**.
+  Không có nút duyệt tất cả một click; chỉ mục được chọn chuyển `dang_theo_doi`, lỗi từng
+  phần giữ `nhap`.
+- Trước khi duyệt, cảnh báo nếu mục được chọn chỉ có ngày hoặc không có thời điểm
+  (chưa xếp được nhắc việc); không tự điền `00:00`.
+- Bỏ chọn **không xoá**; muốn loại phải bấm **"Xoá nháp đã chọn"** + xác nhận.
+- Hiển thị đầy đủ `quote` trong chi tiết, kèm nút **"Mở nguồn"** khi có `url`
+  (liên kết tiêu đề nguồn hiện có được giữ).
+- Gợi ý **"Có thể trùng"** cho bản paraphrase: chỉ hiển thị, không tự gộp/xoá.
 - Sự kiện `relatedProfiles: []` hiện chip **"Chưa rõ hồ sơ"** (đã có `UNCERTAIN_TEXT`).
 
 ### 8.3. Tab "Cài đặt"
@@ -673,7 +696,7 @@ prompt/completion.
 | **A. Hợp đồng & lõi** | 1 | Chưa đổi UI; có candidate từ Mock | Quality gate xanh; test phủ normalize/dedup/schema |
 | **B. Provider & chạy tạm trong side panel** | 2 | Bấm trích trên trang thật → nháp trong DB | E2E 1 trang; lỗi server hiện thông báo rõ |
 | **C. Offscreen & notification** | 3 | Đóng panel vẫn chạy; xong có thông báo | Huỷ được; tắt trình duyệt thì job mất |
-| **D. Duyệt & chống trùng** | 4 | Duyệt nhanh, không sinh trùng khi quét lại | 5 nháp duyệt ≤ 30 s; quét lại 0 bản ghi mới |
+| **D. Duyệt & chống trùng** | 4 | Duyệt nhanh, không sinh trùng khi quét lại | 5 nháp duyệt ≤ 30 s; quét lại cùng output 0 bản ghi mới |
 | **E. Đo chất lượng & hoàn thiện** | 5 | Báo cáo số đo + chốt model | Recall ≥ 80%; p95 ≤ 90 s; 0 ngày bịa |
 
 Nếu chỉ có **3 tuần**: gộp A+B vào tuần 1 (chấp nhận chưa có form cài đặt đầy đủ),
@@ -710,27 +733,54 @@ Không cắt C — đóng panel vẫn chạy là yêu cầu đã chốt, không 
 - `manifest.config.ts`: thêm `host_permissions: ["http://127.0.0.1:8080/*"]`,
   `connect-src http://127.0.0.1:8080` trong CSP.
 - `settings.ts` view: form cấu hình + nút kiểm tra kết nối.
-- **Cố ý chưa có offscreen**: Slice C chỉ đổi "ai gọi provider", không đổi provider,
-  prompt hay normalize. Nếu Slice B bị cắt ngang, phần đã làm vẫn dùng được.
+- **Slice C chỉ đổi "ai gọi provider"**, không đổi provider, prompt hay normalize;
+  phần của Slice B vẫn dùng nguyên.
 
 ### Slice C — chi tiết
 
-- `manifest.config.ts`: thêm `offscreen`, `notifications`.
-- `src/platform/offscreen/index.html` + `main.ts`: nhận `RUN_JOB`, chạy pipeline, ghi DB,
-  gửi `JOB_PROGRESS`/`JOB_DONE`/`JOB_FAILED`.
-- `src/platform/background/jobs.ts`: tạo/đọc/ghi job, `hasDocument()`, `createDocument`,
-  huỷ, notification.
-- `src/ui/sidepanel.ts`: lắng nghe `chrome.storage.onChanged` cho job; `loadAll()` khi xong.
-- Nhớ `justification` khi tạo offscreen: "Chạy suy luận cục bộ, không dừng khi đóng side panel".
-  `reasons: ['WORKERS']`.
+> **Trạng thái (2026-10-24): đã nghiệm thu.** Bản ghi kiểm tra:
+> [`kiem-tra-slice-c.md`](./kiem-tra-slice-c.md). Quality gate `180 test / 21 file` xanh.
+> Phần **nhắc việc sự kiện** (`chrome.alarms`, mốc 1 tuần/1 ngày/ngày diễn ra, KS-10)
+> **không** nằm trong Slice C này; mới có notification kết quả trích xuất.
+> Việc tiếp theo là **Slice D** — xem [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
+
+- `manifest.config.ts`: thêm `offscreen`, `notifications`; CSP vẫn chỉ cho
+  `http://127.0.0.1:8080`.
+- `src/platform/offscreen/index.html` + `main.ts`: nhận `RUN_EXTRACTION`, chạy pipeline,
+  ghi DB, gửi `JOB_PROGRESS`/`JOB_DONE`/`JOB_FAILED`/`JOB_CANCELLED`.
+- `src/platform/offscreen/run-job.ts`: pipeline + lưu nháp, dependency inject để test.
+- `src/platform/background/jobs.ts`: tạo/patch/đọc/ghi job; validate `ExtractionJob` bằng Zod;
+  chỉ một job active; thêm `savedCount`/`duplicateCount`/`truncated` vào hợp đồng.
+- `src/platform/background/offscreen-document.ts`: `ensure`/`close`/gửi message có retry
+  (listener offscreen chưa sẵn sàng ngay sau `createDocument`).
+- `src/platform/background/notifications.ts`: notification xong/lỗi; bấm thì mở tab Sự kiện
+  lọc `nhap`; fallback badge `!` nếu `sidePanel.open()` bị chặn.
+- `src/shared/messages.ts`: union job có trường `to: 'background' | 'offscreen'` (vì
+  `chrome.runtime.sendMessage` phát tới mọi context) + `RuntimeMessageSchema`.
+- `src/ui/sidepanel.ts`: khôi phục job từ session khi mở panel, nghe
+  `chrome.storage.onChanged`; `loadAll()` khi xong; đọc cờ mở tab từ notification.
+- Offscreen dùng `reasons: ['WORKERS']`, justification "Chạy suy luận cục bộ, không dừng khi
+  đóng side panel hoặc service worker bị tạm dừng".
+- `vite.config.ts`: thêm `build.rollupOptions.input.offscreen` để CRXJS bundle trang
+  offscreen (trang này không khai báo trong manifest nên CRXJS không tự tìm thấy).
 
 ### Slice D — chi tiết
 
-- `core/extraction/dedup.ts`: chuẩn hoá title (bỏ dấu, lowercase), so trùng khi
-  `|start - start'| ≤ 1 ngày` hoặc title trùng khít; **chỉ bỏ khi chắc chắn**.
-- `ui/views/events.ts`: badge origin, confidence, quote, nhóm nháp từ máy.
-- `ui/actions/events.ts`: `bulkApproveLlmDrafts()`.
-- Kiểm tra: quét lại cùng trang 2 lần → không tăng số sự kiện.
+> **Trạng thái (2026-10-24): kế hoạch đã rà soát; chưa code.** Phạm vi chi tiết, quyết định
+> và tiêu chí nghiệm thu: [`ban-giao-slice-d.md`](./ban-giao-slice-d.md). Tóm tắt:
+>
+> - `core/extraction/confidence.ts` (mới): ba mức thấp/vừa/cao; không hiển thị phần trăm.
+> - `core/event-review.ts` (mới): `sortDraftsForReview()` — chỉ dùng trong chế độ duyệt,
+>   **không** đổi `sortEvents()` toàn cục.
+> - `ui/views/event-card.ts` + `ui/views/event-review.ts` (mới): badge **Máy đề xuất**,
+>   confidence, nguồn/quote đầy đủ, thanh duyệt và gợi ý trùng; `ui/views/events.ts` giữ
+>   danh sách/lọc.
+> - `ui/actions/review.ts` (mới): chọn/duyệt hàng loạt bằng `Promise.allSettled`, xoá nháp
+>   có xác nhận; chỉ mục được chọn chuyển `dang_theo_doi`.
+> - `core/extraction/similar.ts` (mới): gợi ý gần trùng; **không** dùng trường địa điểm
+>   (schema không có), không tự gộp/xoá.
+> - Kiểm tra: quét lại cùng trang với cùng output → 0 bản ghi mới; paraphrase → có gợi ý,
+>   không tự gộp.
 
 ### Slice E — chi tiết
 
@@ -786,9 +836,9 @@ hồ sơ đúng, JSON hợp lệ, latency. Từ đó tính recall và tỉ lệ 
 | Prompt injection trong trang | Trung bình | Coi `<document>` là dữ liệu; không làm theo chỉ thị trong đó; output vẫn qua Zod |
 | JSON sai dai dẳng | Trung bình | JSON Schema/grammar; retry 1 lần; không lưu rác |
 | Offscreen bị đóng bất ngờ | Thấp | Job `failed` có lý do; người dùng bấm lại |
-| `sidePanel.open()` từ notification bị chặn | Trung bình | Fallback badge + popup; kiểm chứng ở Slice C |
+| `sidePanel.open()` từ notification bị chặn | Trung bình | Fallback badge + cờ `pending_open`; đã kiểm chứng trong Chrome qua KT-C-04 (nghiệm thu 2026-10-24) |
 | Trang dài → nhiều đoạn → chậm | Cao | `maxChunks = 4`; hiện tiến trình; cho huỷ |
-| Bản ghi nháp rác tích tụ | Trung bình | Nút "Duyệt tất cả" + xoá nháp cũ; không tự xoá |
+| Bản ghi nháp rác tích tụ | Trung bình | Chọn + "Duyệt mục đã chọn"; "Xoá nháp đã chọn" có xác nhận; không tự xoá |
 | Quên cập nhật câu chữ "không gọi mạng" | Thấp | Nằm trong checklist Slice B |
 | Thay đổi `origin` làm hỏng bản ghi cũ | Thấp | `.default('manual')` + test đọc bản ghi cũ |
 
@@ -802,6 +852,10 @@ hồ sơ đúng, JSON hợp lệ, latency. Từ đó tính recall và tỉ lệ 
 - `confidence` do model tự báo, **không** phải xác suất đã hiệu chuẩn.
 - Sự kiện thiếu năm/giờ sẽ không vào nhắc việc cho tới khi người dùng điền.
 - Chỉ xử lý tối đa `maxChunks × chunkChars` ký tự mỗi lần trích.
+- Nếu offscreen bị Chrome đóng bất ngờ, job có thể kẹt `running`; chưa có watchdog.
+  Người dùng bấm **Huỷ** để chuyển `cancelled` rồi chạy lại.
+- Job chỉ tồn tại trong một phiên trình duyệt (`chrome.storage.session`); tắt trình duyệt
+  là huỷ, không resume.
 
 ---
 

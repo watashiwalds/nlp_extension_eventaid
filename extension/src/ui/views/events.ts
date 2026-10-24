@@ -1,6 +1,6 @@
 import { LABEL_TEXT, STATUS_TEXT, STATUS_TONE, UNCERTAIN_TEXT } from '../../shared/constants';
 import { LABELS } from '../../shared/contracts';
-import type { Event } from '../../shared/contracts';
+import type { DateTimeRef, Event } from '../../shared/contracts';
 import {
   allEventTags,
   eventTiming,
@@ -9,7 +9,7 @@ import {
   isOverdue,
   nextStatusOptions,
 } from '../../core/events';
-import { formatDateTimeLong, formatDuration, relativeLabel } from '../../core/dates';
+import { formatDate, formatDateTimeLong, formatDuration, relativeLabel } from '../../core/dates';
 import type { AppState } from '../store';
 import {
   badge,
@@ -48,20 +48,34 @@ function timingText(event: Event): string {
   return TIMING_TEXT[eventTiming(event)] ?? 'Chưa xác định';
 }
 
+function dateRefHtml(ref: DateTimeRef | null, fallback = ''): string {
+  if (!ref) return escapeHtml(fallback) || '<span class="warn-text">Chưa xác định</span>';
+  if (ref.value) return escapeHtml(formatDateTimeLong(ref.value));
+  if (ref.date) {
+    const source = ref.raw ? ` <span class="muted small">(nguồn: ${escapeHtml(ref.raw)})</span>` : '';
+    return `${escapeHtml(formatDate(ref.date))} <span class="muted small">· chưa rõ giờ</span>${source}`;
+  }
+  if (ref.raw) {
+    return `<span class="warn-text">Chưa xác định</span> <span class="muted small">(nguồn: ${escapeHtml(ref.raw)})</span>`;
+  }
+  return escapeHtml(fallback) || '<span class="warn-text">Chưa xác định</span>';
+}
+
 function eventDetail(event: Event, state: AppState): string {
   const names = profileNames(event, state);
   const ongoing = isOngoing(event);
-  const endText = event.end?.value
-    ? formatDateTimeLong(event.end.value)
-    : event.durationMinutes
-      ? `Kéo dài ${formatDuration(event.durationMinutes)}`
-      : 'Chưa xác định';
+  const endText =
+    event.end?.value || event.end?.date || event.end?.raw
+      ? dateRefHtml(event.end)
+      : event.durationMinutes
+        ? escapeHtml(`Kéo dài ${formatDuration(event.durationMinutes)}`)
+        : '<span class="warn-text">Chưa xác định</span>';
   const uncertain = event.validation.uncertain;
 
   return `<div class="event-detail">
     <dl class="detail-grid">
-      <div><dt>Bắt đầu</dt><dd>${event.start.value ? escapeHtml(formatDateTimeLong(event.start.value)) : '<span class="warn-text">Chưa xác định</span>'}</dd></div>
-      <div><dt>Kết thúc</dt><dd>${escapeHtml(endText)}</dd></div>
+      <div><dt>Bắt đầu</dt><dd>${dateRefHtml(event.start)}</dd></div>
+      <div><dt>Kết thúc</dt><dd>${endText}</dd></div>
       <div><dt>Diễn biến</dt><dd class="${ongoing ? 'ongoing-text' : ''}">${escapeHtml(timingText(event))}</dd></div>
       <div><dt>Nhãn</dt><dd>${escapeHtml(LABEL_TEXT[event.label])}</dd></div>
       <div><dt>Cập nhật</dt><dd>${escapeHtml(formatDateTimeLong(event.updatedAt))}</dd></div>
@@ -151,9 +165,9 @@ function eventCard(event: Event, state: AppState): string {
   const ongoing = isOngoing(event);
   const overdue = isOverdue(event);
   const names = profileNames(event, state);
-  const start = event.start.value;
+  const start = event.start.value ?? event.start.date;
   const firstSummary = event.summary[0];
-  const missingTime = !start;
+  const missingTime = !event.start.value;
   const hasChips = event.tags.length > 0 || names.length > 0 || missingTime;
 
   return `<article class="event-card ${expanded ? 'event-card--expanded' : ''} ${overdue ? 'event-card--overdue' : ''} ${ongoing ? 'event-card--ongoing' : ''}">

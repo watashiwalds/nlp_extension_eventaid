@@ -1,3 +1,4 @@
+import { parseEventDate } from '../core/dates';
 import { escapeHtml } from './components';
 
 export function hostnameOf(url?: string): string {
@@ -34,13 +35,13 @@ export function shorten(text: string, max = 180): string {
 }
 
 export function monthShort(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  const date = parseEventDate(value);
+  if (!date) return '—';
   return `TH${date.getMonth() + 1}`;
 }
 
 export function dayOfMonth(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '?';
+  const date = parseEventDate(value);
+  if (!date) return '?';
   return date.getDate().toString().padStart(2, '0');
 }

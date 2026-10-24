@@ -44,6 +44,8 @@ export interface NormalizeContext {
   /** Dùng để quy đổi ngày tương đối nếu model trả chuỗi tương đối. */
   now: Date;
   timezone: string;
+  /** Đoạn văn gốc đã gửi cho model; dùng để đối chiếu ngày thay vì tin raw của model. */
+  sourceText?: string;
 }
 
 /** Thông tin gắn vào `Event.extractionMeta` khi lưu bản ghi. */
@@ -61,6 +63,8 @@ export interface CandidateRunMeta {
 export interface DedupInput {
   title: string;
   startValue: string | null;
+  /** `YYYY-MM-DD` khi chỉ biết ngày; dùng thay `startValue` để so trùng. */
+  startDate?: string | null;
 }
 
 export interface DedupResult {

@@ -97,7 +97,7 @@ export function eventFormView(state: AppState): string {
           ${errors.end ? `<p class="field__error">${escapeHtml(errors.end)}</p>` : ''}
         </div>
       </div>
-      <p class="field__hint">Bỏ trống nếu chưa rõ — ứng dụng sẽ ghi “chưa xác định”, không tự suy đoán.</p>
+      <p class="field__hint">Có thể chỉ nhập ngày nếu chưa rõ giờ; bỏ trống nếu chưa rõ — ứng dụng không tự suy đoán.</p>
 
       <div class="field ${errors.duration ? 'field--error' : ''}">
         <label class="field__label" for="event-duration">Thời lượng (phút)</label>

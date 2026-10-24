@@ -20,6 +20,8 @@ export interface ExtractionProgress {
   stage: string;
   chunkIndex: number;
   chunkCount: number;
+  /** Giai đoạn ghi DB; mặc định là đang gọi model. */
+  phase?: 'running' | 'persisting';
 }
 
 export interface ExtractionSettings {
@@ -121,7 +123,11 @@ export async function extractEvents(request: ExtractRequest): Promise<Extraction
       chunkCount: chunks.length,
       latencyMs: result.latencyMs,
     };
-    const candidates = normalizeEvents(parsed.value.events, { now, timezone }).map((candidate) =>
+    const candidates = normalizeEvents(parsed.value.events, {
+      now,
+      timezone,
+      sourceText: chunk.text,
+    }).map((candidate) =>
       attachProfiles(candidate, request.profiles, request.document.title),
     );
     for (const candidate of candidates) collected.push({ candidate, run });

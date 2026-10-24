@@ -82,6 +82,20 @@ export async function saveDocument(document: NormalizedDocument): Promise<void> 
   await mutate('documents', (store) => store.put(valid));
 }
 
+export async function getDocument(documentId: string): Promise<NormalizedDocument | null> {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('documents', 'readonly');
+    const request = tx.objectStore('documents').get(documentId);
+    request.onsuccess = () => {
+      const parsed = NormalizedDocumentSchema.safeParse(request.result);
+      if (parsed.success) resolve(parsed.data);
+      else resolve(null);
+    };
+    request.onerror = () => reject(request.error ?? new Error('Đọc IndexedDB thất bại'));
+  });
+}
+
 export async function listDocuments(): Promise<NormalizedDocument[]> {
   const rows = await readAll<unknown>('documents');
   return rows

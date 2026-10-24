@@ -47,6 +47,7 @@ export const UNCERTAIN_TEXT: Record<string, string> = {
   gio_chua_ro: 'Chưa rõ giờ',
   ngay_tuong_doi: 'Ngày suy ra từ cách nói tương đối',
   do_tin_cay_thap: 'Độ tin cậy thấp',
+  ngay_khong_khop: 'Ngày không khớp với nguồn',
 };
 
 export const MILESTONE_TEXT = {
@@ -63,6 +64,15 @@ export const PENDING_CAPTURE_KEY = 'pending_capture';
 
 /** Khoá job trích xuất trong `chrome.storage.session` (tự xoá khi đóng trình duyệt). */
 export const EXTRACTION_JOB_KEY = 'extraction_job';
+
+/** Cờ mở side panel đúng tab sau khi bấm notification. */
+export const PENDING_OPEN_KEY = 'pending_open';
+
+/** ID notification kết quả trích xuất. */
+export const EXTRACTION_NOTIFICATION_ID = 'extraction_done';
+
+/** Trang offscreen dùng cho tác vụ LLM dài; tạo theo nhu cầu. */
+export const OFFSCREEN_DOCUMENT_PATH = 'src/platform/offscreen/index.html';
 
 /** ID menu chuột phải cho vùng bôi đen (VĐ-03). */
 export const SELECTION_MENU_ID = 'scan-selection';

@@ -26,6 +26,41 @@ export function toInputValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+/** Chuyển `YYYY-MM-DD` (ngày địa phương) sang Date; null nếu ngày không có thật. */
+export function parseDateOnly(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return toDateOnly(date) === value.trim() ? date : null;
+}
+
+export function isValidDateOnly(value: string): boolean {
+  return parseDateOnly(value) !== null;
+}
+
+export function toDateOnly(date: Date): string {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** Nhận cả `YYYY-MM-DDTHH:mm` và `YYYY-MM-DD`; dùng cho hiển thị/sắp xếp. */
+export function parseEventDate(value: string): Date | null {
+  return parseLocalDateTime(value) ?? parseDateOnly(value);
+}
+
+/** Hiển thị: nhận thêm ISO có múi giờ (ví dụ `updatedAt`) bên cạnh ngày giờ địa phương. */
+function parseDisplayDate(value: string): Date | null {
+  const local = parseLocalDateTime(value);
+  if (local) return local;
+  const dateOnly = parseDateOnly(value);
+  if (dateOnly) return dateOnly;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isDateOnlyValue(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
+}
+
 const LOCAL_ISO = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?$/;
 const OFFSET_ISO =
   /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/i;
@@ -106,32 +141,36 @@ export interface DateTimeParts {
 export function splitDateTimeLocal(value: string): DateTimeParts {
   const trimmed = (value ?? '').trim();
   if (!trimmed) return { date: '', time: '' };
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return { date: trimmed, time: '' };
   const [date = '', time = ''] = trimmed.split('T');
   return { date, time };
 }
 
 export interface JoinedDateTime {
-  /** `YYYY-MM-DDTHH:mm`, hoặc chuỗi rỗng khi cả hai ô đều trống. */
+  /** `YYYY-MM-DDTHH:mm`; rỗng khi chỉ có ngày hoặc cả hai ô đều trống. */
   value: string;
+  /** `YYYY-MM-DD` khi biết ngày nhưng chưa biết giờ. */
+  date: string | null;
   error: string | null;
 }
 
-/** Ghép ô ngày + ô giờ; trả lỗi rõ ràng thay vì đoán giá trị còn thiếu. */
+/** Ghép ô ngày + ô giờ; cho phép chỉ có ngày, không tự điền giờ. */
 export function joinDateTimeLocal(dateValue: string, timeValue: string): JoinedDateTime {
   const date = dateValue.trim();
   const time = timeValue.trim();
-  if (!date && !time) return { value: '', error: null };
-  if (!date) return { value: '', error: 'Cần nhập ngày' };
-  if (!time) return { value: '', error: 'Cần nhập giờ' };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) {
-    return { value: '', error: 'Ngày hoặc giờ không hợp lệ' };
+  if (!date && !time) return { value: '', date: null, error: null };
+  if (!date) return { value: '', date: null, error: 'Cần nhập ngày' };
+  if (!isValidDateOnly(date)) return { value: '', date: null, error: 'Ngày hoặc giờ không hợp lệ' };
+  if (!time) return { value: '', date, error: null };
+  if (!/^\d{2}:\d{2}$/.test(time)) {
+    return { value: '', date: null, error: 'Ngày hoặc giờ không hợp lệ' };
   }
   const value = `${date}T${time}`;
   const parsed = parseLocalDateTime(value);
   if (!parsed || toInputValue(parsed) !== value) {
-    return { value: '', error: 'Ngày hoặc giờ không hợp lệ' };
+    return { value: '', date: null, error: 'Ngày hoặc giờ không hợp lệ' };
   }
-  return { value, error: null };
+  return { value, date: null, error: null };
 }
 
 export function toIsoLocal(date: Date): string {
@@ -139,29 +178,30 @@ export function toIsoLocal(date: Date): string {
 }
 
 export function formatTime(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  const date = parseDisplayDate(value);
+  if (!date || isDateOnlyValue(value)) return '—';
   return new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit' }).format(date);
 }
 
 export function formatDate(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  const date = parseDisplayDate(value);
+  if (!date) return '—';
   return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
 }
 
 export function formatDateTime(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  const date = parseDisplayDate(value);
+  if (!date) return '—';
+  if (isDateOnlyValue(value)) return formatDate(value);
   return `${formatTime(value)} · ${formatDate(value)}`;
 }
 
 export function formatDateTimeLong(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  const date = parseDisplayDate(value);
+  if (!date) return '—';
   const weekday = new Intl.DateTimeFormat('vi-VN', { weekday: 'long' }).format(date);
   const day = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
-  return `${weekday}, ${day} · ${formatTime(value)}`;
+  return isDateOnlyValue(value) ? `${weekday}, ${day}` : `${weekday}, ${day} · ${formatTime(value)}`;
 }
 
 function startOfDay(date: Date): number {
@@ -169,8 +209,8 @@ function startOfDay(date: Date): number {
 }
 
 export function daysFromToday(value: string, now: Date = new Date()): number | null {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
+  const date = parseEventDate(value);
+  if (!date) return null;
   return Math.round((startOfDay(date) - startOfDay(now)) / DAY_MS);
 }
 
@@ -178,7 +218,7 @@ export function daysFromToday(value: string, now: Date = new Date()): number | n
 export function relativeLabel(value: string, now: Date = new Date()): string {
   const days = daysFromToday(value, now);
   if (days === null) return 'Chưa xác định';
-  const time = formatTime(value);
+  const time = parseLocalDateTime(value) ? formatTime(value) : 'chưa rõ giờ';
   if (days === 0) return `Hôm nay · ${time}`;
   if (days === 1) return `Ngày mai · ${time}`;
   if (days === -1) return `Hôm qua · ${time}`;
@@ -187,14 +227,14 @@ export function relativeLabel(value: string, now: Date = new Date()): string {
 }
 
 export function isPast(value: string, now: Date = new Date()): boolean {
-  const date = new Date(value);
-  return !Number.isNaN(date.getTime()) && date.getTime() < now.getTime();
+  const date = parseEventDate(value);
+  return date !== null && date.getTime() < now.getTime();
 }
 
 export function isSameDay(a: string, b: string): boolean {
-  const dateA = new Date(a);
-  const dateB = new Date(b);
-  if (Number.isNaN(dateA.getTime()) || Number.isNaN(dateB.getTime())) return false;
+  const dateA = parseEventDate(a);
+  const dateB = parseEventDate(b);
+  if (!dateA || !dateB) return false;
   return startOfDay(dateA) === startOfDay(dateB);
 }
 

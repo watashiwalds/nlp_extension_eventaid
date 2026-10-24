@@ -65,7 +65,22 @@ describe('form sự kiện', () => {
     const result = buildEventFromForm(values({ start: '', end: '', duration: '' }), null, NOW);
     expect(result.event).toBeDefined();
     expect(result.event?.start.value).toBeNull();
+    expect(result.event?.start.date).toBeNull();
     expect(result.event?.validation.uncertain).toContain('chua_ro_thoi_diem');
+  });
+
+  it('cho phép chỉ nhập ngày, giữ date và gắn cờ chưa rõ giờ', () => {
+    const result = buildEventFromForm(
+      values({ start: '', startDate: '2026-11-20', end: '', endDate: '2026-11-21' }),
+      null,
+      NOW,
+    );
+    expect(result.errors).toEqual({});
+    expect(result.event?.start.value).toBeNull();
+    expect(result.event?.start.date).toBe('2026-11-20');
+    expect(result.event?.end?.date).toBe('2026-11-21');
+    expect(result.event?.validation.uncertain).toContain('gio_chua_ro');
+    expect(result.event?.validation.uncertain).not.toContain('chua_ro_thoi_diem');
   });
 
   it('cập nhật giữ nguyên id và trạng thái', () => {

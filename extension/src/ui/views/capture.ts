@@ -136,7 +136,7 @@ function extractionCard(state: AppState): string {
       </div>
       <button type="button" class="btn btn--small btn--danger-ghost" data-action="cancel-extraction">Huỷ</button>
     </div>
-    <p class="muted small">Máy chủ mô hình chạy trên chính máy bạn. Giữ side panel mở cho tới khi trích xong.</p>
+    <p class="muted small">Máy chủ mô hình chạy trên chính máy bạn. Có thể đóng bảng điều khiển; quá trình trích xuất vẫn chạy tiếp và sẽ có thông báo khi xong.</p>
   </section>`;
 }
 

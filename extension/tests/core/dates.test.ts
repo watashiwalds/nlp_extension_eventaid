@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   daysFromToday,
   durationMinutes,
+  formatDate,
+  formatDateTimeLong,
   formatDuration,
   joinDateTimeLocal,
   parseLocalDateTime,
@@ -44,6 +46,13 @@ describe('dates', () => {
     expect(relativeLabel('2026-10-19T09:00', NOW)).toBe('Đã qua 2 ngày');
   });
 
+  it('định dạng được ngày chỉ có ngày và ISO có múi giờ', () => {
+    expect(formatDate('2026-11-20')).toContain('20/11/2026');
+    expect(formatDateTimeLong('2026-11-20')).toContain('20/11/2026');
+    expect(formatDateTimeLong('2026-11-20')).not.toContain('—');
+    expect(formatDateTimeLong('2026-10-23T12:00:00.000Z')).not.toContain('—');
+  });
+
   it('tính thời lượng và định dạng', () => {
     expect(durationMinutes('2026-11-02T09:00', '2026-11-02T10:30')).toBe(90);
     expect(durationMinutes('2026-11-02T10:00', '2026-11-02T09:00')).toBeNull();
@@ -57,14 +66,20 @@ describe('dates', () => {
     expect(splitDateTimeLocal('2026-11-02T09:30')).toEqual({ date: '2026-11-02', time: '09:30' });
     expect(joinDateTimeLocal('2026-11-02', '09:30')).toEqual({
       value: '2026-11-02T09:30',
+      date: null,
       error: null,
     });
+    expect(splitDateTimeLocal('2026-11-02')).toEqual({ date: '2026-11-02', time: '' });
   });
 
   it('ghép ô ngày/giờ xử lý rỗng và giá trị thiếu', () => {
-    expect(joinDateTimeLocal('', '')).toEqual({ value: '', error: null });
+    expect(joinDateTimeLocal('', '')).toEqual({ value: '', date: null, error: null });
     expect(splitDateTimeLocal('')).toEqual({ date: '', time: '' });
-    expect(joinDateTimeLocal('2026-11-02', '').error).toBe('Cần nhập giờ');
+    expect(joinDateTimeLocal('2026-11-02', '')).toEqual({
+      value: '',
+      date: '2026-11-02',
+      error: null,
+    });
     expect(joinDateTimeLocal('', '09:30').error).toBe('Cần nhập ngày');
     expect(joinDateTimeLocal('2026-11-31', '09:30').error).toBe('Ngày hoặc giờ không hợp lệ');
     expect(joinDateTimeLocal('2026-11-02', '99:99').error).toBe('Ngày hoặc giờ không hợp lệ');

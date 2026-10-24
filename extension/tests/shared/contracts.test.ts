@@ -8,6 +8,7 @@ import {
   MAX_EVENT_TAGS,
 } from '../../src/shared/contracts';
 import { makeEvent } from '../../src/core/events';
+import { RuntimeMessageSchema } from '../../src/shared/messages';
 import { clearAll, exportAll, importAll, listEvents } from '../../src/platform/storage/db';
 
 const NOW = new Date(2026, 9, 21, 8, 0, 0);
@@ -38,10 +39,14 @@ beforeEach(async () => {
 });
 
 describe('hợp đồng lớp trích xuất LLM', () => {
-  it('bản ghi cũ thiếu origin được đọc là manual', () => {
-    const parsed = EventSchema.parse(legacyEvent());
+  it('bản ghi cũ thiếu origin/date được đọc với giá trị mặc định', () => {
+    const raw = legacyEvent();
+    const start = raw.start as Record<string, unknown>;
+    delete start.date;
+    const parsed = EventSchema.parse(raw);
     expect(parsed.origin).toBe('manual');
     expect(parsed.extractionMeta).toBeUndefined();
+    expect(parsed.start.date).toBeNull();
   });
 
   it('bản ghi llm giữ origin và extractionMeta', () => {
@@ -120,8 +125,39 @@ describe('hợp đồng lớp trích xuất LLM', () => {
       startedAt: NOW.toISOString(),
       updatedAt: NOW.toISOString(),
     };
-    expect(ExtractionJobSchema.parse(job).status).toBe('queued');
+    const parsed = ExtractionJobSchema.parse(job);
+    expect(parsed.status).toBe('queued');
+    expect(parsed.savedCount).toBe(0);
+    expect(parsed.duplicateCount).toBe(0);
+    expect(parsed.truncated).toBe(false);
     expect(() => ExtractionJobSchema.parse({ ...job, status: 'dang_chay' })).toThrow();
+  });
+
+  it('message job phải đúng đích và đủ trường', () => {
+    expect(
+      RuntimeMessageSchema.safeParse({
+        to: 'background',
+        type: 'RUN_EXTRACTION',
+        documentId: 'doc_1',
+      }).success,
+    ).toBe(true);
+    expect(
+      RuntimeMessageSchema.safeParse({
+        to: 'offscreen',
+        type: 'RUN_EXTRACTION',
+        documentId: 'doc_1',
+      }).success,
+    ).toBe(false);
+    expect(
+      RuntimeMessageSchema.safeParse({
+        to: 'background',
+        type: 'JOB_PROGRESS',
+        jobId: 'job_1',
+        stage: 'Đang đọc…',
+        chunkIndex: 1,
+        chunkCount: 2,
+      }).success,
+    ).toBe(true);
   });
 });
 

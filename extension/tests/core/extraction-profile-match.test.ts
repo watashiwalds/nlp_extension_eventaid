@@ -24,7 +24,7 @@ function candidate(patch: Partial<EventCandidate> = {}): EventCandidate {
   return {
     title: 'Họp nhóm đồ án',
     label: 'công_vụ',
-    start: { value: '2026-11-02T09:00', raw: '9:00 ngày 2/11/2026' },
+    start: { value: '2026-11-02T09:00', date: null, raw: '9:00 ngày 2/11/2026' },
     end: null,
     durationMinutes: null,
     summary: [],

@@ -4,8 +4,8 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 `proposed_technical.md`, lộ trình S0–S6 trong `ke_hoach_phat_trien.md`) và đánh dấu mức độ
 đã có trong **demo** tại `extension/`.
 
-- **Ngày đối chiếu:** 2026-10-22
-- **Mốc demo:** sau phiên 2 (VĐ-09, YC-03 + các mục phiên 1)
+- **Ngày đối chiếu:** 2026-10-24
+- **Mốc demo:** sau Slice B (LLM cục bộ) + Slice C (offscreen job + notification) — Slice C đã nghiệm thu 2026-10-24; Slice D là việc tiếp theo
 - **Nguồn tham chiếu chéo:** [`DEVIATIONS.md`](./DEVIATIONS.md), [`kiem-thu-demo.md`](./kiem-thu-demo.md)
 
 ## Chú giải
@@ -26,25 +26,27 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 
 | Nhóm | Nội dung | ✅ | 🟡 | ❌ | Tổng |
 |---|---|---:|---:|---:|---:|
-| A | Nền tảng & kiến trúc | 6 | 2 | 2 | 10 |
+| A | Nền tảng & kiến trúc | 8 | 2 | 0 | 10 |
 | B | Thu thập dữ liệu | 9 | 1 | 3 | 13 |
-| C | Pipeline NLP (classifier + LLM) | 0 | 1 | 10 | 11 |
+| C | Pipeline NLP (classifier + LLM) | 5 | 4 | 2 | 11 |
 | D | Xem lại & quản lý sự kiện | 6 | 2 | 2 | 10 |
 | E | Nhắc việc | 0 | 1 | 5 | 6 |
 | F | Mở rộng (KS-12, KS-13) | 1 | 0 | 4 | 5 |
 | G | Phi chức năng & chất lượng | 4 | 5 | 2 | 11 |
-| **—** | **Tổng** | **26** | **12** | **28** | **66** |
+| **—** | **Tổng** | **33** | **15** | **18** | **66** |
 
 **Kết luận nhanh**
 
 - **Phần lõi của một ứng dụng quản lý lịch trình đã chạy được:** đọc trang, quản lý hồ sơ,
   tạo/sửa/xoá sự kiện đủ 7 trường, máy trạng thái, nguồn trích, xuất–nhập JSON.
-- **Toàn bộ phần "thông minh" chưa có:** classifier, LLM, chuẩn hoá ngày giờ, dedup,
-  so khớp hồ sơ, tự động trích xuất. Demo là **nhập tay 100%**.
+- **Phần LLM cục bộ đã có:** `InferenceProvider` cho llama.cpp, prompt + JSON schema, validate
+  bằng Zod, normalize, dedup, khớp hồ sơ, chunking; job chạy trong offscreen và lưu nháp.
+  **Classifier TF-IDF vẫn chưa có**, nên không có bước lọc trước khi gọi LLM.
 - **Các kênh dữ liệu ngoài trang web chưa có:** Gmail API, PDF/DOCX/OCR, ICS. Trang Gmail chỉ được đọc **best-effort** như một trang web.
-- **Nhắc việc chưa có:** trường dữ liệu tồn tại nhưng luôn rỗng; không có `alarms`/`notifications`.
+- **Nhắc việc sự kiện chưa có:** trường dữ liệu tồn tại nhưng luôn rỗng; `notifications` mới
+  dùng cho job trích xuất, chưa có `chrome.alarms`/engine KS-10.
 - **Nền tảng kỹ thuật đúng kế hoạch:** TypeScript strict, Vite + CRXJS, hợp đồng Zod duy nhất,
-  phân lớp core/platform/ui, không gọi mạng, CSP `script-src 'self'`.
+  phân lớp core/platform/ui, mạng chỉ tới `127.0.0.1:8080`, CSP `script-src 'self'`.
 
 ---
 
@@ -57,11 +59,11 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | A3 | `shared/contracts.ts` là nguồn hợp đồng duy nhất, Zod validate ở biên IndexedDB | ✅ | Đủ `Document`, `Profile`, `Event`, `Settings`; có test parse |
 | A4 | Phân lớp `core/` → `platform/` → `ui/`, không import ngược | ✅ | ESLint `no-restricted-imports` + `no-restricted-globals` |
 | A5 | IndexedDB + wrapper typed (~150 dòng), không Dexie | ✅ | `platform/storage/db.ts`; 4 object store |
-| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 72 test Vitest |
+| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 180 test Vitest / 21 file |
 | A7 | Content script inject Readability theo yêu cầu | 🟡 | `scripting.executeScript` chạy page snapshot (lọc `main`/landmark, bỏ menu/khung ẩn), **Readability chạy trong side panel**; chưa có content script thường trú |
-| A8 | Job queue bền, tiến trình, resume sau service worker restart | ❌ | Đọc trang là thao tác đồng bộ vài trăm ms, không có job nền |
-| A9 | Offscreen document chạy classifier + LLM | ❌ | Không có tác vụ dài cần offscreen |
-| A10 | `Settings` store được đọc/ghi trong luồng thật | 🟡 | Bảng `settings` có trong DB nhưng demo chưa dùng; cờ quét dùng `chrome.storage.session` |
+| A8 | Job queue bền, tiến trình, resume sau service worker restart | 🟡 | Có **một** job active trong `chrome.storage.session`, tiến trình + huỷ; SW restart vẫn thấy job/offscreen; **không resume sau khi tắt trình duyệt** |
+| A9 | Offscreen document chạy classifier + LLM | ✅ | Offscreen chỉ cho LLM; classifier chưa có. Tạo theo nhu cầu, đóng sau khi xong |
+| A10 | `Settings` store được đọc/ghi trong luồng thật | ✅ | `LlmSettings` đọc/ghi qua IndexedDB; cờ quét và job dùng `chrome.storage.session` |
 
 ## B. Thu thập dữ liệu
 
@@ -87,15 +89,15 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 |---|---|---|---|
 | C1 | Classifier TF-IDF + Logistic Regression (có/không sự kiện + score) | ❌ | Không có; mọi sự kiện do người dùng tạo |
 | C2 | `core/classifier.ts` + `public/models/classifier.json` | ❌ | Không có model, không có script train |
-| C3 | LLM cục bộ llama.cpp qua `fetch` (`127.0.0.1:8080`) | ❌ | Không có `InferenceProvider`, không có host permission |
-| C4 | `MockProvider` để làm UI trước khi có model | ❌ | Không cần vì demo nhập tay |
-| C5 | Prompt + JSON schema + `LlmEvent` validate bằng Zod | ❌ | Không có |
-| C6 | Chuẩn hoá ngày giờ tiếng Việt ("8h tối mai", "thứ 3 tuần sau") | ❌ | Chỉ parse chuỗi ISO từ ô `datetime-local` |
-| C7 | Validate kết quả và gắn `validation.uncertain[]`, không bịa dữ liệu | 🟡 | Demo **suy ra cờ** từ dữ liệu nhập tay (thiếu start/end/hồ sơ); chưa validate output model |
-| C8 | Dedup + merge sự kiện trùng từ nhiều nguồn | ❌ | Không có |
-| C9 | So khớp hồ sơ tự động theo tên/biệt danh/từ khoá | ❌ | Người dùng tự gắn hồ sơ |
-| C10 | Chunking văn bản dài + merge kết quả từng đoạn | ❌ | Chỉ cắt cứng 200k ký tự khi đọc trang |
-| C11 | Phòng chống prompt injection từ nội dung tài liệu | ❌ | Chưa có LLM nên chưa có bề mặt tấn công này |
+| C3 | LLM cục bộ llama.cpp qua `fetch` (`127.0.0.1:8080`) | ✅ | `platform/inference/llama-cpp.ts` + `InferenceProvider`; `host_permissions` và CSP chỉ mở `127.0.0.1:8080` |
+| C4 | `MockProvider` để làm UI trước khi có model | ✅ | `core/extraction/mock-provider.ts`; dùng trong test pipeline/offscreen |
+| C5 | Prompt + JSON schema + `LlmEvent` validate bằng Zod | ✅ | `prompt.ts`, `schema.ts`, `contracts.ts`; retry 1 lần khi JSON sai |
+| C6 | Chuẩn hoá ngày giờ tiếng Việt ("8h tối mai", "thứ 3 tuần sau") | 🟡 | Hỗ trợ `d/m/yyyy`, `d-m-yyyy`, `yyyy-mm-dd`, "ngày d tháng m năm yyyy"; thiếu năm/giờ → `uncertain`, không bịa. Chưa phủ hết "8h tối mai" |
+| C7 | Validate kết quả và gắn `validation.uncertain[]`, không bịa dữ liệu | 🟡 | Đã validate output model + đối chiếu ngày với nguồn, giữ `DateTimeRef.date`; vẫn cần đo chất lượng trên bộ mẫu (Slice E) |
+| C8 | Dedup + merge sự kiện trùng từ nhiều nguồn | 🟡 | Có dedup candidate trong lần chạy + với sự kiện cũ; **chưa có gợi ý/gộp paraphrase** (Slice D) |
+| C9 | So khớp hồ sơ tự động theo tên/biệt danh/từ khoá | ✅ | `profile-match.ts` chạy sau normalize, event-first; người dùng vẫn sửa được |
+| C10 | Chunking văn bản dài + merge kết quả từng đoạn | ✅ | `chunk.ts` + `pipeline.ts`; `maxChunks × chunkChars`, báo khi cắt |
+| C11 | Phòng chống prompt injection từ nội dung tài liệu | 🟡 | Prompt coi `<document>` là dữ liệu và output vẫn qua Zod; chưa có red-team/đo prompt injection |
 
 ## D. Xem lại & quản lý sự kiện
 
@@ -116,7 +118,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 
 | Mã | Chức năng theo kế hoạch | Trạng thái | Demo hiện tại / ghi chú |
 |---|---|---|---|
-| E1 | `chrome.alarms` + `chrome.notifications` | ❌ | Không khai báo quyền, không có engine nhắc việc |
+| E1 | `chrome.alarms` + `chrome.notifications` | ❌ | `notifications` đã khai báo nhưng chỉ dùng cho job trích xuất; **chưa có `alarms`/engine nhắc việc sự kiện** |
 | E2 | 3 mốc: 1 tuần trước / 1 ngày trước / ngày diễn ra | ❌ | Hằng số `MILESTONE_TEXT` có, nhưng `notifications` luôn rỗng |
 | E3 | Bật/tắt từng mốc trong Cài đặt, áp dụng cho sự kiện mới | ❌ | Chưa có UI |
 | E4 | Thông báo có 2 nút (Theo dõi / Huỷ), hành động thứ 3 vào side panel | ❌ | Chưa có thông báo |
@@ -137,16 +139,16 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 
 | Mã | Chức năng theo kế hoạch | Trạng thái | Demo hiện tại / ghi chú |
 |---|---|---|---|
-| G1 | Toàn bộ xử lý cục bộ, không gửi nội dung ra ngoài | ✅ | Không có host permission, không có request mạng |
-| G2 | Bộ quyền tối thiểu | 🟡 | Demo chỉ xin `activeTab`, `scripting`, `storage`, `sidePanel`, `contextMenus`; kế hoạch còn có `alarms`, `notifications`, `offscreen`, `unlimitedStorage` cho các phần chưa làm |
+| G1 | Toàn bộ xử lý cục bộ, không gửi nội dung ra ngoài | ✅ | Mạng chỉ tới `127.0.0.1:8080` (llama-server); không backend từ xa |
+| G2 | Bộ quyền tối thiểu | 🟡 | Đã có `activeTab`, `scripting`, `storage`, `offscreen`, `notifications`, `sidePanel`, `contextMenus`; còn thiếu `alarms`/`unlimitedStorage` cho phần chưa làm |
 | G3 | CSP `script-src 'self'`, không remote code, không WASM | ✅ | Giữ đúng |
 | G4 | Escape HTML trước khi render | ✅ | Toàn bộ nội dung động đi qua `escapeHtml`/`escapeAttr` |
 | G5 | Không thực thi script/macro trong tài liệu đầu vào | ✅ | Chỉ đọc text/HTML tĩnh, không eval |
 | G6 | Accessibility: bàn phím, focus ring, nhãn ARIA | 🟡 | Đã bỏ `autofocus`, thêm `:focus-visible`, Esc đóng form, focus ô lỗi đầu tiên; cần kiểm thủ công lại |
 | G7 | Side panel 320/360/400px không tràn ngang | 🟡 | Đã tách ô ngày/giờ + grid `minmax(0, 1fr)`, stack khi hẹp; **chưa xác nhận lại trên Chrome thật** |
-| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 72 test Vitest (core + parse + page snapshot + smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
+| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 180 test Vitest / 21 file (core, parse, page snapshot, extraction/LLM, job, offscreen runner, smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
 | G9 | Golden set 150 mẫu + `run_eval.ts` + F1/p95 | ❌ | Chưa có dataset, chưa có eval |
-| G10 | **KS-11** Luồng lỗi: token hết hạn, quota, model chết, trang không inject được | 🟡 | Có xử lý `chrome://`, nội dung rỗng, JSON rác, trang SPA chưa render (hướng dẫn quét lại/bôi đen/dán); thiếu lỗi OAuth/quota/model |
+| G10 | **KS-11** Luồng lỗi: token hết hạn, quota, model chết, trang không inject được | 🟡 | Có xử lý `chrome://`, nội dung rỗng, JSON rác, trang SPA chưa render, model chết, huỷ/job lỗi; thiếu lỗi OAuth/quota |
 | G11 | Đóng gói CRX + privacy policy + báo cáo eval | ❌ | Mới ở mức load unpacked `dist/` |
 
 ---
@@ -156,21 +158,23 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | Sprint | Mục tiêu | Demo đạt được |
 |---|---|---|
 | **S0** | Foundation + de-risk | ✅ Phần lớn: TS/Vite/CRXJS, contracts, CI, Readability; ❌ chưa có benchmark llama.cpp, ADR, golden set |
-| **S1** | Capture + classifier | 🟡 Capture ✅ (selection/context menu + lọc nội dung chính cho trang động); ❌ classifier, job queue |
-| **S2** | LLM extraction | ❌ Chưa có |
-| **S3** | Review + CRUD | 🟡 CRUD và form 7 trường ✅; review/duyệt tự động, `versionHistory` ❌ |
-| **S4** | Notifications + KS-12 | ❌ Chưa có |
+| **S1** | Capture + classifier | 🟡 Capture ✅ (selection/context menu + lọc nội dung chính cho trang động); ❌ classifier; job nền đã có cho LLM |
+| **S2** | LLM extraction | ✅ Phần lớn: provider, pipeline, prompt v4, normalize, dedup, profile match, offscreen job; nghiệm thu Slice B/C 2026-10-23/24 |
+| **S3** | Review + CRUD | 🟡 CRUD và form 7 trường ✅; review/duyệt hàng loạt, `versionHistory` ❌ |
+| **S4** | Notifications + KS-12 | 🟡 Notification kết quả trích xuất ✅; nhắc việc sự kiện + KS-12 ❌ |
 | **S5** | Gmail + attachment | ❌ Chưa có |
 | **S6** | Hardening + release | 🟡 Có test/build/CI; chưa có eval, CRX, privacy policy |
 
 ## Ghi chú khi dùng cho báo cáo
 
-1. **Không nên nói demo "trích xuất sự kiện"**: demo chỉ **đọc nội dung** và để người dùng
-   **tạo sự kiện thủ công**. Trích xuất tự động là phần chưa triển khai.
+1. **Có thể nói demo "trích xuất sự kiện bằng LLM cục bộ"**, nhưng phải nói rõ: cần
+   `llama-server` trên máy, kết quả là **nháp** để người dùng duyệt, và chưa đo chất lượng trên
+   bộ mẫu lớn (Slice E). Vẫn có nhập tay đầy đủ.
 2. **Điểm mạnh nên nhấn:** hợp đồng dữ liệu 7 trường, máy trạng thái, nguồn trích, cờ không bịa dữ liệu,
-   kiến trúc tách lớp sẵn sàng cắm classifier/LLM, và các quy tắc riêng tư (không mạng, quyền tối thiểu).
-3. **Điểm cần nói rõ là giả lập/thay thế:** dán văn bản thay Gmail/PDF; nhập tay thay LLM;
-   hoàn thành thủ công thay tự động theo giờ.
+   job offscreen không mất khi đóng panel, kiến trúc tách lớp, và các quy tắc riêng tư
+   (suy luận cục bộ, quyền tối thiểu).
+3. **Điểm cần nói rõ là giả lập/thay thế:** dán văn bản thay Gmail/PDF; chưa có classifier
+   TF-IDF; hoàn thành sự kiện thủ công thay tự động theo giờ; nhắc việc sự kiện chưa có.
 4. **Trước khi báo cáo:** chạy lại `npm run typecheck && npm run lint && npm test && npm run build`
    và hoàn tất các ô còn trống trong `docs/kiem-thu-demo.md`.
 

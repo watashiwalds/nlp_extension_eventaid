@@ -1,8 +1,9 @@
-import type { NormalizedDocument } from './contracts';
+import { z } from 'zod';
+import type { EventStatus, NormalizedDocument } from './contracts';
 
 /**
- * Hợp đồng message giữa popup / side panel / service worker.
- * Demo chỉ cần yêu cầu mở panel; nội dung đi qua IndexedDB, không nhét vào message.
+ * Hợp đồng message giữa popup / side panel / service worker / offscreen.
+ * Nội dung tài liệu đi qua IndexedDB, không nhét vào message.
  */
 export type Request =
   | { type: 'OPEN_SIDE_PANEL'; tabId?: number }
@@ -14,6 +15,70 @@ export type Response =
   | { ok: true }
   | { ok: false; error: string }
   | { ok: true; counts: { documents: number; profiles: number; events: number } };
+
+/**
+ * Message nội bộ cho job trích xuất chạy trong offscreen document.
+ * Validate ở biên nhận để một context lỗi không làm hỏng job của context khác.
+ */
+export const RuntimeMessageSchema = z.union([
+  z.object({
+    to: z.literal('background'),
+    type: z.literal('RUN_EXTRACTION'),
+    documentId: z.string().min(1),
+  }),
+  z.object({
+    to: z.literal('background'),
+    type: z.literal('CANCEL_EXTRACTION'),
+    jobId: z.string().min(1),
+  }),
+  z.object({
+    to: z.literal('offscreen'),
+    type: z.literal('RUN_EXTRACTION'),
+    jobId: z.string().min(1),
+    documentId: z.string().min(1),
+  }),
+  z.object({
+    to: z.literal('offscreen'),
+    type: z.literal('CANCEL_EXTRACTION'),
+    jobId: z.string().min(1),
+  }),
+  z.object({
+    to: z.literal('background'),
+    type: z.literal('JOB_PROGRESS'),
+    jobId: z.string().min(1),
+    status: z.enum(['running', 'persisting']).default('running'),
+    stage: z.string(),
+    chunkIndex: z.number().int().nonnegative(),
+    chunkCount: z.number().int().nonnegative(),
+  }),
+  z.object({
+    to: z.literal('background'),
+    type: z.literal('JOB_DONE'),
+    jobId: z.string().min(1),
+    candidateCount: z.number().int().nonnegative(),
+    savedCount: z.number().int().nonnegative(),
+    duplicateCount: z.number().int().nonnegative(),
+    chunkCount: z.number().int().nonnegative(),
+    truncated: z.boolean(),
+  }),
+  z.object({
+    to: z.literal('background'),
+    type: z.literal('JOB_FAILED'),
+    jobId: z.string().min(1),
+    error: z.string().min(1),
+  }),
+  z.object({
+    to: z.literal('background'),
+    type: z.literal('JOB_CANCELLED'),
+    jobId: z.string().min(1),
+  }),
+]);
+
+export type RuntimeMessage = z.infer<typeof RuntimeMessageSchema>;
+
+export type RuntimeResponse =
+  | { ok: true; jobId?: string }
+  | { ok: false; error: string };
 
 export interface CapturePayload {
   html: string;
@@ -37,5 +102,12 @@ export interface PendingCapture {
   mode?: 'page' | 'selection';
   /** Vùng chọn do context menu lưu, dự phòng khi selection trên trang đã mất. */
   selectionText?: string;
+  requestedAt: number;
+}
+
+/** Cờ mở side panel đúng tab sau khi bấm notification. */
+export interface PendingOpen {
+  tab: 'events';
+  status?: EventStatus;
   requestedAt: number;
 }

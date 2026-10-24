@@ -8,7 +8,15 @@ export default defineManifest({
     'Đọc nội dung trang web, trích sự kiện lịch trình bằng mô hình chạy trên máy và quản lý hồ sơ. Toàn bộ dữ liệu lưu cục bộ.',
   version: pkg.version,
   minimum_chrome_version: '120',
-  permissions: ['activeTab', 'scripting', 'storage', 'sidePanel', 'contextMenus'],
+  permissions: [
+    'activeTab',
+    'scripting',
+    'storage',
+    'offscreen',
+    'notifications',
+    'sidePanel',
+    'contextMenus',
+  ],
   host_permissions: ['http://127.0.0.1:8080/*'],
   action: {
     default_title: 'Lịch trình cá nhân',

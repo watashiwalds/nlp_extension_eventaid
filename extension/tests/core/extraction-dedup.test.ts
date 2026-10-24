@@ -20,7 +20,7 @@ function candidate(patch: Partial<EventCandidate> = {}): EventCandidate {
   return {
     title: 'Họp nhóm đồ án',
     label: 'công_vụ',
-    start: { value: '2026-11-02T09:00', raw: '9:00 ngày 2/11/2026' },
+    start: { value: '2026-11-02T09:00', date: null, raw: '9:00 ngày 2/11/2026' },
     end: null,
     durationMinutes: null,
     summary: [],
@@ -84,6 +84,21 @@ describe('dedup', () => {
     expect(
       isLikelyDuplicate({ title: 'Nộp báo cáo', startValue: null }, { title: 'nộp báo cáo', startValue: null }),
     ).toBe(true);
+  });
+
+  it('so trùng bằng ngày khi chưa biết giờ', () => {
+    expect(
+      isLikelyDuplicate(
+        { title: 'Hạn nhận vé', startValue: null, startDate: '2026-10-29' },
+        { title: 'Hạn nhận vé', startValue: null, startDate: '2026-10-29' },
+      ),
+    ).toBe(true);
+    expect(
+      isLikelyDuplicate(
+        { title: 'Hạn nhận vé', startValue: null, startDate: '2026-10-25' },
+        { title: 'Hạn nhận vé', startValue: null, startDate: '2026-10-29' },
+      ),
+    ).toBe(false);
   });
 
   it('tiêu đề khác thì không trùng dù cùng giờ', () => {

@@ -94,4 +94,27 @@ describe('cải thiện sau nghiệm thu phiên 2', () => {
     store.set({ events: [event] });
     expect(renderApp(store.get())).not.toContain('data-action="delete-unlinked-documents"');
   });
+
+  it('hiển thị ngày trên thẻ khi chỉ biết ngày, không ghi CHƯA RÕ', () => {
+    const event = makeEvent(
+      {
+        title: 'Hạn nhận vé',
+        label: 'giải_trí',
+        startValue: null,
+        startDate: '2026-11-20',
+        endValue: null,
+        durationMinutesInput: null,
+        summary: [],
+        relatedProfiles: [],
+        sources: [],
+      },
+      NOW,
+    );
+    store.set({ tab: 'events', events: [event] });
+
+    const html = renderApp(store.get());
+    expect(html).toContain('TH11');
+    expect(html).toContain('20');
+    expect(html).not.toContain('CHƯA RÕ');
+  });
 });

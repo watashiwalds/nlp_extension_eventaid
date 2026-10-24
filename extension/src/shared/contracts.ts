@@ -73,8 +73,10 @@ export const SourceRefSchema = z.object({
 export type SourceRef = z.infer<typeof SourceRefSchema>;
 
 export const DateTimeRefSchema = z.object({
-  /** ISO 8601 local, ví dụ `2026-11-02T09:00`. null = chưa xác định. */
+  /** ISO 8601 local, ví dụ `2026-11-02T09:00`. null = chưa xác định giờ. */
   value: z.string().nullable(),
+  /** Ngày `YYYY-MM-DD` khi biết ngày nhưng chưa biết giờ. null = không có ngày riêng. */
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().default(null),
   /** Chuỗi gốc người dùng nhập / đọc được. */
   raw: z.string().nullable(),
 });
@@ -189,6 +191,12 @@ export const ExtractionJobSchema = z.object({
   chunkIndex: z.number().int().nonnegative(),
   chunkCount: z.number().int().nonnegative(),
   candidateCount: z.number().int().nonnegative(),
+  /** Số sự kiện nháp đã ghi DB (đã trừ trùng). */
+  savedCount: z.number().int().nonnegative().default(0),
+  /** Số candidate bị bỏ vì trùng. */
+  duplicateCount: z.number().int().nonnegative().default(0),
+  /** Tài liệu dài hơn giới hạn nên chỉ xử lý phần đầu. */
+  truncated: z.boolean().default(false),
   error: z.string().nullable(),
   startedAt: z.string(),
   updatedAt: z.string(),

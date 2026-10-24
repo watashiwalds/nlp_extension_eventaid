@@ -1,12 +1,14 @@
-import { ACTION_TITLE, PENDING_CAPTURE_KEY } from '../shared/constants';
+import { ACTION_TITLE, EXTRACTION_JOB_KEY, PENDING_CAPTURE_KEY, PENDING_OPEN_KEY } from '../shared/constants';
 import type { EventStatus } from '../shared/contracts';
-import type { PendingCapture } from '../shared/messages';
+import type { PendingCapture, PendingOpen } from '../shared/messages';
+import { parseStoredJob } from '../platform/background/jobs';
 import { hideToast, loadAll, store } from './store';
 import type { Tab } from './store';
 import { renderApp } from './render';
 import { activeDocument } from './store';
 import {
   applyFilterFromForm,
+  applyJob,
   captureCurrentPage,
   cancelExtractionAction,
   changeStatusAction,
@@ -29,6 +31,7 @@ import {
   savePastedText,
   saveProfileFromForm,
   selectDocument,
+  syncExtractionJob,
   toggleEventAction,
 } from './actions';
 
@@ -232,6 +235,27 @@ function clearActionHint(): void {
   void chrome.action.setTitle({ title: ACTION_TITLE });
 }
 
+async function consumePendingOpen(): Promise<void> {
+  try {
+    const bag = await chrome.storage.session.get(PENDING_OPEN_KEY);
+    const pending = bag[PENDING_OPEN_KEY] as PendingOpen | undefined;
+    if (!pending) return;
+    await chrome.storage.session.remove(PENDING_OPEN_KEY);
+    store.set((state) => ({
+      ...state,
+      tab: pending.tab,
+      eventForm: { ...state.eventForm, open: false },
+      profileForm: { ...state.profileForm, open: false },
+      eventFilter: isStatus(pending.status)
+        ? { ...state.eventFilter, status: pending.status }
+        : state.eventFilter,
+    }));
+    clearActionHint();
+  } catch (error) {
+    console.warn('[sidepanel] Không mở được tab từ notification', error);
+  }
+}
+
 async function consumePendingCapture(): Promise<void> {
   if (consuming) return;
   consuming = true;
@@ -271,8 +295,15 @@ root.addEventListener('change', handleChange);
 root.addEventListener('keydown', handleKeydown);
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === 'session' && changes[PENDING_CAPTURE_KEY]?.newValue) {
-    void consumePendingCapture();
+  if (areaName !== 'session') return;
+  if (changes[PENDING_CAPTURE_KEY]?.newValue) void consumePendingCapture();
+  if (changes[PENDING_OPEN_KEY]?.newValue) void consumePendingOpen();
+
+  const jobChange = changes[EXTRACTION_JOB_KEY];
+  if (jobChange) {
+    const job = parseStoredJob(jobChange.newValue);
+    if (job) applyJob(job);
+    else store.set({ extraction: null });
   }
 });
 
@@ -280,6 +311,8 @@ store.subscribe(render);
 render();
 void loadAll();
 void consumePendingCapture();
+void consumePendingOpen();
+void syncExtractionJob();
 
 /**
  * Nhãn thời gian ("đang diễn ra", "còn N ngày"…) được tính tại thời điểm render,

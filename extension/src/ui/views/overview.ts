@@ -76,21 +76,24 @@ function upcoming(state: AppState): string {
       : `<ul class="mini-list">
           ${events
             .map(
-              (event) => `<li>
+              (event) => {
+                const startKey = event.start.value ?? event.start.date ?? '';
+                return `<li>
                 <button type="button" class="mini-event" data-action="goto-events" data-event-id="${escapeAttr(event.id)}">
                   <span class="date-block date-block--sm">
-                    <span class="date-block__day">${dayOfMonth(event.start.value ?? '')}</span>
-                    <span class="date-block__month">${event.start.value ? monthShort(event.start.value) : '—'}</span>
+                    <span class="date-block__day">${dayOfMonth(startKey)}</span>
+                    <span class="date-block__month">${startKey ? monthShort(startKey) : '—'}</span>
                   </span>
                   <span class="mini-event__body">
                     <span class="mini-event__title">${escapeHtml(event.title)}</span>
                     <span class="mini-event__meta">${escapeHtml(
-                      event.start.value ? relativeLabel(event.start.value, now) : 'Chưa có thời điểm',
+                      startKey ? relativeLabel(startKey, now) : 'Chưa có thời điểm',
                     )} · ${escapeHtml(LABEL_TEXT[event.label])}</span>
                   </span>
                   ${icon('chevron')}
                 </button>
-              </li>`,
+              </li>`;
+              },
             )
             .join('')}
         </ul>`;

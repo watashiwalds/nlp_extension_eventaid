@@ -32,8 +32,16 @@ export function openEventForm(
         title: event.title,
         label: event.label,
         tags: event.tags.join(', '),
-        ...splitDraftDates(event.start.value ?? '', event.end?.value ?? ''),
-        duration: event.end?.value ? '' : event.durationMinutes ? String(event.durationMinutes) : '',
+        ...splitDraftDates(
+          event.start.value ?? event.start.date ?? '',
+          event.end?.value ?? event.end?.date ?? '',
+        ),
+        duration:
+          event.end?.value || event.end?.date
+            ? ''
+            : event.durationMinutes
+              ? String(event.durationMinutes)
+              : '',
         summary: event.summary.join('\n'),
         profileIds: [...event.relatedProfiles],
         attachSource: false,
@@ -116,7 +124,9 @@ export async function saveEventFromForm(form: HTMLFormElement): Promise<void> {
       label: draft.label,
       tags: draft.tags,
       start: start.value,
+      startDate: start.date,
       end: end.value,
+      endDate: end.date,
       duration: draft.duration,
       summary: draft.summary,
       profileIds: draft.profileIds,
