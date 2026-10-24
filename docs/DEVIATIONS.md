@@ -18,13 +18,18 @@ phân lớp của kế hoạch. Nhắc việc sự kiện (KS-10) và Gmail API 
 | Form ngày/giờ | Một ô `datetime-local` | **Tách ô ngày + ô giờ**; `EventDraft` giữ 4 chuỗi ngày/giờ | Ô native rộng tối thiểu gây tràn side panel 320–400px (VĐ-10) |
 | Mở panel từ menu / notification | `sidePanel.open()` trong user gesture | Menu chuột phải: nếu Chrome từ chối thì ghi cờ + badge **!**. Notification kết quả trích xuất: thử `sidePanel.open()` với fallback badge | `notifications` đã được thêm cho job trích xuất; chưa dùng cho nhắc việc sự kiện |
 | Nhắc việc sự kiện | `chrome.alarms` + `notifications`, 2 nút | Trường `notifications` tồn tại nhưng **luôn rỗng**; `notifications` permission chỉ dùng cho job trích xuất | Tránh gợi ý sai rằng đã có nhắc việc; KS-10 vẫn là việc tiếp theo |
+| Duyệt nháp (KS-08 bước 4) | Sửa nhanh **tại chỗ** + ghi nhận chỉnh sửa để cải thiện model | Nút **Sửa** mở form đầy đủ; **không** thu thập dữ liệu chỉnh sửa | Giữ một nguồn validate form, tránh nhân đôi logic; feedback loop để Slice E/classifier |
+| Duyệt nháp (KS-08 bước 5) | Mục bỏ chọn bị **loại khỏi danh sách nháp** | Bỏ chọn chỉ bỏ lựa chọn; muốn loại phải bấm **Xoá nháp đã chọn** và xác nhận | Tránh xoá im lặng; người dùng có thể để nháp lại để duyệt sau |
+| Duyệt nháp (KS-08 bước 7) | Thông báo hệ điều hành **HOÀN THÀNH** | Toast trong side panel (`Đã lưu N sự kiện…`) | Notification hiện có chỉ dành cho job trích xuất; không thêm notification cho thao tác duyệt |
+| Địa điểm sự kiện | Trường địa điểm có cấu trúc | Không có; địa điểm nằm trong `summary`/`quote` | Schema 7 trường của `base_idea.md` không có địa điểm; gợi ý trùng so địa điểm qua văn bản |
+| Gộp nguồn paraphrase (D4b) | Gộp tự động khi phát hiện trùng | **Không tự gộp**; chỉ gợi ý **Có thể trùng**, người dùng chọn Giữ cả hai / Mở bản kia / Xoá bản này | Giữ quyết định cho người dùng; gộp nguồn thủ công bằng sửa/xoá |
 | Gmail / PDF / DOCX | Sprint S5 | Không có Gmail API; Gmail chỉ đọc **best-effort** qua trang web đang mở, PDF/DOCX dùng **Dán văn bản** | Cần OAuth + parser riêng |
 | Content script | `src/platform/content` inject Readability | `scripting.executeScript` chạy `page-snapshot.ts` (lọc landmark/nhiễu), **Readability chạy trong side panel** | Tránh phải bundle thư viện vào content script; vẫn chỉ dùng `activeTab`. Khi cần bắt vùng chọn phức tạp/SPA, chuyển sang content script |
 | Offscreen document | Chạy classifier + LLM | Có, chỉ cho LLM; tạo theo nhu cầu, tối đa 1, dùng `reasons: ['WORKERS']` | Service worker bị kill sau ~30s nên job dài phải chạy ngoài SW |
 | Job queue / pipeline | `Job`, state machine, resume sau SW restart | Có **một** job active trong `chrome.storage.session`; không resume sau khi tắt trình duyệt | Đúng phạm vi đã chốt: đóng panel vẫn chạy, tắt trình duyệt thì huỷ |
 | `Settings` store | `settings` | Dùng cho `LlmSettings`; cờ quét và job dùng `chrome.storage.session` | Tách dữ liệu bền (IndexedDB) khỏi trạng thái phiên |
 | Classifier | `public/models/classifier.json` | Không có | — |
-| Test | Vitest + checklist KS | Vitest **180 test / 21 file** (core, parse Readability/forceRaw, page snapshot, tags, extraction/LLM, job, offscreen runner, smoke UI bằng jsdom) + checklist | Không có Playwright như kế hoạch |
+| Test | Vitest + checklist KS | Vitest **206 test / 25 file** (core, parse Readability/forceRaw, page snapshot, tags, extraction/LLM, duyệt nháp/confidence/similar, job, offscreen runner, smoke UI bằng jsdom) + checklist | Không có Playwright như kế hoạch |
 | Thông báo UI | 2 nút theo giới hạn Chrome | Notification kết quả trích xuất dùng **1 nút**; chưa có notification nhắc việc | Giữ dưới giới hạn 2 nút của Chrome |
 
 ## Điểm **không** lệch

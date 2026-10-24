@@ -5,7 +5,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 đã có trong **demo** tại `extension/`.
 
 - **Ngày đối chiếu:** 2026-10-24
-- **Mốc demo:** sau Slice B (LLM cục bộ) + Slice C (offscreen job + notification) — Slice C đã nghiệm thu 2026-10-24; Slice D là việc tiếp theo
+- **Mốc demo:** sau Slice B (LLM cục bộ) + Slice C (offscreen job + notification) + Slice D (duyệt nháp, chống trùng); Slice E là việc tiếp theo
 - **Nguồn tham chiếu chéo:** [`DEVIATIONS.md`](./DEVIATIONS.md), [`kiem-thu-demo.md`](./kiem-thu-demo.md)
 
 ## Chú giải
@@ -59,7 +59,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | A3 | `shared/contracts.ts` là nguồn hợp đồng duy nhất, Zod validate ở biên IndexedDB | ✅ | Đủ `Document`, `Profile`, `Event`, `Settings`; có test parse |
 | A4 | Phân lớp `core/` → `platform/` → `ui/`, không import ngược | ✅ | ESLint `no-restricted-imports` + `no-restricted-globals` |
 | A5 | IndexedDB + wrapper typed (~150 dòng), không Dexie | ✅ | `platform/storage/db.ts`; 4 object store |
-| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 180 test Vitest / 21 file |
+| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 206 test Vitest / 25 file |
 | A7 | Content script inject Readability theo yêu cầu | 🟡 | `scripting.executeScript` chạy page snapshot (lọc `main`/landmark, bỏ menu/khung ẩn), **Readability chạy trong side panel**; chưa có content script thường trú |
 | A8 | Job queue bền, tiến trình, resume sau service worker restart | 🟡 | Có **một** job active trong `chrome.storage.session`, tiến trình + huỷ; SW restart vẫn thấy job/offscreen; **không resume sau khi tắt trình duyệt** |
 | A9 | Offscreen document chạy classifier + LLM | ✅ | Offscreen chỉ cho LLM; classifier chưa có. Tạo theo nhu cầu, đóng sau khi xong |
@@ -103,7 +103,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 
 | Mã | Chức năng theo kế hoạch | Trạng thái | Demo hiện tại / ghi chú |
 |---|---|---|---|
-| D1 | **KS-08** Review card 7 trường + trích dẫn nguồn + duyệt | 🟡 | Form nhập tay đủ 7 trường, gắn hồ sơ + nguồn trích, có badge "Cần kiểm tra"; **chưa có đề xuất từ model** để duyệt |
+| D1 | **KS-08** Review card 7 trường + trích dẫn nguồn + duyệt | ✅ | Form nhập tay đủ 7 trường, gắn hồ sơ + nguồn trích; badge **Máy đề xuất** + mức tin cậy; chế độ **Duyệt nháp** chọn/duyệt/xoá hàng loạt có xác nhận; gợi ý **Có thể trùng** (không tự gộp). Sửa nhanh tại chỗ và thu thập feedback: xem `DEVIATIONS.md` |
 | D2 | **KS-09** CRUD sự kiện | ✅ | Tạo, xem, sửa, xoá; giữ `id`/trạng thái/nguồn khi sửa |
 | D3 | Máy trạng thái `nhap → dang_theo_doi → hoan_thanh \| huy` | ✅ | Chuyển trạng thái thủ công; quay lại được; `completedAt` được set/xoá đúng |
 | D4 | Tự động hoàn thành khi qua giờ kết thúc (service worker) | ❌ | Chỉ hiển thị viền đỏ + nhãn "đã qua"; hoàn thành phải bấm tay |
@@ -146,7 +146,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | G5 | Không thực thi script/macro trong tài liệu đầu vào | ✅ | Chỉ đọc text/HTML tĩnh, không eval |
 | G6 | Accessibility: bàn phím, focus ring, nhãn ARIA | 🟡 | Đã bỏ `autofocus`, thêm `:focus-visible`, Esc đóng form, focus ô lỗi đầu tiên; cần kiểm thủ công lại |
 | G7 | Side panel 320/360/400px không tràn ngang | 🟡 | Đã tách ô ngày/giờ + grid `minmax(0, 1fr)`, stack khi hẹp; **chưa xác nhận lại trên Chrome thật** |
-| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 180 test Vitest / 21 file (core, parse, page snapshot, extraction/LLM, job, offscreen runner, smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
+| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 206 test Vitest / 25 file (core, parse, page snapshot, extraction/LLM, job, offscreen runner, smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
 | G9 | Golden set 150 mẫu + `run_eval.ts` + F1/p95 | ❌ | Chưa có dataset, chưa có eval |
 | G10 | **KS-11** Luồng lỗi: token hết hạn, quota, model chết, trang không inject được | 🟡 | Có xử lý `chrome://`, nội dung rỗng, JSON rác, trang SPA chưa render, model chết, huỷ/job lỗi; thiếu lỗi OAuth/quota |
 | G11 | Đóng gói CRX + privacy policy + báo cáo eval | ❌ | Mới ở mức load unpacked `dist/` |
@@ -160,7 +160,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | **S0** | Foundation + de-risk | ✅ Phần lớn: TS/Vite/CRXJS, contracts, CI, Readability; ❌ chưa có benchmark llama.cpp, ADR, golden set |
 | **S1** | Capture + classifier | 🟡 Capture ✅ (selection/context menu + lọc nội dung chính cho trang động); ❌ classifier; job nền đã có cho LLM |
 | **S2** | LLM extraction | ✅ Phần lớn: provider, pipeline, prompt v4, normalize, dedup, profile match, offscreen job; nghiệm thu Slice B/C 2026-10-23/24 |
-| **S3** | Review + CRUD | 🟡 CRUD và form 7 trường ✅; review/duyệt hàng loạt, `versionHistory` ❌ |
+| **S3** | Review + CRUD | 🟡 CRUD và form 7 trường ✅; duyệt hàng loạt + gợi ý trùng ✅; sửa nhanh tại chỗ/thu thập feedback, `versionHistory` ❌ |
 | **S4** | Notifications + KS-12 | 🟡 Notification kết quả trích xuất ✅; nhắc việc sự kiện + KS-12 ❌ |
 | **S5** | Gmail + attachment | ❌ Chưa có |
 | **S6** | Hardening + release | 🟡 Có test/build/CI; chưa có eval, CRX, privacy policy |

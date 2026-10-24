@@ -26,6 +26,9 @@ Load unpacked từ `dist/`.
 | `src/shared/constants.ts` | Nhãn tiếng Việt, giới hạn kích thước, key storage |
 | `src/core/dates.ts` | Parse/format ngày giờ, tách–ghép ô ngày/giờ, nhãn tương đối, thời lượng |
 | `src/core/events.ts` | Tạo/cập nhật sự kiện, state machine, lọc/sắp xếp, lọc theo hồ sơ và nhãn tuỳ chỉnh |
+| `src/core/event-review.ts` | Hàm thuần cho duyệt nháp: thứ tự ưu tiên, cảnh báo thiếu thời điểm, làm sạch lựa chọn |
+| `src/core/extraction/confidence.ts` | Ngưỡng/mức độ tin cậy dùng chung (Thấp/Vừa/Cao) |
+| `src/core/extraction/similar.ts` | Gợi ý sự kiện gần trùng (paraphrase) — chỉ hiển thị, không ghi DB |
 | `src/core/profiles.ts` | Tạo/cập nhật/tìm hồ sơ |
 | `src/core/forms.ts` | Validate form bằng Zod, map lỗi về từng trường |
 | `src/core/text.ts` | Chuẩn hoá, hash, tách tóm tắt/danh sách/nhãn tuỳ chỉnh |
@@ -40,8 +43,8 @@ Load unpacked từ `dist/`.
 | `src/platform/storage/db.ts` | Wrapper IndexedDB, validate khi đọc/ghi, export/import |
 | `src/platform/background/index.ts` | Service worker: cấu hình side panel + menu chuột phải vùng chọn/cấp trang |
 | `src/ui/sidepanel.*` | UI chính 5 tab (Tổng quan · Quét nội dung · Sự kiện · Hồ sơ · Cài đặt), event delegation |
-| `src/ui/actions/*` | Nghiệp vụ UI: capture, CRUD, filter, export/import |
-| `src/ui/views/*` | View functions trả về HTML (không framework); `capture.ts` cho tab quét nội dung |
+| `src/ui/actions/*` | Nghiệp vụ UI: capture, CRUD, filter, duyệt nháp (`review.ts`), export/import |
+| `src/ui/views/*` | View functions trả về HTML (không framework); `capture.ts` cho tab quét nội dung, `event-card.ts` cho thẻ/chi tiết sự kiện, `event-review.ts` cho thanh duyệt |
 | `src/ui/popup.*` | Popup: quét nhanh + mở side panel |
 | `tests/` | Vitest: core + parse + page snapshot + smoke UI (jsdom + fake-indexeddb) |
 

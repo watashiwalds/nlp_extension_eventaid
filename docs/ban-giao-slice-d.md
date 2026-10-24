@@ -1,5 +1,9 @@
 # Bàn giao Slice C → Slice D
 
+> **Trạng thái triển khai (2026-10-24):** Slice D đã được code theo tài liệu này,
+> quality gate tự động xanh và checklist thủ công trong Chrome đã được người dùng
+> xác nhận đạt — xem [`kiem-tra-slice-d.md`](./kiem-tra-slice-d.md).
+
 > **Trạng thái:** Slice C đã nghiệm thu ngày **2026-10-24**. Phiên làm việc tiếp theo
 > bắt đầu **Slice D** — duyệt sự kiện nháp, hiển thị nguồn/độ tin cậy và chống trùng.
 > Tài liệu này là điểm bắt đầu của phiên đó; không thay thế

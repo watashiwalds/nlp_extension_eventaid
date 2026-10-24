@@ -1,6 +1,6 @@
 # Kế hoạch lớp trích xuất sự kiện bằng LLM cục bộ
 
-> **Mốc tham chiếu:** `main` @ `5d5abc7` (2026-10-24); quality gate xanh với **180 test / 21 file** (2026-10-23).
+> **Mốc tham chiếu:** `main` @ `c2ba1ab` (2026-10-24); quality gate xanh với **206 test / 25 file** (2026-10-24).
 > **Trạng thái:** **Slice A + B đã xong phần code, đã chạy provider/pipeline với `llama-server` thật** (Qwen3.5-4B Q5_K_S, build b10101) và **đã được nghiệm thu ngày 2026-10-23**. Xem §1.2, §9.3 và §10.
 > **Sau nghiệm thu:** đã sửa lỗi khớp hồ sơ (SB-01) theo hướng event-first, prompt v3;
 > sau đó thêm ngày chỉ có ngày (`DateTimeRef.date`) và đối chiếu ngày với nguồn, prompt v4.
@@ -8,7 +8,10 @@
 > **Slice C đã nghiệm thu ngày 2026-10-24:** job chạy trong offscreen, lưu trạng thái vào
 > `chrome.storage.session`, huỷ được, mở lại side panel vẫn thấy tiến trình và có
 > notification khi xong. Bản ghi kiểm tra: [`kiem-tra-slice-c.md`](./archive/kiem-tra-slice-c.md).
-> **Slice D là việc tiếp theo**; bàn giao và phạm vi ở [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
+> **Slice D đã nghiệm thu ngày 2026-10-24:** duyệt nháp, duyệt/xoá hàng loạt, cảnh báo
+> thiếu thời điểm và gợi ý trùng paraphrase. Bản ghi: [`kiem-tra-slice-d.md`](./kiem-tra-slice-d.md);
+> phạm vi gốc: [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
+> **Slice E là việc tiếp theo**; bàn giao tại [`ban-giao-slice-e.md`](./ban-giao-slice-e.md).
 > **Phạm vi:** nối `llama-server` (llama.cpp) vào demo hiện có để trích sự kiện, duyệt và lưu.
 > Tài liệu này **không thay thế** `ke_hoach_phat_trien.md` (build order) hay `script.md`
 > (hành vi); nó là bản chi tiết hoá cho lớp LLM sau khi đã chốt phạm vi với người dùng.
@@ -743,7 +746,8 @@ Không cắt C — đóng panel vẫn chạy là yêu cầu đã chốt, không 
 > [`kiem-tra-slice-c.md`](./archive/kiem-tra-slice-c.md). Quality gate `180 test / 21 file` xanh.
 > Phần **nhắc việc sự kiện** (`chrome.alarms`, mốc 1 tuần/1 ngày/ngày diễn ra, KS-10)
 > **không** nằm trong Slice C này; mới có notification kết quả trích xuất.
-> Việc tiếp theo là **Slice D** — xem [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
+> Slice D đã nghiệm thu ngày 2026-10-24 — xem [`kiem-tra-slice-d.md`](./kiem-tra-slice-d.md).
+> Việc tiếp theo là **Slice E** — xem [`ban-giao-slice-e.md`](./ban-giao-slice-e.md).
 
 - `manifest.config.ts`: thêm `offscreen`, `notifications`; CSP vẫn chỉ cho
   `http://127.0.0.1:8080`.
@@ -767,8 +771,9 @@ Không cắt C — đóng panel vẫn chạy là yêu cầu đã chốt, không 
 
 ### Slice D — chi tiết
 
-> **Trạng thái (2026-10-24): kế hoạch đã rà soát; chưa code.** Phạm vi chi tiết, quyết định
-> và tiêu chí nghiệm thu: [`ban-giao-slice-d.md`](./ban-giao-slice-d.md). Tóm tắt:
+> **Trạng thái (2026-10-24): đã nghiệm thu.** Quality gate `206 test / 25 file` xanh;
+> người dùng đã xác nhận checklist thủ công. Bản ghi: [`kiem-tra-slice-d.md`](./kiem-tra-slice-d.md);
+> phạm vi và quyết định gốc: [`ban-giao-slice-d.md`](./ban-giao-slice-d.md). Tóm tắt:
 >
 > - `core/extraction/confidence.ts` (mới): ba mức thấp/vừa/cao; không hiển thị phần trăm.
 > - `core/event-review.ts` (mới): `sortDraftsForReview()` — chỉ dùng trong chế độ duyệt,
@@ -785,14 +790,23 @@ Không cắt C — đóng panel vẫn chạy là yêu cầu đã chốt, không 
 
 ### Slice E — chi tiết
 
+> **Trạng thái (2026-10-24): đã bàn giao, chưa bắt đầu code.** Kế hoạch chi tiết, bộ mẫu
+> 15 tài liệu, định dạng fixture, công cụ đo và quy trình đo thật:
+> [`ban-giao-slice-e.md`](./ban-giao-slice-e.md). Tóm tắt:
+
 - Bộ mẫu 12–15 tài liệu: thông báo lớp, email mời họp, lịch seminar, thông báo tuyển dụng,
-  bài đăng sự kiện, một trang không có sự kiện.
+  bài đăng sự kiện, trang không có sự kiện, ngày chỉ có ngày, thiếu năm, khoảng thời gian,
+  ngày tương đối, nhiều sự kiện cùng ngày, paraphrase, prompt injection, tài liệu dài và
+  khớp hồ sơ.
 - Test đánh giá tất định: `tests/eval/extraction.eval.test.ts` dùng `MockProvider` +
-  fixture để chạy trong CI (không cần model).
-- Đo thật: chạy tay qua UI trên từng tài liệu, ghi `latencyMs` + kết quả vào bảng.
+  fixture để chạy trong CI (không cần model). **Không** dùng test này để tuyên bố model đạt
+  recall; nó chỉ bảo vệ công thức đo và pipeline.
+- Đo thật: chạy tay qua UI trên từng tài liệu, ghi `latencyMs` + kết quả vào
+  `docs/ket-qua-danh-gia-slice-e.md`; chạy lặp ≥ 2 lần, ghi cấu hình model/GPU.
 - Chốt **model khuyến nghị** dựa trên số đo, không dựa trên cảm giác; không hard-code
   trong code (ô “Tên model” vẫn để trống được).
-- Cập nhật `docs/DEVIATIONS.md`, `README.md`, `AGENTS.md` §11.
+- Cập nhật `docs/DEVIATIONS.md` nếu có lệch mới, `README.md`, `extension/README.md`,
+  `AGENTS.md` §11.
 
 ---
 

@@ -1,7 +1,7 @@
 # Checklist kiểm thử demo (thủ công)
 
 Chạy trước khi demo/báo cáo. Mỗi mục ghi rõ kịch bản `script.md` tương ứng.
-Kế hoạch xử lý các mục còn lại: [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
+Các mục KT-13/KT-14 còn lại cần kiểm trên Chrome thật; ghi chú nằm trong tệp này.
 Lịch sử hai phiên trước: [`docs/archive/phien-lam-viec-tiep-theo.md`](./archive/phien-lam-viec-tiep-theo.md).
 
 > **Rà soát thủ công (2026-10-22):** người dùng đã đi qua toàn bộ checklist. Các ô `[ ]`
@@ -54,6 +54,26 @@ Lịch sử hai phiên trước: [`docs/archive/phien-lam-viec-tiep-theo.md`](./
 - [x] Nhập thời lượng 90 phút, không có end → chi tiết hiện “Kéo dài 1 giờ 30 phút”.
 - [x] Gắn 2 hồ sơ → chip hiển thị đúng tên.
 - [x] Sự kiện mới luôn ở trạng thái **Nháp**.
+
+### 4.1. Duyệt nháp và chống trùng (Slice D)
+
+> Đã chạy và được người dùng xác nhận ngày **2026-10-24** (bản ghi:
+> [`kiem-tra-slice-d.md`](./kiem-tra-slice-d.md)).
+
+- [x] Nút **Duyệt nháp (N)** chỉ hiện khi N > 0; bấm vào thấy nháp `llm` xếp trước, nhập tay sau.
+- [x] **5 nháp được duyệt trong ≤ 30 giây** bằng chọn + **Duyệt đã chọn**, không mở từng form.
+- [x] Badge **Máy đề xuất** + mức tin cậy (Thấp/Vừa/Cao) hiện ở thẻ và chi tiết; **không** hiện phần trăm.
+- [x] Sự kiện nhập tay không hiện badge/độ tin cậy; chi tiết có dòng **Nguồn tạo**.
+- [x] Chip **thiếu thời điểm**, **chưa gắn hồ sơ**, **Có thể trùng** hiện đúng; `do_tin_cay_thap` vẫn nằm trong **Cần kiểm tra**.
+- [x] Quote dài hiện **Xem trích dẫn đầy đủ**; nút **Mở nguồn** mở đúng URL; nguồn không URL không tạo link giả.
+- [x] Chọn một phần → checkbox tổng `indeterminate`; **Chọn tất cả** chỉ chọn mục đang hiển thị.
+- [x] Duyệt nháp chỉ có ngày / không có ngày → hộp thoại cảnh báo “chưa xếp được nhắc việc”; huỷ thì không lưu.
+- [x] Chỉ mục được chọn chuyển `dang_theo_doi`; mục khác giữ `nhap`; `origin`/`sources`/`extractionMeta` được giữ.
+- [x] Bỏ chọn không xoá; **Xoá nháp đã chọn** có xác nhận, chỉ xoá `nhap`, không xoá sự kiện đang theo dõi.
+- [x] Quét lại cùng trang hai lần (cùng output) → lần hai **0 bản ghi mới**.
+- [x] Paraphrase → có gợi ý **Có thể trùng**; **Giữ cả hai** ẩn gợi ý trong phiên; **Mở bản kia** cuộn tới đúng thẻ.
+- [x] `Escape` thoát chế độ duyệt khi không có form; **Quay lại danh sách** luôn có, kể cả khi đã duyệt hết.
+- [x] Side panel 320/360/400 px không tràn ở thanh duyệt/checkbox; chỉ dùng bàn phím vẫn thao tác được.
 
 ## 5. Quản lý sự kiện (KS-09)
 

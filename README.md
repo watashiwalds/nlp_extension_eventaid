@@ -18,9 +18,10 @@ Repo này chứa cả bộ tài liệu kế hoạch (gốc) và mã nguồn demo
 | 4 | **Tạo sự kiện thủ công** | Đủ 7 trường trong `base_idea.md` + **nhãn tuỳ chỉnh** (`tags`, tối đa 5), trạng thái `nhap → dang_theo_doi → hoan_thanh/huy`, gắn hồ sơ + nguồn trích, cờ “cần kiểm tra” khi thiếu dữ liệu; tóm tắt nhập tay tối đa 50 ý (LLM trả 1–5); ô ngày và giờ tách riêng để không tràn khi panel hẹp |
 | 5 | **Quản lý dữ liệu** | Lọc/tìm sự kiện (trạng thái, nhãn, **nhãn tuỳ chỉnh**, từ khoá), ưu tiên sự kiện sắp diễn ra, kế hoạch theo từng hồ sơ ở tab Tổng quan, xuất–nhập JSON, xoá toàn bộ dữ liệu |
 | 6 | **Trích sự kiện bằng LLM cục bộ** | Gọi `llama-server` tại `127.0.0.1:8080`; job chạy trong **offscreen document** nên đóng side panel vẫn tiếp tục; lưu nháp (`nhap`), hiện tiến trình, huỷ được, có **thông báo khi xong** và mở đúng tab Sự kiện lọc Nháp |
+| 7 | **Duyệt nháp + chống trùng** | Chế độ **Duyệt nháp**: badge **Máy đề xuất**, mức tin cậy (Thấp/Vừa/Cao, không hiện %), nguồn/trích dẫn đầy đủ; chọn nhiều nháp để **Duyệt đã chọn** (`nhap → dang_theo_doi`) hoặc **Xoá nháp đã chọn** có xác nhận; cảnh báo khi thiếu giờ/ngày; gợi ý **Có thể trùng** cho paraphrase, không tự gộp |
 
 **Chưa có (đúng phạm vi demo hiện tại):** nhắc việc sự kiện (`chrome.alarms`/KS-10), Gmail/PDF/DOCX,
-classifier TF-IDF, duyệt hàng loạt và gộp trùng paraphrase (Slice D).
+classifier TF-IDF. Gộp nguồn tự động và sửa nhanh tại chỗ chưa làm — xem [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md).
 Chi tiết lệch so với kế hoạch: [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md).
 Bảng đối chiếu đầy đủ chức năng chính thức vs. demo: [`docs/chuc-nang-demo-vs-chinh-thuc.md`](docs/chuc-nang-demo-vs-chinh-thuc.md).
 
@@ -55,7 +56,7 @@ npm run build
 | `npm run build` | `tsc --noEmit` + `vite build` → `dist/` |
 | `npm run typecheck` | TypeScript strict, 0 lỗi |
 | `npm run lint` | ESLint (flat config) |
-| `npm test` | Vitest: 180 test / 21 file (core, parse, page snapshot, extraction/LLM, job, smoke test UI bằng jsdom) |
+| `npm test` | Vitest: 206 test / 25 file (core, parse, page snapshot, extraction/LLM, duyệt nháp, job, smoke test UI bằng jsdom) |
 | `npm run icons` | Sinh lại icon PNG |
 
 ---
@@ -75,7 +76,10 @@ npm run build
 │  ├─ chuc-nang-demo-vs-chinh-thuc.md # Đối chiếu chức năng kế hoạch vs demo
 │  ├─ kiem-thu-demo.md           # Checklist kiểm thử thủ công theo KS
 │  ├─ ke-hoach-llm-trich-xuat.md # Kế hoạch lớp trích xuất LLM (Slice A–E)
-│  ├─ ban-giao-slice-d.md        # Bàn giao & phạm vi Slice D
+│  ├─ ban-giao-slice-d.md        # Bàn giao & phạm vi Slice D (đã nghiệm thu)
+│  ├─ kiem-tra-slice-d.md        # Bản ghi nghiệm thu Slice D
+│  ├─ ban-giao-slice-e.md        # Bàn giao & phạm vi Slice E (đo chất lượng)
+│  ├─ ket-qua-danh-gia-slice-e.md # Mẫu bảng đo chất lượng trích xuất
 │  └─ archive/                   # Biên bản/kế hoạch lịch sử, không dùng làm nguồn hiện hành
 ├─ extension/                    # Mã nguồn demo
 │  ├─ src/shared/                # contracts.ts (Zod), messages.ts, constants.ts
@@ -115,13 +119,13 @@ Checklist thủ công (theo kịch bản KS): [`docs/kiem-thu-demo.md`](docs/kie
 
 ## 6. Bước tiếp theo
 
-1. **Slice D — duyệt nháp + chống trùng:** badge nguồn/độ tin cậy, chọn và duyệt hàng loạt (`nhap → dang_theo_doi`), xoá nháp có xác nhận, gợi ý gộp paraphrase. Phạm vi và thứ tự: [`docs/ban-giao-slice-d.md`](docs/ban-giao-slice-d.md).
+1. Đo chất lượng trích xuất trên bộ mẫu (**Slice E**).
 2. Bổ sung **classifier từ khoá** (không cần train) để gợi ý “trang có sự kiện”.
 3. **Nhắc việc sự kiện** bằng `chrome.alarms` + `notifications` (KS-10, tối đa 2 nút).
-4. Đo chất lượng trích xuất trên bộ mẫu (Slice E).
-5. Gmail read-only + PDF/DOCX ở sprint cuối.
+4. Gmail read-only + PDF/DOCX ở sprint cuối.
 
 Xem lộ trình đầy đủ trong [`ke_hoach_phat_trien.md`](ke_hoach_phat_trien.md) §9.
 Kế hoạch lớp trích xuất bằng LLM cục bộ: [`docs/ke-hoach-llm-trich-xuat.md`](docs/ke-hoach-llm-trich-xuat.md).
-Bàn giao Slice D: [`docs/ban-giao-slice-d.md`](docs/ban-giao-slice-d.md).
+Bản ghi Slice D: [`docs/kiem-tra-slice-d.md`](docs/kiem-tra-slice-d.md); bàn giao gốc: [`docs/ban-giao-slice-d.md`](docs/ban-giao-slice-d.md).
+Bàn giao Slice E: [`docs/ban-giao-slice-e.md`](docs/ban-giao-slice-e.md); mẫu bảng đo: [`docs/ket-qua-danh-gia-slice-e.md`](docs/ket-qua-danh-gia-slice-e.md).
 Tài liệu lịch sử (đã lưu trữ): [`docs/archive/`](docs/archive/README.md).
