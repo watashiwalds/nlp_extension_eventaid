@@ -74,8 +74,9 @@ npm run build
 │  ├─ DEVIATIONS.md              # Demo khác kế hoạch ở đâu và vì sao
 │  ├─ chuc-nang-demo-vs-chinh-thuc.md # Đối chiếu chức năng kế hoạch vs demo
 │  ├─ kiem-thu-demo.md           # Checklist kiểm thử thủ công theo KS
-│  ├─ phien-lam-viec-tiep-theo.md # Kế hoạch 2 phiên tiếp theo
-│  └─ thiet-ke-demo-va-san-sang-llama-cpp.md # Thiết kế demo + đánh giá sẵn sàng LLM
+│  ├─ ke-hoach-llm-trich-xuat.md # Kế hoạch lớp trích xuất LLM (Slice A–E)
+│  ├─ ban-giao-slice-d.md        # Bàn giao & phạm vi Slice D
+│  └─ archive/                   # Biên bản/kế hoạch lịch sử, không dùng làm nguồn hiện hành
 ├─ extension/                    # Mã nguồn demo
 │  ├─ src/shared/                # contracts.ts (Zod), messages.ts, constants.ts
 │  ├─ src/core/                  # Thuần TS: dates, events, profiles, forms, text
@@ -93,9 +94,10 @@ npm run build
 
 ## 4. Quyền & quyền riêng tư
 
-- Permissions: `activeTab`, `scripting`, `storage`, `sidePanel`, `contextMenus`. **Không** có host permission, **không** gọi mạng.
+- Permissions: `activeTab`, `scripting`, `storage`, `offscreen`, `notifications`, `sidePanel`, `contextMenus`.
+- Host permission duy nhất: `http://127.0.0.1:8080/*` cho `llama-server` cục bộ. Không có backend từ xa, không gửi nội dung ra ngoài máy.
 - Chỉ đọc khi người dùng bấm hoặc chọn menu chuột phải; Readability chạy trong side panel, không inject thư viện vào trang.
-- CSP giữ `script-src 'self'`, không remote code, không WASM.
+- CSP giữ `script-src 'self'`, `connect-src` chỉ mở `http://127.0.0.1:8080`; không remote code, không WASM.
 - Toàn bộ nội dung động được escape trước khi chèn vào `innerHTML`.
 
 ---
@@ -120,6 +122,6 @@ Checklist thủ công (theo kịch bản KS): [`docs/kiem-thu-demo.md`](docs/kie
 5. Gmail read-only + PDF/DOCX ở sprint cuối.
 
 Xem lộ trình đầy đủ trong [`ke_hoach_phat_trien.md`](ke_hoach_phat_trien.md) §9.
-Kế hoạch ngắn hạn chia 2 phiên: [`docs/phien-lam-viec-tiep-theo.md`](docs/phien-lam-viec-tiep-theo.md).
-Đánh giá khoảng cách tới llama.cpp: [`docs/thiet-ke-demo-va-san-sang-llama-cpp.md`](docs/thiet-ke-demo-va-san-sang-llama-cpp.md).
-Kế hoạch thi công lớp trích xuất bằng LLM cục bộ: [`docs/ke-hoach-llm-trich-xuat.md`](docs/ke-hoach-llm-trich-xuat.md).
+Kế hoạch lớp trích xuất bằng LLM cục bộ: [`docs/ke-hoach-llm-trich-xuat.md`](docs/ke-hoach-llm-trich-xuat.md).
+Bàn giao Slice D: [`docs/ban-giao-slice-d.md`](docs/ban-giao-slice-d.md).
+Tài liệu lịch sử (đã lưu trữ): [`docs/archive/`](docs/archive/README.md).

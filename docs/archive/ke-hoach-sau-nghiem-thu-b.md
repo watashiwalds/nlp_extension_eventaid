@@ -1,5 +1,11 @@
 # Kế hoạch sau nghiệm thu Phiên B
 
+> **ĐÃ LƯU TRỮ (2026-10-24).** Kế hoạch đã hoàn tất (SB-01, SB-03, SB-12 xong) và không
+> còn là nguồn hiện hành. Trạng thái hiện tại nằm ở
+> [`ke-hoach-llm-trich-xuat.md`](../ke-hoach-llm-trich-xuat.md) §9 và
+> [`DEVIATIONS.md`](../DEVIATIONS.md). Giữ lại để tra cứu cách sửa lỗi khớp hồ sơ và
+> ngày chỉ có ngày.
+
 > **Mốc:** 2026-10-23 · Phiên B đã được nghiệm thu.
 > **Nguồn:** [`kiem-tra-slice-b.md`](./kiem-tra-slice-b.md) — bảng §4 và mục “Vấn đề”.
 > **Phạm vi:** chỉ xử lý các vấn đề **không thuộc** Slice C/D/E. Việc đã có phiên riêng

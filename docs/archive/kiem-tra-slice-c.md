@@ -1,14 +1,19 @@
 # Kiểm tra Slice C — offscreen job + thông báo
 
+> **ĐÃ LƯU TRỮ (2026-10-24).** Biên bản nghiệm thu Slice C đã đóng; không dùng làm nguồn
+> hiện hành. Tóm tắt kiến trúc, giới hạn và bàn giao sang Slice D nằm ở
+> [`ban-giao-slice-d.md`](../ban-giao-slice-d.md) §2–§3. Giữ lại để tra cứu checklist
+> KT-C và hợp đồng job tại thời điểm nghiệm thu.
+
 > **Trạng thái (2026-10-24): đã nghiệm thu.** Job trích xuất chạy trong offscreen document,
 > lưu tiến trình vào `chrome.storage.session`, đóng side panel không làm mất lần chạy,
 > huỷ được và có thông báo khi xong. Người dùng xác nhận Slice C đạt nghiệm thu ngày
 > 2026-10-24; checklist thủ công §5 được đóng theo xác nhận đó (không lưu log từng lần chạy).
 >
-> Phạm vi đúng theo [`ke-hoach-llm-trich-xuat.md`](./ke-hoach-llm-trich-xuat.md) §10 —
+> Phạm vi đúng theo [`ke-hoach-llm-trich-xuat.md`](../ke-hoach-llm-trich-xuat.md) §10 —
 > Slice C. **Không** gồm nhắc việc sự kiện (`chrome.alarms`, KS-10), duyệt hàng loạt
 > (Slice D) hay đo chất lượng (Slice E). Bàn giao sang Slice D:
-> [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
+> [`ban-giao-slice-d.md`](../ban-giao-slice-d.md).
 
 ---
 
@@ -136,10 +141,10 @@ Test mới:
 | Code offscreen + job + notification | ✅ Xong |
 | Quality gate gần nhất | ✅ `typecheck`, `lint`, `test` (180 test / 21 file), `build` — 2026-10-23 |
 | Nghiệm thu thủ công | ✅ Người dùng xác nhận ngày 2026-10-24 |
-| Tài liệu | ✅ Trang này + `ke-hoach-llm-trich-xuat.md` + [`ban-giao-slice-d.md`](./ban-giao-slice-d.md) |
+| Tài liệu | ✅ Trang này + `ke-hoach-llm-trich-xuat.md` + [`ban-giao-slice-d.md`](../ban-giao-slice-d.md) |
 | Commit | ⏳ Chưa commit tại thời điểm chốt; thay đổi Slice C vẫn ở working tree |
 | Việc tiếp theo | **Slice D** — duyệt nháp, badge/confidence, bulk approve, chống trùng |
 
 **Điều kiện bắt đầu Slice D:** giữ nguyên các quyết định của Slice C (local-only, job
 offscreen, draft `nhap`), không mở rộng sang KS-10/Gmail, và đọc
-[`ban-giao-slice-d.md`](./ban-giao-slice-d.md) trước khi sửa code.
+[`ban-giao-slice-d.md`](../ban-giao-slice-d.md) trước khi sửa code.

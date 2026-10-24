@@ -179,4 +179,5 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
    và hoàn tất các ô còn trống trong `docs/kiem-thu-demo.md`.
 
 Xem thêm: [`DEVIATIONS.md`](./DEVIATIONS.md) — giải thích từng chỗ lệch và lý do;
-[`phien-lam-viec-tiep-theo.md`](./phien-lam-viec-tiep-theo.md) — việc còn lại và hướng triển khai.
+[`ban-giao-slice-d.md`](./ban-giao-slice-d.md) — việc còn lại và hướng triển khai Slice D.
+Kế hoạch hai phiên trước đã hoàn tất, lưu ở [`docs/archive/phien-lam-viec-tiep-theo.md`](./archive/phien-lam-viec-tiep-theo.md).

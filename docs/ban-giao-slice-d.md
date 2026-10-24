@@ -44,7 +44,7 @@ và các lệch KS-08 được ghi rõ ở §9.
 | Huỷ | Background gửi tín hiệu abort, đóng offscreen và ghi `cancelled`; message hoàn tất đến muộn bị bỏ qua |
 | Thông báo | Notification khi xong/lỗi; bấm notification mở tab **Sự kiện**, lọc **Nháp**; fallback badge `!` |
 | Kết quả | Sự kiện do LLM tạo vẫn là `status='nhap'`, `origin='llm'`, giữ `sources` và `extractionMeta` |
-| Tài liệu | [`kiem-tra-slice-c.md`](./kiem-tra-slice-c.md) ghi kiến trúc, hợp đồng job, checklist và giới hạn |
+| Tài liệu | Bản ghi lịch sử [`kiem-tra-slice-c.md`](./archive/kiem-tra-slice-c.md) ghi kiến trúc, hợp đồng job, checklist và giới hạn |
 
 **Bằng chứng tự động (lần chạy gần nhất 2026-10-23):**
 
@@ -57,7 +57,7 @@ npm run build       # xanh; dist/src/platform/offscreen/index.html + assets/offs
 ```
 
 **Nghiệm thu thủ công:** người dùng xác nhận Slice C đạt ngày 2026-10-24. Không có log
-chi tiết từng mục KT-C; checklist trong `kiem-tra-slice-c.md` §5 được đóng theo xác nhận này.
+chi tiết từng mục KT-C; checklist trong `docs/archive/kiem-tra-slice-c.md` §5 được đóng theo xác nhận này.
 
 ## 3. Giới hạn đã biết (không chặn Slice D)
 
@@ -381,7 +381,7 @@ Dùng fixture 5 candidate hoặc `MockProvider` để tạo 5 nháp cho test UI;
 
 ## 10. Tài liệu tham chiếu
 
-- [`kiem-tra-slice-c.md`](./kiem-tra-slice-c.md) — Slice C đã nghiệm thu, giới hạn.
+- Bản ghi lịch sử [`kiem-tra-slice-c.md`](./archive/kiem-tra-slice-c.md) — Slice C đã nghiệm thu, giới hạn.
 - [`ke-hoach-llm-trich-xuat.md`](./ke-hoach-llm-trich-xuat.md) §10 — Slice D/E.
 - [`script.md`](../script.md) KS-08 — hành vi duyệt sự kiện.
 - [`AGENTS.md`](../AGENTS.md) §6 — mô hình `Event`, `status`, `origin`.

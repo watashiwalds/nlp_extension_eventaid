@@ -1,17 +1,18 @@
 # Kế hoạch hai phiên tiếp theo
 
-> **Tài liệu lịch sử (2026-10-22).** Kế hoạch dưới đây đã hoàn tất và không còn là bàn giao
-> hiện hành. Việc tiếp theo là **Slice D**, xem
-> [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
+> **ĐÃ LƯU TRỮ (2026-10-24).** Kế hoạch hai phiên (S1/S2) đã hoàn tất và không còn là
+> bàn giao hiện hành. Việc tiếp theo là **Slice D**, xem
+> [`ban-giao-slice-d.md`](../ban-giao-slice-d.md). Giữ lại để tra cứu quyết định và
+> checklist của hai phiên trước.
 
 > Cập nhật **2026-10-22** sau khi người dùng rà soát thủ công toàn bộ checklist và bổ sung
-> mục **Vấn đề tồn đọng** / **Gợi ý cải thiện** trong [`docs/kiem-thu-demo.md`](./kiem-thu-demo.md).
+> mục **Vấn đề tồn đọng** / **Gợi ý cải thiện** trong [`kiem-thu-demo.md`](../kiem-thu-demo.md).
 >
 > Kế hoạch VĐ-01…VĐ-08 của phiên trước đã hoàn tất; tóm tắt ở **Phụ lục A**.
 > Tài liệu này thay thế kế hoạch cũ và chia việc còn lại thành **2 phiên độc lập**.
 >
 > **Lớp trích xuất bằng LLM cục bộ** không nằm trong phạm vi hai phiên dưới đây;
-> kế hoạch riêng ở [`ke-hoach-llm-trich-xuat.md`](./ke-hoach-llm-trich-xuat.md).
+> kế hoạch riêng ở [`ke-hoach-llm-trich-xuat.md`](../ke-hoach-llm-trich-xuat.md).
 
 ---
 
@@ -23,7 +24,7 @@
 | Demo | `extension/` load unpacked từ `extension/dist` |
 | Quality gate | `typecheck`, `lint`, `test`, `build` đều xanh tại `b307b0b` (40 test) |
 | Kiểm thử thủ công | Người dùng **đã rà soát toàn bộ checklist**; các mục còn `[ ]` là chưa đạt hoặc chưa xác nhận lại |
-| Phạm vi | Không ML/LLM, không nhắc việc, không Gmail API — xem [`DEVIATIONS.md`](./DEVIATIONS.md) |
+| Phạm vi | Không ML/LLM, không nhắc việc, không Gmail API — xem [`DEVIATIONS.md`](../DEVIATIONS.md) |
 
 **Hai tồn đọng mới**
 
@@ -512,7 +513,7 @@ npm run build
 ```
 
 Sau đó load unpacked `extension/dist`, **Reload** ở `chrome://extensions`, và kiểm thủ công
-các mục tương ứng trong [`docs/kiem-thu-demo.md`](./kiem-thu-demo.md).
+các mục tương ứng trong [`kiem-thu-demo.md`](../kiem-thu-demo.md).
 
 ---
 
@@ -552,7 +553,7 @@ sửa mục này **trước khi** bắt đầu phiên tương ứng.
 - VĐ-01…VĐ-08 đã sửa trong commit `b307b0b`; 40 test, quality gate xanh.
 - Đã thêm context menu vùng chọn, `forceRaw`, cap tóm tắt 50 ý, sửa CSS/focus.
 - Người dùng đã rà soát thủ công; hai tồn đọng mới là VĐ-09/Gmail và VĐ-10/ngày-giờ.
-- Bảng đối chiếu chức năng: [`chuc-nang-demo-vs-chinh-thuc.md`](./chuc-nang-demo-vs-chinh-thuc.md)
+- Bảng đối chiếu chức năng: [`chuc-nang-demo-vs-chinh-thuc.md`](../chuc-nang-demo-vs-chinh-thuc.md)
   (commit `cbc316f`).
 - Chi tiết từng VĐ cũ nằm trong lịch sử git của tệp này và trong `docs/kiem-thu-demo.md`.
 

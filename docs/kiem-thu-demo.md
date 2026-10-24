@@ -1,12 +1,13 @@
 # Checklist kiểm thử demo (thủ công)
 
 Chạy trước khi demo/báo cáo. Mỗi mục ghi rõ kịch bản `script.md` tương ứng.
-Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./phien-lam-viec-tiep-theo.md).
+Kế hoạch xử lý các mục còn lại: [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
+Lịch sử hai phiên trước: [`docs/archive/phien-lam-viec-tiep-theo.md`](./archive/phien-lam-viec-tiep-theo.md).
 
 > **Rà soát thủ công (2026-10-22):** người dùng đã đi qua toàn bộ checklist. Các ô `[ ]`
 > còn lại là mục **chưa đạt hoặc chưa xác nhận lại**, không phải chưa từng kiểm.
 > VĐ-10 và YC-01…YC-06 đã xử lý trong **2 phiên** — xem
-> [`phien-lam-viec-tiep-theo.md`](./phien-lam-viec-tiep-theo.md).
+> [`phien-lam-viec-tiep-theo.md`](./archive/phien-lam-viec-tiep-theo.md).
 > **Phiên 2 (2026-10-22):** đã thêm nhãn tuỳ chỉnh + lọc nội dung chính cho trang động.
 > KT-11/12/15 có test tự động; KT-13 (Gmail thật) và KT-14 (SPA/bài báo trên Chrome)
 > vẫn cần xác nhận thủ công.
@@ -21,8 +22,8 @@ Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./p
 ## 1. Đọc trang web (KS-04)
 
 - [x] Mở một bài báo tiếng Việt dài → popup → **Quét trang đang mở** → side panel mở, hiện tiêu đề + toàn văn.
-- [x] Badge phương thức = **Readability**; số ký tự hợp lý; nút “Xem toàn bộ” hoạt động.
-- [x] Mở trang động (SPA) khó đọc → vẫn có nội dung, badge **DOM thô (dự phòng)**.
+- [x] Badge phương thức = **Nội dung chính**; số ký tự hợp lý; nút “Xem toàn bộ” hoạt động.
+- [x] Mở trang động (SPA) khó đọc → vẫn có nội dung, badge **Toàn trang (dự phòng)**.
 - [x] Bôi đen một đoạn → quét → badge **Vùng bôi đen**, nội dung đúng đoạn bôi đen.
 - [x] Bôi đen → chuột phải → **Quét sự kiện từ vùng chọn** → side panel mở, đọc đúng vùng chọn.
 - [x] Document `raw_dom` hiện cảnh báo giải thích + nút **Dùng nội dung thô** tạo document mới.
@@ -93,7 +94,7 @@ Kế hoạch xử lý các mục còn lại: [`phien-lam-viec-tiep-theo.md`](./p
 
 **Ghi chú:** người dùng đã rà soát thủ công ngày 2026-10-22. Các mục `[ ]` còn lại là
 **chưa đạt hoặc chưa xác nhận lại**; VĐ-06 được mở lại thành **VĐ-10** (ngày/giờ vẫn tràn
-khi UI hẹp). Kế hoạch xử lý: [`phien-lam-viec-tiep-theo.md`](./phien-lam-viec-tiep-theo.md).
+khi UI hẹp). Bối cảnh lịch sử: [`phien-lam-viec-tiep-theo.md`](./archive/phien-lam-viec-tiep-theo.md).
 
 ## Vấn đề tồn đọng
 

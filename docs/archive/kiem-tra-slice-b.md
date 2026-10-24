@@ -1,5 +1,11 @@
 # Kiểm tra Slice B — Provider llama.cpp & trích xuất từ side panel
 
+> **ĐÃ LƯU TRỮ (2026-10-24).** Đây là biên bản nghiệm thu lịch sử của Slice B; không dùng
+> làm nguồn hiện hành. Trạng thái hiện tại nằm ở
+> [`ke-hoach-llm-trich-xuat.md`](../ke-hoach-llm-trich-xuat.md) §9–§11 và
+> [`ban-giao-slice-d.md`](../ban-giao-slice-d.md). Giữ lại để tra cứu số đo, lỗi
+> `response_format` và quyết định thời điểm đó.
+
 > **Mốc:** 2026-10-22 · quality gate xanh với **146 test / 17 file**.
 > **Đã nghiệm thu:** 2026-10-23. Kế hoạch xử lý các vấn đề còn lại:
 > [`ke-hoach-sau-nghiem-thu-b.md`](./ke-hoach-sau-nghiem-thu-b.md).
@@ -10,8 +16,8 @@
 > `llama-server` và model Qwen3.5-4B Q5_K_S. Phần kiểm tra UI trong Chrome
 > (quét trang thật → nháp trong DB) đã được xác nhận.
 >
-> Liên quan: [`ke-hoach-llm-trich-xuat.md`](./ke-hoach-llm-trich-xuat.md) §9–§11,
-> [`kiem-thu-demo.md`](./kiem-thu-demo.md), [`DEVIATIONS.md`](./DEVIATIONS.md).
+> Liên quan: [`ke-hoach-llm-trich-xuat.md`](../ke-hoach-llm-trich-xuat.md) §9–§11,
+> [`kiem-thu-demo.md`](../kiem-thu-demo.md), [`DEVIATIONS.md`](../DEVIATIONS.md).
 
 ---
 

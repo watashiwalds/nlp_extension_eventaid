@@ -1,20 +1,20 @@
 # Kế hoạch lớp trích xuất sự kiện bằng LLM cục bộ
 
-> **Mốc tham chiếu:** `main` @ `d360d52` + working tree (2026-10-23); quality gate xanh với **180 test / 21 file** (2026-10-23).
+> **Mốc tham chiếu:** `main` @ `5d5abc7` (2026-10-24); quality gate xanh với **180 test / 21 file** (2026-10-23).
 > **Trạng thái:** **Slice A + B đã xong phần code, đã chạy provider/pipeline với `llama-server` thật** (Qwen3.5-4B Q5_K_S, build b10101) và **đã được nghiệm thu ngày 2026-10-23**. Xem §1.2, §9.3 và §10.
 > **Sau nghiệm thu:** đã sửa lỗi khớp hồ sơ (SB-01) theo hướng event-first, prompt v3;
 > sau đó thêm ngày chỉ có ngày (`DateTimeRef.date`) và đối chiếu ngày với nguồn, prompt v4.
-> Ghi nhận ở [`ke-hoach-sau-nghiem-thu-b.md`](./ke-hoach-sau-nghiem-thu-b.md).
+> Ghi nhận ở [`ke-hoach-sau-nghiem-thu-b.md`](./archive/ke-hoach-sau-nghiem-thu-b.md).
 > **Slice C đã nghiệm thu ngày 2026-10-24:** job chạy trong offscreen, lưu trạng thái vào
 > `chrome.storage.session`, huỷ được, mở lại side panel vẫn thấy tiến trình và có
-> notification khi xong. Bản ghi kiểm tra: [`kiem-tra-slice-c.md`](./kiem-tra-slice-c.md).
+> notification khi xong. Bản ghi kiểm tra: [`kiem-tra-slice-c.md`](./archive/kiem-tra-slice-c.md).
 > **Slice D là việc tiếp theo**; bàn giao và phạm vi ở [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
 > **Phạm vi:** nối `llama-server` (llama.cpp) vào demo hiện có để trích sự kiện, duyệt và lưu.
 > Tài liệu này **không thay thế** `ke_hoach_phat_trien.md` (build order) hay `script.md`
 > (hành vi); nó là bản chi tiết hoá cho lớp LLM sau khi đã chốt phạm vi với người dùng.
 
-**Đọc kèm:** [`thiet-ke-demo-va-san-sang-llama-cpp.md`](./thiet-ke-demo-va-san-sang-llama-cpp.md)
-(đánh giá khoảng cách hiện tại), [`kiem-thu-demo.md`](./kiem-thu-demo.md) (checklist KS),
+**Đọc kèm:** [`thiet-ke-demo-va-san-sang-llama-cpp.md`](./archive/thiet-ke-demo-va-san-sang-llama-cpp.md)
+(đánh giá **lịch sử** trước khi tích hợp LLM), [`kiem-thu-demo.md`](./kiem-thu-demo.md) (checklist KS),
 [`DEVIATIONS.md`](./DEVIATIONS.md) (chỗ demo cố ý lệch kế hoạch).
 
 ---
@@ -48,7 +48,7 @@ không gọi mạng, không sửa UI. Mục tiêu là chốt hình dạng dữ l
 > **Trạng thái (2026-10-22):** đã hoàn thành. Code nằm ở `extension/src/core/extraction/**`,
 > `extension/src/core/ports/inference.ts`; test ở `extension/tests/core/extraction-*.test.ts`.
 > Slice B cũng đã xong và được nghiệm thu (§10); lỗi khớp hồ sơ đã được xử lý theo
-> [`ke-hoach-sau-nghiem-thu-b.md`](./ke-hoach-sau-nghiem-thu-b.md).
+> [`ke-hoach-sau-nghiem-thu-b.md`](./archive/ke-hoach-sau-nghiem-thu-b.md).
 
 ### 1.1. Việc làm, theo thứ tự
 
@@ -241,8 +241,9 @@ export const LlmSettingsSchema = z.object({
 });
 ```
 
-Lưu qua `setSetting('llm', ...)` và **validate bằng Zod khi đọc** (hiện `settings` chưa
-được validate — xem `thiet-ke-demo-va-san-sang-llama-cpp.md` §2.4).
+Lưu qua `setSetting('llm', ...)` và **validate bằng Zod khi đọc** (đã cài trong
+`platform/storage/settings.ts`; bản đánh giá lịch sử ở
+`docs/archive/thiet-ke-demo-va-san-sang-llama-cpp.md` §2.4).
 
 ---
 
@@ -708,8 +709,8 @@ Không cắt C — đóng panel vẫn chạy là yêu cầu đã chốt, không 
 > **Trạng thái (2026-10-23): đã nghiệm thu.** Code xong, đã E2E provider/pipeline với
 > `llama-server` thật và đã kiểm tra UI trong Chrome. Lỗi khớp hồ sơ khi có từ 2 hồ sơ
 > đã được sửa theo hướng event-first, prompt v3; ghi nhận ở
-> [`ke-hoach-sau-nghiem-thu-b.md`](./ke-hoach-sau-nghiem-thu-b.md).
-> Checklist kiểm tra chi tiết: [`kiem-tra-slice-b.md`](./kiem-tra-slice-b.md).
+> [`ke-hoach-sau-nghiem-thu-b.md`](./archive/ke-hoach-sau-nghiem-thu-b.md).
+> Checklist kiểm tra chi tiết: [`kiem-tra-slice-b.md`](./archive/kiem-tra-slice-b.md).
 > Đã chốt bằng probe: dạng **OpenAI** thực sự ép schema, dạng `schema` trần bị bỏ qua;
 > provider thử `OpenAI → schema → json_object` khi gặp 400/422. Qwen3.5 mặc định suy luận
 > rất dài nên provider gửi `chat_template_kwargs.enable_thinking = false`.
@@ -739,7 +740,7 @@ Không cắt C — đóng panel vẫn chạy là yêu cầu đã chốt, không 
 ### Slice C — chi tiết
 
 > **Trạng thái (2026-10-24): đã nghiệm thu.** Bản ghi kiểm tra:
-> [`kiem-tra-slice-c.md`](./kiem-tra-slice-c.md). Quality gate `180 test / 21 file` xanh.
+> [`kiem-tra-slice-c.md`](./archive/kiem-tra-slice-c.md). Quality gate `180 test / 21 file` xanh.
 > Phần **nhắc việc sự kiện** (`chrome.alarms`, mốc 1 tuần/1 ngày/ngày diễn ra, KS-10)
 > **không** nằm trong Slice C này; mới có notification kết quả trích xuất.
 > Việc tiếp theo là **Slice D** — xem [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
@@ -883,7 +884,7 @@ hồ sơ đúng, JSON hợp lệ, latency. Từ đó tính recall và tỉ lệ 
 | `script.md` KS-11 | Luồng lỗi: server chưa chạy, model đang tải, JSON sai |
 | `ke_hoach_phat_trien.md` §7 | Model, prompt, ngân sách token gốc |
 | `ke_hoach_phat_trien.md` §8.1 | State machine pipeline (bản đầy đủ có classifier; bản này rút gọn) |
-| `thiet-ke-demo-va-san-sang-llama-cpp.md` §3 | Điểm nối và hợp đồng đề xuất ban đầu |
+| `docs/archive/thiet-ke-demo-va-san-sang-llama-cpp.md` §3 | Điểm nối và hợp đồng đề xuất ban đầu (lịch sử) |
 
 **Việc phải đồng bộ khi kết thúc Slice E:** `AGENTS.md` §11 (Current status),
 `README.md` + `extension/README.md` (tính năng, cách chạy, file map),

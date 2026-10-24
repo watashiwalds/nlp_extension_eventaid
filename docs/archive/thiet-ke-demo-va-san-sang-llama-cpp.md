@@ -1,5 +1,10 @@
 # Thiết kế demo & mức sẵn sàng tích hợp llama.cpp
 
+> **ĐÃ LƯU TRỮ (2026-10-24).** Đây là bản đánh giá **trước khi** tích hợp LLM; nhiều kết
+> luận đã lỗi thời (ví dụ “chưa có `InferenceProvider`/offscreen”). Không dùng làm nguồn
+> hiện hành. Trạng thái hiện tại: [`ke-hoach-llm-trich-xuat.md`](../ke-hoach-llm-trich-xuat.md)
+> và [`DEVIATIONS.md`](../DEVIATIONS.md). Giữ lại để tra cứu lý do thiết kế ban đầu.
+
 > **Mốc tham chiếu:** `main` @ `3cafd8f` (2026-10-22).
 > **Đã kiểm chứng:** `npm run typecheck`, `npm run lint`, `npm test` (**72 test**), `npm run build` đều xanh.
 > **Phạm vi:** mô tả thiết kế đang có trong `extension/`, sau đó đánh giá khoảng cách tới việc
