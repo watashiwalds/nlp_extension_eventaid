@@ -29,7 +29,8 @@ phân lớp của kế hoạch. Nhắc việc sự kiện (KS-10) và Gmail API 
 | Job queue / pipeline | `Job`, state machine, resume sau SW restart | Có **một** job active trong `chrome.storage.session`; không resume sau khi tắt trình duyệt | Đúng phạm vi đã chốt: đóng panel vẫn chạy, tắt trình duyệt thì huỷ |
 | `Settings` store | `settings` | Dùng cho `LlmSettings`; cờ quét và job dùng `chrome.storage.session` | Tách dữ liệu bền (IndexedDB) khỏi trạng thái phiên |
 | Classifier | `public/models/classifier.json` | Không có | — |
-| Test | Vitest + checklist KS | Vitest **206 test / 25 file** (core, parse Readability/forceRaw, page snapshot, tags, extraction/LLM, duyệt nháp/confidence/similar, job, offscreen runner, smoke UI bằng jsdom) + checklist | Không có Playwright như kế hoạch |
+| Model LLM chốt | 3B Q4 + KV q8_0 trong ~3 GB VRAM | **9B IQ4_XS** (16 layer lên GPU, ~5,5 GB) sau Slice E; 4B Q5_K_S bị loại vì recall 72,7%/75,0% | 4B nhanh hơn ~3,4 lần nhưng dưới ngưỡng recall 80%; giữ nguyên ngưỡng, ghi rõ đánh đổi. Có thể cải thiện prompt cho 4B rồi đo lại |
+| Test | Vitest + checklist KS | Vitest **264 test / 27 file** (core, parse Readability/forceRaw, page snapshot, tags, extraction/LLM, duyệt nháp/confidence/similar, job, offscreen runner, smoke UI bằng jsdom, Slice E eval) + **17 test live skip** khi không có `LLAMA_EVAL=1` + checklist | Không có Playwright như kế hoạch |
 | Thông báo UI | 2 nút theo giới hạn Chrome | Notification kết quả trích xuất dùng **1 nút**; chưa có notification nhắc việc | Giữ dưới giới hạn 2 nút của Chrome |
 
 ## Điểm **không** lệch

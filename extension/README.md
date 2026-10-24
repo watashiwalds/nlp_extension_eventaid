@@ -13,6 +13,8 @@ npm run build      # tsc --noEmit + vite build → dist/
 npm run typecheck
 npm run lint
 npm test
+LLAMA_EVAL=1 npx vitest run tests/eval/extraction.live.eval.test.ts \
+  --reporter=verbose --disableConsoleIntercept   # đo thật, cần llama-server
 ```
 
 Load unpacked từ `dist/`.
@@ -47,6 +49,7 @@ Load unpacked từ `dist/`.
 | `src/ui/views/*` | View functions trả về HTML (không framework); `capture.ts` cho tab quét nội dung, `event-card.ts` cho thẻ/chi tiết sự kiện, `event-review.ts` cho thanh duyệt |
 | `src/ui/popup.*` | Popup: quét nhanh + mở side panel |
 | `tests/` | Vitest: core + parse + page snapshot + smoke UI (jsdom + fake-indexeddb) |
+| `tests/eval/*` | Slice E: metric, test tất định `MockProvider`, harness đo thật `llama-server` (`LLAMA_EVAL=1`) |
 
 ## Quy ước
 

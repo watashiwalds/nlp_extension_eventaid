@@ -1,6 +1,7 @@
 # Kế hoạch lớp trích xuất sự kiện bằng LLM cục bộ
 
-> **Mốc tham chiếu:** `main` @ `c2ba1ab` (2026-10-24); quality gate xanh với **206 test / 25 file** (2026-10-24).
+> **Mốc tham chiếu:** `main` @ `c2ba1ab` (2026-10-24); quality gate xanh với **264 test / 27 file**
+> (+17 test live skip) (2026-10-24).
 > **Trạng thái:** **Slice A + B đã xong phần code, đã chạy provider/pipeline với `llama-server` thật** (Qwen3.5-4B Q5_K_S, build b10101) và **đã được nghiệm thu ngày 2026-10-23**. Xem §1.2, §9.3 và §10.
 > **Sau nghiệm thu:** đã sửa lỗi khớp hồ sơ (SB-01) theo hướng event-first, prompt v3;
 > sau đó thêm ngày chỉ có ngày (`DateTimeRef.date`) và đối chiếu ngày với nguồn, prompt v4.
@@ -11,7 +12,9 @@
 > **Slice D đã nghiệm thu ngày 2026-10-24:** duyệt nháp, duyệt/xoá hàng loạt, cảnh báo
 > thiếu thời điểm và gợi ý trùng paraphrase. Bản ghi: [`kiem-tra-slice-d.md`](./kiem-tra-slice-d.md);
 > phạm vi gốc: [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
-> **Slice E là việc tiếp theo**; bàn giao tại [`ban-giao-slice-e.md`](./ban-giao-slice-e.md).
+> **Slice E đã đo ngày 2026-10-24:** chốt 9B IQ4_XS, 4B Q5_K_S bị loại vì recall
+> dưới 80%. Bàn giao tại [`ban-giao-slice-e.md`](./ban-giao-slice-e.md); kết quả tại
+> [`ket-qua-danh-gia-slice-e.md`](./ket-qua-danh-gia-slice-e.md).
 > **Phạm vi:** nối `llama-server` (llama.cpp) vào demo hiện có để trích sự kiện, duyệt và lưu.
 > Tài liệu này **không thay thế** `ke_hoach_phat_trien.md` (build order) hay `script.md`
 > (hành vi); nó là bản chi tiết hoá cho lớp LLM sau khi đã chốt phạm vi với người dùng.
@@ -747,7 +750,8 @@ Không cắt C — đóng panel vẫn chạy là yêu cầu đã chốt, không 
 > Phần **nhắc việc sự kiện** (`chrome.alarms`, mốc 1 tuần/1 ngày/ngày diễn ra, KS-10)
 > **không** nằm trong Slice C này; mới có notification kết quả trích xuất.
 > Slice D đã nghiệm thu ngày 2026-10-24 — xem [`kiem-tra-slice-d.md`](./kiem-tra-slice-d.md).
-> Việc tiếp theo là **Slice E** — xem [`ban-giao-slice-e.md`](./ban-giao-slice-e.md).
+> **Slice E đã đo ngày 2026-10-24** — xem [`ban-giao-slice-e.md`](./ban-giao-slice-e.md)
+> và [`ket-qua-danh-gia-slice-e.md`](./ket-qua-danh-gia-slice-e.md).
 
 - `manifest.config.ts`: thêm `offscreen`, `notifications`; CSP vẫn chỉ cho
   `http://127.0.0.1:8080`.
@@ -790,9 +794,9 @@ Không cắt C — đóng panel vẫn chạy là yêu cầu đã chốt, không 
 
 ### Slice E — chi tiết
 
-> **Trạng thái (2026-10-24): đã bàn giao, chưa bắt đầu code.** Kế hoạch chi tiết, bộ mẫu
-> 15 tài liệu, định dạng fixture, công cụ đo và quy trình đo thật:
-> [`ban-giao-slice-e.md`](./ban-giao-slice-e.md). Tóm tắt:
+> **Trạng thái (2026-10-24): đã có bộ mẫu + harness + đo thật.** Kế hoạch chi tiết:
+> [`ban-giao-slice-e.md`](./ban-giao-slice-e.md); kết quả đo:
+> [`ket-qua-danh-gia-slice-e.md`](./ket-qua-danh-gia-slice-e.md). Tóm tắt:
 
 - Bộ mẫu 12–15 tài liệu: thông báo lớp, email mời họp, lịch seminar, thông báo tuyển dụng,
   bài đăng sự kiện, trang không có sự kiện, ngày chỉ có ngày, thiếu năm, khoảng thời gian,
@@ -807,6 +811,10 @@ Không cắt C — đóng panel vẫn chạy là yêu cầu đã chốt, không 
   trong code (ô “Tên model” vẫn để trống được).
 - Cập nhật `docs/DEVIATIONS.md` nếu có lệch mới, `README.md`, `extension/README.md`,
   `AGENTS.md` §11.
+- **Kết quả 2026-10-24:** 9B IQ4_XS đạt recall 90,9%, 0 ngày bịa, p95 34,0 s → chốt;
+  4B Q5_K_S đạt recall 72,7% / 75,0% → loại vì dưới ngưỡng 80%, dù nhanh hơn và không bịa ngày.
+  Harness đo thật: `extension/tests/eval/extraction.live.eval.test.ts` (chỉ chạy khi
+  `LLAMA_EVAL=1`).
 
 ---
 
@@ -878,7 +886,7 @@ hồ sơ đúng, JSON hợp lệ, latency. Từ đó tính recall và tỉ lệ 
 
 1. GPU cụ thể là model nào, bao nhiêu nhân CPU? Ảnh hưởng trực tiếp latency và `-ngl`.
 2. Có cần API key cho llama-server không? Nếu chỉ dùng máy cá nhân, có thể bỏ trống.
-3. Model mặc định chốt 3B hay 1.5B — quyết định sau bảng đo Slice B.
+3. Model mặc định: chốt 9B IQ4_XS sau Slice E; 4B Q5_K_S không đạt recall.
 4. Có giữ classifier TF-IDF về sau để lọc trước khi gọi LLM không, hay bỏ hẳn?
 5. Có cần ADR riêng cho D2/D3/D5 (offscreen, session, model) trước khi code không?
    `ke_hoach_phat_trien.md` §3 đang thiếu ADR-001/002/003.

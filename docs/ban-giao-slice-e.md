@@ -1,8 +1,9 @@
 # Bàn giao Slice D → Slice E
 
 > **Trạng thái:** Slice D đã nghiệm thu ngày **2026-10-24** (quality gate tự động xanh,
-> checklist thủ công trong Chrome đã được người dùng xác nhận). Phiên tiếp theo bắt đầu
-> **Slice E** — đo chất lượng trích xuất trên bộ mẫu và chốt model khuyến nghị.
+> checklist thủ công trong Chrome đã được người dùng xác nhận). **Slice E đã đo ngày
+> 2026-10-24:** chốt 9B IQ4_XS, 4B Q5_K_S bị loại vì recall dưới 80%. Kết quả:
+> [`ket-qua-danh-gia-slice-e.md`](./ket-qua-danh-gia-slice-e.md).
 > Tài liệu này là điểm bắt đầu của phiên đó; không thay thế
 > [`ke-hoach-llm-trich-xuat.md`](./ke-hoach-llm-trich-xuat.md) (phạm vi/thứ tự lát cắt)
 > hay [`script.md`](../script.md).
@@ -13,7 +14,7 @@
 > **Rà soát kế hoạch (2026-10-24):** đã đối chiếu với code hiện tại
 > (`src/core/extraction/{pipeline,normalize,dedup,prompt,schema,similar}.ts`,
 > `src/platform/offscreen/run-job.ts`, `src/platform/inference/llama-cpp.ts`) và các tiêu chí
-> ở `ke-hoach-llm-trich-xuat.md` §2.2, §10, §11. **Chưa có dòng code Slice E nào được viết.**
+> ở `ke-hoach-llm-trich-xuat.md` §2.2, §10, §11. **Slice E đã có bộ mẫu + harness + kết quả đo.**
 
 ---
 
@@ -227,6 +228,9 @@ còn bỏ sót.
      lớn hơn) — **không** hạ ngưỡng nghiệm thu một cách im lặng.
 - Không hard-code model trong code; chỉ ghi khuyến nghị trong tài liệu và giữ ô cài đặt
   trống được như hiện tại.
+- **Kết quả 2026-10-24:** 9B IQ4_XS đạt recall 90,9%, 0 ngày bịa, p95 34,0 s → **chốt**;
+  4B Q5_K_S đạt recall 72,7% / 75,0% → **loại** vì dưới ngưỡng 80%. Chi tiết:
+  [`ket-qua-danh-gia-slice-e.md`](./ket-qua-danh-gia-slice-e.md).
 
 ## 8. Thứ tự thực hiện và file tác động
 
@@ -272,14 +276,14 @@ còn bỏ sót.
 
 ## 11. Định nghĩa hoàn thành
 
-- [ ] 15 mẫu có đáp án, không có dữ liệu cá nhân thật.
-- [ ] `metrics.ts` + test đơn vị cho match, recall/precision, ngày bịa, percentile.
-- [ ] `extraction.eval.test.ts` chạy trong CI bằng MockProvider; có mẫu cố ý sai.
-- [ ] Bảng đo thật đã điền đủ; có recall, ngày bịa, JSON, p95, cấu hình model.
-- [ ] Kết luận model khuyến nghị (hoặc lý do chưa chốt) được ghi trong tài liệu.
-- [ ] `AGENTS.md` §11, `README.md`, `extension/README.md`, `ke-hoach-llm-trich-xuat.md`
-      được cập nhật; `DEVIATIONS.md` chỉ thêm nếu có lệch mới.
-- [ ] `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` xanh.
+- [x] 15 mẫu có đáp án, không có dữ liệu cá nhân thật.
+- [x] `metrics.ts` + test đơn vị cho match, recall/precision, ngày bịa, percentile.
+- [x] `extraction.eval.test.ts` chạy trong CI bằng MockProvider; có mẫu cố ý sai.
+- [x] Bảng đo thật đã điền đủ; có recall, ngày bịa, JSON, p95, cấu hình model.
+- [x] Kết luận model khuyến nghị (hoặc lý do chưa chốt) được ghi trong tài liệu.
+- [x] `AGENTS.md` §11, `README.md`, `extension/README.md`, `ke-hoach-llm-trich-xuat.md`
+      được cập nhật; `DEVIATIONS.md` đã thêm dòng model 9B so với ngân sách 3 GB.
+- [x] `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` xanh.
 - [ ] Người dùng xem lại báo cáo trước khi commit cuối.
 
 ## 12. Tài liệu tham chiếu

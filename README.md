@@ -56,7 +56,7 @@ npm run build
 | `npm run build` | `tsc --noEmit` + `vite build` → `dist/` |
 | `npm run typecheck` | TypeScript strict, 0 lỗi |
 | `npm run lint` | ESLint (flat config) |
-| `npm test` | Vitest: 206 test / 25 file (core, parse, page snapshot, extraction/LLM, duyệt nháp, job, smoke test UI bằng jsdom) |
+| `npm test` | Vitest: 264 test / 27 file (core, parse, page snapshot, extraction/LLM, duyệt nháp, job, Slice E eval, smoke test UI bằng jsdom); 17 test live skip nếu không có `LLAMA_EVAL=1` |
 | `npm run icons` | Sinh lại icon PNG |
 
 ---
@@ -119,7 +119,8 @@ Checklist thủ công (theo kịch bản KS): [`docs/kiem-thu-demo.md`](docs/kie
 
 ## 6. Bước tiếp theo
 
-1. Đo chất lượng trích xuất trên bộ mẫu (**Slice E**).
+1. **Slice E đã đo ngày 2026-10-24:** chốt **9B IQ4_XS**; 4B Q5_K_S bị loại vì recall
+   dưới 80%. Xem [`docs/ket-qua-danh-gia-slice-e.md`](docs/ket-qua-danh-gia-slice-e.md).
 2. Bổ sung **classifier từ khoá** (không cần train) để gợi ý “trang có sự kiện”.
 3. **Nhắc việc sự kiện** bằng `chrome.alarms` + `notifications` (KS-10, tối đa 2 nút).
 4. Gmail read-only + PDF/DOCX ở sprint cuối.
@@ -127,5 +128,5 @@ Checklist thủ công (theo kịch bản KS): [`docs/kiem-thu-demo.md`](docs/kie
 Xem lộ trình đầy đủ trong [`ke_hoach_phat_trien.md`](ke_hoach_phat_trien.md) §9.
 Kế hoạch lớp trích xuất bằng LLM cục bộ: [`docs/ke-hoach-llm-trich-xuat.md`](docs/ke-hoach-llm-trich-xuat.md).
 Bản ghi Slice D: [`docs/kiem-tra-slice-d.md`](docs/kiem-tra-slice-d.md); bàn giao gốc: [`docs/ban-giao-slice-d.md`](docs/ban-giao-slice-d.md).
-Bàn giao Slice E: [`docs/ban-giao-slice-e.md`](docs/ban-giao-slice-e.md); mẫu bảng đo: [`docs/ket-qua-danh-gia-slice-e.md`](docs/ket-qua-danh-gia-slice-e.md).
+Bàn giao Slice E: [`docs/ban-giao-slice-e.md`](docs/ban-giao-slice-e.md); kết quả đo: [`docs/ket-qua-danh-gia-slice-e.md`](docs/ket-qua-danh-gia-slice-e.md).
 Tài liệu lịch sử (đã lưu trữ): [`docs/archive/`](docs/archive/README.md).
