@@ -150,7 +150,8 @@ Checklist thủ công (theo kịch bản KS): [`docs/kiem-thu-demo.md`](docs/kie
 ## 6. Bước tiếp theo
 
 1. **Slice E đã đo ngày 2026-10-24:** chốt **9B IQ4_XS**; 4B Q5_K_S bị loại vì recall
-   dưới 80%. Xem [`docs/ket-qua-danh-gia-slice-e.md`](docs/ket-qua-danh-gia-slice-e.md).
+   dưới 80%. Đo bổ sung 2026-10-26: 27B ternary đạt recall 90,9% nhưng p95 127,3 s > 90 s
+   nên cũng bị loại. Xem [`docs/ket-qua-danh-gia-slice-e.md`](docs/ket-qua-danh-gia-slice-e.md).
 2. **Chọn nơi chạy suy luận** (KS-14): **đã triển khai F1–F5** — localhost mặc định + endpoint
    OpenAI-compatible (Gemini, máy trạm Cloudflared), consent theo origin, key cục bộ. Việc còn lại
    là chạy checklist thủ công với endpoint thật. Xem

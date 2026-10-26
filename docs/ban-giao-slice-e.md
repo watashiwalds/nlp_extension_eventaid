@@ -2,7 +2,8 @@
 
 > **Trạng thái:** Slice D đã nghiệm thu ngày **2026-10-24** (quality gate tự động xanh,
 > checklist thủ công trong Chrome đã được người dùng xác nhận). **Slice E đã đo ngày
-> 2026-10-24:** chốt 9B IQ4_XS, 4B Q5_K_S bị loại vì recall dưới 80%. Kết quả:
+> 2026-10-24:** chốt 9B IQ4_XS, 4B Q5_K_S bị loại vì recall dưới 80%; đo bổ sung
+> 2026-10-26 loại 27B ternary vì p95 127,3 s > 90 s. Kết quả:
 > [`ket-qua-danh-gia-slice-e.md`](./ket-qua-danh-gia-slice-e.md).
 > Tài liệu này là điểm bắt đầu của phiên đó; không thay thế
 > [`ke-hoach-llm-trich-xuat.md`](./ke-hoach-llm-trich-xuat.md) (phạm vi/thứ tự lát cắt)
@@ -231,6 +232,8 @@ còn bỏ sót.
 - **Kết quả 2026-10-24:** 9B IQ4_XS đạt recall 90,9%, 0 ngày bịa, p95 34,0 s → **chốt**;
   4B Q5_K_S đạt recall 72,7% / 75,0% → **loại** vì dưới ngưỡng 80%. Chi tiết:
   [`ket-qua-danh-gia-slice-e.md`](./ket-qua-danh-gia-slice-e.md).
+- **Đo bổ sung 2026-10-26:** Ternary-Bonsai-2-27B PTQ1_0 đạt recall 90,9% / 90,0%, 0 ngày bịa,
+  0 lỗi JSON, nhưng p95 127,3 s > 90 s → **loại** theo tiêu chí latency; 9B vẫn là model chốt.
 
 ## 8. Thứ tự thực hiện và file tác động
 

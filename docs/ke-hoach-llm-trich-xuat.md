@@ -13,7 +13,8 @@
 > thiếu thời điểm và gợi ý trùng paraphrase. Bản ghi: [`kiem-tra-slice-d.md`](./kiem-tra-slice-d.md);
 > phạm vi gốc: [`ban-giao-slice-d.md`](./ban-giao-slice-d.md).
 > **Slice E đã đo ngày 2026-10-24:** chốt 9B IQ4_XS, 4B Q5_K_S bị loại vì recall
-> dưới 80%. Bàn giao tại [`ban-giao-slice-e.md`](./ban-giao-slice-e.md); kết quả tại
+> dưới 80%; đo bổ sung 2026-10-26 loại 27B ternary vì p95 127,3 s > 90 s. Bàn giao tại
+> [`ban-giao-slice-e.md`](./ban-giao-slice-e.md); kết quả tại
 > [`ket-qua-danh-gia-slice-e.md`](./ket-qua-danh-gia-slice-e.md).
 > **Sàng lọc trước LLM (Slice F — chưa triển khai):** từ 2026-10-26, pipeline có thêm bước sàng
 > lọc PhoBERT cục bộ (`127.0.0.1:8000`) **trước** lớp mô tả ở đây. Bước này chỉ quyết định có gọi
@@ -837,6 +838,8 @@ Không cắt C — đóng panel vẫn chạy là yêu cầu đã chốt, không 
   4B Q5_K_S đạt recall 72,7% / 75,0% → loại vì dưới ngưỡng 80%, dù nhanh hơn và không bịa ngày.
   Harness đo thật: `extension/tests/eval/extraction.live.eval.test.ts` (chỉ chạy khi
   `LLAMA_EVAL=1`).
+- **Đo bổ sung 2026-10-26:** Ternary-Bonsai-2-27B PTQ1_0 đạt recall 90,9% / 90,0%, 0 ngày bịa,
+  JSON hợp lệ 100%, nhưng p95 127,3 s > 90 s → loại theo tiêu chí latency; giữ 9B IQ4_XS.
 
 ---
 
@@ -908,7 +911,8 @@ hồ sơ đúng, JSON hợp lệ, latency. Từ đó tính recall và tỉ lệ 
 
 1. GPU cụ thể là model nào, bao nhiêu nhân CPU? Ảnh hưởng trực tiếp latency và `-ngl`.
 2. Có cần API key cho llama-server không? Nếu chỉ dùng máy cá nhân, có thể bỏ trống.
-3. Model mặc định: chốt 9B IQ4_XS sau Slice E; 4B Q5_K_S không đạt recall.
+3. Model mặc định: chốt 9B IQ4_XS sau Slice E; 4B Q5_K_S không đạt recall; 27B ternary
+   không đạt p95 latency (127,3 s > 90 s).
 4. ~~Có giữ classifier TF-IDF về sau để lọc trước khi gọi LLM không, hay bỏ hẳn?~~ **Đã chốt
    2026-10-26:** bỏ TF-IDF, dùng dịch vụ PhoBERT cục bộ (Slice F, chưa triển khai) — xem
    [`ke-hoach-bo-loc-noi-dung.md`](./ke-hoach-bo-loc-noi-dung.md).

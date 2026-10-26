@@ -298,11 +298,13 @@ cho tới khi có Chrome + endpoint; không đánh dấu đã kiểm thử thủ
    biết; nếu không, giảm `chunkChars` và cảnh báo khi output bị cắt.
 10. **Model lớn làm latency sát ngưỡng.** Đo nhanh một model 27B lượng tử hoá trên CPU cho
     ~87 s/tài liệu — gần mức timeout 120 s của extension và vượt xa ngưỡng proxy ~100 s của
-    Cloudflared. Khuyến nghị model ≤ 9B cho demo remote, hoặc giảm chunk và đặt timeout thấp hơn
-    để báo lỗi sớm thay vì treo.
+    Cloudflared. Đo đầy đủ Slice E ngày 2026-10-26 trên Ternary-Bonsai-2-27B PTQ1_0 cho p95
+    127,3 s/tài liệu. Khuyến nghị model ≤ 9B cho demo remote, hoặc giảm chunk và đặt timeout
+    thấp hơn để báo lỗi sớm thay vì treo.
 
-**Trạng thái rủi ro (2026-10-26):** các rủi ro 1–3 và 9–10 vẫn **mở** vì chưa có API key, Chrome
-hay `llama-server` để đo thật. Code đã xử lý `finishReason`/`promptFeedback`, retry có giới hạn và
+**Trạng thái rủi ro (2026-10-26):** các rủi ro 1–3 và 9–10 vẫn **mở** vì chưa chạy đủ checklist
+§8 trên Chrome với Gemini/Cloudflared thật (Gemini key đã dùng được nhưng chưa nghiệm thu đủ
+các mục §8). Code đã xử lý `finishReason`/`promptFeedback`, retry có giới hạn và
 hiển thị lỗi theo host/status, nhưng chưa chứng minh trên Gemini/Cloudflared thật. Adapter native
 Gemini (F6) **không triển khai**.
 
