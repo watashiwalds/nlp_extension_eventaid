@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { EXTRACTION_RESPONSE_SCHEMA } from '../../src/core/extraction/schema';
+import { EXTRACTION_WIRE_SCHEMA } from '../../src/core/extraction/schema';
 import { InferenceError } from '../../src/core/ports/inference';
 import { OpenAiCompatibleProvider } from '../../src/platform/inference/openai-compatible';
 
@@ -147,7 +147,7 @@ describe('OpenAiCompatibleProvider.run', () => {
     expect(body).not.toHaveProperty('chat_template_kwargs');
     expect(body.response_format).toEqual({
       type: 'json_schema',
-      json_schema: { name: 'extraction', strict: true, schema: EXTRACTION_RESPONSE_SCHEMA },
+      json_schema: { name: 'extraction', strict: true, schema: EXTRACTION_WIRE_SCHEMA },
     });
   });
 
@@ -192,18 +192,70 @@ describe('OpenAiCompatibleProvider.run', () => {
     expect((error as Error).message).not.toContain('secret-key');
   });
 
-  it('400 do schema không retry và giữ chi tiết để kiểm tra provider', async () => {
+  it('400 do schema được hạ xuống json_object đúng một lần và giữ cho các đoạn sau', async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(new Response('response_format json_schema not supported', { status: 400 }));
+      .mockResolvedValueOnce(
+        new Response('response_format json_schema not supported', { status: 400 }),
+      )
+      .mockResolvedValueOnce(completion('{"events":[]}'))
+      .mockResolvedValueOnce(completion('{"events":[]}'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const instance = provider();
+    await expect(instance.run(request)).resolves.toMatchObject({ raw: '{"events":[]}' });
+    await instance.run(request);
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    const first = JSON.parse(String((fetchMock.mock.calls[0]?.[1] as RequestInit).body));
+    const second = JSON.parse(String((fetchMock.mock.calls[1]?.[1] as RequestInit).body));
+    const third = JSON.parse(String((fetchMock.mock.calls[2]?.[1] as RequestInit).body));
+    expect(first.response_format.type).toBe('json_schema');
+    expect(second.response_format).toEqual({ type: 'json_object' });
+    expect(third.response_format).toEqual({ type: 'json_object' });
+  });
+
+  it('400 vẫn lỗi sau khi hạ json_object: giữ chi tiết và không lặp vô hạn', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response('Request contains an invalid argument.', { status: 400 }));
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(provider().run(request)).rejects.toMatchObject({
       kind: 'http',
       status: 400,
-      message: expect.stringContaining('json_schema not supported'),
+      message: expect.stringContaining('invalid argument'),
     });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('đã ở json_object thì không gửi lặp khi gặp 400 khác', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('response_format json_schema not supported', { status: 400 }))
+      .mockResolvedValueOnce(completion('{"events":[]}'))
+      .mockResolvedValueOnce(new Response('prompt quá dài', { status: 400 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const instance = provider();
+    await instance.run(request);
+    await expect(instance.run(request)).rejects.toMatchObject({ status: 400 });
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('5xx rồi 400 trong lần thử lại vẫn được hạ xuống json_object', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({}, 503, { 'Retry-After': '0' }))
+      .mockResolvedValueOnce(new Response('schema không hỗ trợ', { status: 400 }))
+      .mockResolvedValueOnce(completion('{"events":[]}'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(provider().run(request)).resolves.toMatchObject({ raw: '{"events":[]}' });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    const third = JSON.parse(String((fetchMock.mock.calls[2]?.[1] as RequestInit).body));
+    expect(third.response_format).toEqual({ type: 'json_object' });
   });
 
   it('không đưa key vào thông báo lỗi dù máy chủ echo lại', async () => {

@@ -414,7 +414,7 @@ User message:
                      "summary", "confidence", "uncertain", "quote"],
         "properties": {
           "title": { "type": "string", "maxLength": 120 },
-          "label": { "enum": ["công_vụ", "giải_trí", "cá_nhân", "kỷ_niệm", "khác"] },
+          "label": { "type": "string", "enum": ["công_vụ", "giải_trí", "cá_nhân", "kỷ_niệm", "khác"] },
           "start": { "type": ["string", "null"] },
           "end": { "type": ["string", "null"] },
           "startRaw": { "type": "string" },
@@ -442,6 +442,15 @@ User message:
 `LlamaCppProvider` thử theo thứ tự **OpenAI → schema trần → json_object**, chỉ hạ cấp khi
 gặp HTTP 400/422 và giữ dạng cuối cho các đoạn sau. Nếu build chỉ nhận schema trần mà bỏ
 qua nó, lớp Zod + retry vẫn là lưới an toàn cuối cùng.
+
+**Endpoint remote dùng schema rút gọn.** `OpenAiCompatibleProvider` gửi
+`EXTRACTION_WIRE_SCHEMA` — bản sao của schema trên đã bỏ đệ quy `maxItems`, `minItems`,
+`maxLength`, `minLength`, `minimum`, `maximum`, `uniqueItems`, nhưng giữ `required`, `enum`,
+`additionalProperties: false` và `type`. Lý do: Gemini có thể trả 400 `INVALID_ARGUMENT` khi
+schema “sinh quá nhiều trạng thái” cho constrained decoding (xem
+`docs/ke-hoach-da-provider.md` §8.5). Local vẫn gửi schema đầy đủ; Zod kiểm tra lại toàn bộ
+output nên hợp đồng dữ liệu không đổi. Remote thử `json_schema` trước, hạ **một lần** sang
+`json_object` khi 400/422 và giữ dạng đó cho các đoạn sau.
 
 ### 6.3. Retry
 

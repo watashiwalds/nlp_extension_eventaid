@@ -68,7 +68,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | A3 | `shared/contracts.ts` là nguồn hợp đồng duy nhất, Zod validate ở biên IndexedDB | ✅ | Đủ `Document`, `Profile`, `Event`, `Settings`; có test parse |
 | A4 | Phân lớp `core/` → `platform/` → `ui/`, không import ngược | ✅ | ESLint `no-restricted-imports` + `no-restricted-globals` |
 | A5 | IndexedDB + wrapper typed (~150 dòng), không Dexie | ✅ | `platform/storage/db.ts`; 4 object store |
-| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 354 test Vitest / 36 file (+17 live skip) |
+| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 358 test Vitest / 36 file (+17 live skip) |
 | A7 | Content script inject Readability theo yêu cầu | 🟡 | `scripting.executeScript` chạy page snapshot (lọc `main`/landmark, bỏ menu/khung ẩn), **Readability chạy trong side panel**; chưa có content script thường trú |
 | A8 | Job queue bền, tiến trình, resume sau service worker restart | 🟡 | Có **một** job active trong `chrome.storage.session`, tiến trình + huỷ; SW restart vẫn thấy job/offscreen; **không resume sau khi tắt trình duyệt** |
 | A9 | Offscreen document chạy sàng lọc + LLM | ✅ | Offscreen chỉ cho LLM; **sàng lọc chưa có** (Slice F). Tạo theo nhu cầu, đóng sau khi xong |
@@ -155,7 +155,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | G5 | Không thực thi script/macro trong tài liệu đầu vào | ✅ | Chỉ đọc text/HTML tĩnh, không eval |
 | G6 | Accessibility: bàn phím, focus ring, nhãn ARIA | 🟡 | Đã bỏ `autofocus`, thêm `:focus-visible`, Esc đóng form, focus ô lỗi đầu tiên; cần kiểm thủ công lại |
 | G7 | Side panel 320/360/400px không tràn ngang | 🟡 | Đã tách ô ngày/giờ + grid `minmax(0, 1fr)`, stack khi hẹp; **chưa xác nhận lại trên Chrome thật** |
-| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 354 test Vitest / 36 file (core, parse, page snapshot, extraction/LLM, provider remote/factory/permissions, form Cài đặt, job, offscreen runner, Slice E eval, smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
+| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 358 test Vitest / 36 file (core, parse, page snapshot, extraction/LLM, provider remote/factory/permissions, form Cài đặt, job, offscreen runner, Slice E eval, smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
 | G9 | Golden set 150 mẫu + `run_eval.ts` + F1/p95 | 🟡 | Slice E có **15 mẫu** + metric + harness `llama-server`; chưa đủ 150 mẫu, chưa có F1/coverage đầy đủ |
 | G10 | **KS-11** Luồng lỗi: token hết hạn, quota, model chết, trang không inject được | 🟡 | Có xử lý `chrome://`, nội dung rỗng, JSON rác, trang SPA chưa render, model chết, huỷ/job lỗi; thiếu lỗi OAuth/quota |
 | G11 | Đóng gói CRX + privacy policy + báo cáo eval | ❌ | Mới ở mức load unpacked `dist/` |
@@ -167,7 +167,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | H1 | **KS-14** Chọn nơi chạy suy luận: **Máy này** (mặc định) / endpoint OpenAI-compatible (Gemini) / máy trạm Cloudflared | ✅ | `LlamaCppProvider` + `OpenAiCompatibleProvider` + factory; form chọn provider, consent và quyền host động. Checklist thật còn chờ |
 | H2 | Consent một lần theo origin remote + thu hồi; đổi origin phải đồng ý lại | ✅ | `consentByOrigin`, modal consent, nút thu hồi; có test |
 | H3 | API key cục bộ, không xuất JSON/log; nút xoá key | ✅ | `LlmSettings.apiKey` lưu cục bộ, export không chứa settings, có nút **Xoá key đã lưu** |
-| H4 | Health/lỗi remote 401/403/404/429/5xx, timeout, `response_format` | ✅ | `OpenAiCompatibleProvider` map lỗi, retry có giới hạn, `finishReason`/`promptFeedback`; test mock. **2026-10-26:** sửa lỗi health ghi đè model bằng ID `models/…` của Gemini (404 khi trích); vẫn chờ xác nhận trên endpoint thật |
+| H4 | Health/lỗi remote 401/403/404/429/5xx, timeout, `response_format` | ✅ | `OpenAiCompatibleProvider` map lỗi, retry có giới hạn, `finishReason`/`promptFeedback`; test mock. **2026-10-26:** sửa lỗi health ghi đè model bằng ID `models/…` của Gemini (404 khi trích) và gửi **schema rút gọn** + hạ một lần sang `json_object` khi 400/422 (lỗi `invalid argument`); vẫn chờ xác nhận trên endpoint thật |
 | H5 | Quyền host cấp lúc chạy cho đúng origin (`optional_host_permissions`) | ✅ | Manifest có optional host cho HTTPS + local alias; xin quyền trong user gesture |
 | H6 | **Slice F** Sàng lọc nội dung bằng PhoBERT cục bộ (`127.0.0.1:8000`) trước khi gọi LLM | ❌ | Không có; demo gọi LLM trực tiếp. Không cắt câu, chỉ bỏ lần gọi LLM trên tài liệu âm |
 

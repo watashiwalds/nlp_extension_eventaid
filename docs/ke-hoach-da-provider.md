@@ -276,10 +276,13 @@ cho tới khi có Chrome + endpoint; không đánh dấu đã kiểm thử thủ
 1. **Gemini OpenAI-compatible có thật sự ép `response_format` schema không?** Nếu không,
    phải dùng native `generateContent` + `responseSchema` (dịch `nullable`, bỏ
    `additionalProperties`). Đây là câu hỏi **vẫn mở**; F1–F5 đã làm theo giả định
-   OpenAI-compatible, chưa có bằng chứng từ Gemini thật.
+   OpenAI-compatible, chưa có bằng chứng từ Gemini thật. Lần chạy 2026-10-26 với
+   `gemini-3.5-flash-lite` trả 400 `INVALID_ARGUMENT` khi gửi schema đầy đủ; đã gửi schema rút
+   gọn + fallback `json_object` (§8.5) nhưng **chưa xác nhận** trên endpoint thật.
 2. **Thinking của Gemini** có thể ăn hết `maxTokens`; cần tắt/hạ mức (`thinkingBudget` với 2.5,
-   `thinkingLevel` với 3) và kiểm tra model cụ thể. **Chưa đo** — provider remote không gửi
-   `chat_template_kwargs`.
+   `thinkingLevel`/`reasoning_effort` với 3) và kiểm tra model cụ thể. Gemini 3 **không tắt được**
+   thinking; token suy luận tính vào `max_tokens` (mặc định 1200, trần hợp đồng 2048) nên có thể
+   bị cắt trước khi trả JSON. **Chưa đo** — provider remote không gửi `chat_template_kwargs`.
 3. **Cloudflared free** có timeout proxy ~100 giây; trang dài hoặc model chậm có thể lỗi 524
    trước timeout 120 giây của extension. Giảm chunk hoặc chấp nhận lỗi trong demo. **Chưa đo.**
 4. **Quyền host động** hiện cảnh báo rộng; nếu chuyển sang phát hành store phải thiết kế lại.
@@ -323,7 +326,8 @@ Gemini (F6) **không triển khai**.
 
 | File | Nội dung |
 |---|---|
-| `extension/src/platform/inference/openai-compatible.ts` | Provider remote: `/models`, `/chat/completions`, Bearer key, retry 429/5xx, map lỗi và `finishReason`/`promptFeedback`; **giữ model người dùng nhập**, chỉ tự dò khi ô model trống |
+| `extension/src/platform/inference/openai-compatible.ts` | Provider remote: `/models`, `/chat/completions`, Bearer key, retry 429/5xx, map lỗi và `finishReason`/`promptFeedback`; **giữ model người dùng nhập**, chỉ tự dò khi ô model trống; gửi `EXTRACTION_WIRE_SCHEMA` và hạ một lần sang `json_object` khi 400/422 (§8.5) |
+| `extension/src/core/extraction/schema.ts` | Zod + JSON Schema của output; `EXTRACTION_WIRE_SCHEMA` bỏ các ràng buộc sinh (`maxItems`, `minLength`, `minimum`…) cho endpoint remote, giữ `required`/`enum`/`additionalProperties` |
 | `extension/src/platform/inference/http.ts` | Helper dùng chung: timeout/abort, header auth, parse model, **chuẩn hoá tiền tố `models/` của Gemini + chọn model chat đầu tiên**, map lỗi HTTP, che key trong body lỗi |
 | `extension/src/core/inference/provider-choice.ts` | Hàm thuần: chuẩn hoá/validate endpoint, local vs remote, consent, endpoint hiệu lực khi chọn local |
 | `extension/src/platform/inference/factory.ts` | `createInferenceProvider(settings)` |
@@ -373,6 +377,33 @@ Gemini (F6) **không triển khai**.
 - [ ] Kiểm tra Gemini có tôn trọng `response_format` + tắt thinking được không; nếu không, mở F6.
 - [ ] Đo lại giới hạn proxy ~100 giây của Cloudflared với trang dài.
 - [ ] Kiểm tra Chrome chấp nhận optional host `http://[::1]:8080/*` và CSP tương ứng.
+
+### 8.5. Sửa lỗi Gemini 400 INVALID_ARGUMENT khi trích xuất (2026-10-26)
+
+- **Hiện tượng:** sau khi sửa 404, **Kiểm tra kết nối** vẫn OK nhưng trích xuất bằng
+  `gemini-3.5-flash-lite` trả 400 `Request contains an invalid argument.` (không kèm
+  `fieldViolations`).
+- **Giả thuyết (chưa xác nhận):** schema gửi trong `response_format` sinh quá nhiều trạng thái cho
+  constrained decoding. Tài liệu/cộng đồng Gemini nêu đích danh `maxItems` lồng nhau,
+  `minimum`/`maximum` và chuỗi/enum dài. Schema cũ có `events.maxItems = 20`,
+  `summary.maxItems = 5`, `uncertain.maxItems = 10`, `confidence` 0–1 và `maxLength` — đúng các
+  dạng bị nêu. Không lấy được nguyên văn body đầy đủ nên đây là **giả thuyết**, không phải kết luận.
+- **Cách sửa:**
+  - Thêm `type: 'string'` cho `label`; một số bộ chuyển schema từ chối `enum` không có `type`.
+  - `EXTRACTION_WIRE_SCHEMA` gửi cho endpoint remote: bỏ đệ quy `maxItems`, `minItems`,
+    `maxLength`, `minLength`, `minimum`, `maximum`, `uniqueItems`; giữ `required`, `enum`,
+    `additionalProperties: false` và `type` (kể cả `["string", "null"]`).
+  - Local vẫn dùng `EXTRACTION_RESPONSE_SCHEMA` đầy đủ. Zod (`parseRawExtraction`) vẫn kiểm tra
+    lại toàn bộ output nên **không nới hợp đồng dữ liệu**.
+  - Remote thử `json_schema` trước; nếu 400/422 thì hạ **đúng một lần** sang `json_object` và giữ
+    dạng đó cho các đoạn còn lại của job. Retry 429/5xx chạy **trước** bước hạ để lần thử lại trả
+    400 vẫn được hạ; khi đã ở `json_object` thì không gửi lặp.
+- **Test:** `tests/core/extraction-schema.test.ts` (wire schema bỏ đúng khoá, giữ cấu trúc) và
+  `tests/platform/openai-compatible.test.ts` (400 → `json_object` một lần; `json_object` gặp 400
+  không lặp; 5xx → 400 vẫn hạ).
+- **Còn lại:** build lại, reload extension và chạy lại §8.2 với Gemini thật. Nếu vẫn 400: chép
+  nguyên văn body (UI đã hiện body 400/404/422 đã che key); cân nhắc bỏ `additionalProperties`
+  hoặc mở F6. **Chưa xác nhận trên endpoint thật.**
 
 ---
 

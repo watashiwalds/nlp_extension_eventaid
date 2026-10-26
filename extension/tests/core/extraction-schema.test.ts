@@ -1,11 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import {
   EXTRACTION_RESPONSE_SCHEMA,
+  EXTRACTION_WIRE_SCHEMA,
   parseRawExtraction,
   RawEventSchema,
 } from '../../src/core/extraction/schema';
 import { MOCK_EXTRACTION } from '../../src/core/extraction/mock-provider';
 import { buildSystemPrompt } from '../../src/core/extraction/prompt';
+
+interface SchemaNode {
+  type?: unknown;
+  enum?: unknown[];
+  required?: string[];
+  properties?: Record<string, SchemaNode>;
+  items?: SchemaNode;
+}
+
+const wire = EXTRACTION_WIRE_SCHEMA as SchemaNode;
 
 describe('schema output của model', () => {
   it('nhận fixture hợp lệ', () => {
@@ -55,6 +66,19 @@ describe('schema output của model', () => {
     expect([...items.required].sort()).toEqual(Object.keys(RawEventSchema.shape).sort());
     expect(items.properties).not.toHaveProperty('profileIds');
     expect(RawEventSchema.shape).not.toHaveProperty('profileIds');
+  });
+
+  it('bản schema gửi endpoint ngoài bỏ giới hạn sinh chuỗi nhưng giữ cấu trúc', () => {
+    expect(JSON.stringify(wire)).not.toMatch(
+      /"(maxItems|minItems|maxLength|minLength|minimum|maximum|uniqueItems)"\s*:/,
+    );
+
+    const event = wire.properties?.events?.items;
+    expect(wire.required).toEqual(['events']);
+    expect([...(event?.required ?? [])].sort()).toEqual(Object.keys(RawEventSchema.shape).sort());
+    expect(event?.properties?.label).toMatchObject({ type: 'string' });
+    expect(event?.properties?.start).toEqual({ type: ['string', 'null'] });
+    expect(event?.properties?.confidence).toEqual({ type: 'number' });
   });
 
   it('system prompt không còn danh sách hồ sơ hay profileIds', () => {

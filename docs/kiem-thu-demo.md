@@ -111,6 +111,11 @@ Lịch sử hai phiên trước: [`docs/archive/phien-lam-viec-tiep-theo.md`](./
 > **2026-10-26 — sau báo lỗi Gemini:** health `/models` từng ghi đè model đã nhập bằng ID dạng
 > `models/…`, khiến trích xuất trả 404 dù **Kiểm tra kết nối** báo OK. Đã sửa (giữ model đã nhập,
 > chuẩn hoá tiền tố, chỉ tự dò khi ô model trống — xem kế hoạch §8.3); cần chạy lại mục 8.2.
+>
+> **Cùng ngày — lỗi 400 khi trích bằng Gemini:** endpoint remote nay nhận **schema rút gọn**
+> (bỏ `maxItems`/`minimum`/`maxLength`…) và tự hạ **một lần** sang `json_object` nếu vẫn 400/422
+> (kế hoạch §8.5). Đây là giả thuyết chưa xác nhận trên endpoint thật; khi chạy 8.2, nếu vẫn lỗi
+> thì **chép nguyên văn phần body lỗi** (đã che key) để chẩn đoán trước khi mở F6.
 
 ### 8.1. Localhost (mặc định)
 
@@ -123,6 +128,8 @@ Lịch sử hai phiên trước: [`docs/archive/phien-lam-viec-tiep-theo.md`](./
 - [x] Chọn **Endpoint khác**, nhập base URL HTTPS + API key + model → **Kiểm tra kết nối**.
 - [x] Lần đầu: modal consent hiện đúng origin; **Huỷ** → không lưu, không gửi request, giữ provider cũ.
 - [ ] **Đồng ý** → lưu, health OK, trích 1 trang mẫu; JSON hợp lệ, không bịa ngày.
+- [ ] Trích bằng model Gemini đang dùng (đã thử `gemini-3.5-flash-lite`) → không còn 400
+      `Request contains an invalid argument.`; nếu còn, chép nguyên văn body lỗi (đã che key).
 - [ ] Nhập model Gemini (`gemini-…`, thử cả `models/gemini-…`) hoặc để trống → **Kiểm tra kết nối**
       **và** trích 1 trang đều dùng đúng model chat, không trả 404 *(đã sửa lỗi health ghi đè model
       ngày 2026-10-26; cần xác nhận lại trên Chrome)*.

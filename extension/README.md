@@ -70,7 +70,7 @@ MODEL_DIR=../phobert_task_classifier_final \
 | *(Slice F, chưa có)* `src/core/filter/*` | Chia cửa sổ, gộp quyết định, `MockFilter` (thuần, test bằng Node) |
 | *(Slice F, chưa có)* `src/platform/inference/phobert-filter.ts` | Client gọi dịch vụ PhoBERT `127.0.0.1:8000` (health, `/analyze`, timeout, fail-open) |
 | `src/platform/inference/llama-cpp.ts` | Provider local: `llama-server` (health, models, timeout, abort) |
-| `src/platform/inference/openai-compatible.ts` | Provider remote: `/models`, `/chat/completions`, Bearer key, retry 429/5xx, lỗi 401/403/404/429/5xx |
+| `src/platform/inference/openai-compatible.ts` | Provider remote: `/models`, `/chat/completions`, Bearer key, retry 429/5xx, lỗi 401/403/404/429/5xx; gửi schema rút gọn và hạ một lần sang `json_object` khi 400/422 |
 | `src/platform/inference/http.ts` | Helper HTTP dùng chung: timeout/abort, header, parse model, map lỗi, che key |
 | `src/platform/inference/factory.ts` | Chọn provider theo `LlmSettings.provider` (local mặc định) |
 | `src/platform/permissions.ts` | Xin/thu hồi quyền host động cho đúng origin |

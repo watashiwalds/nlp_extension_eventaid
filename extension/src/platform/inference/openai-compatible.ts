@@ -1,4 +1,4 @@
-import { EXTRACTION_RESPONSE_SCHEMA } from '../../core/extraction/schema';
+import { EXTRACTION_WIRE_SCHEMA } from '../../core/extraction/schema';
 import { InferenceError } from '../../core/ports/inference';
 import type {
   InferenceHealth,
@@ -26,6 +26,8 @@ import type { ModelsBody } from './http';
 
 export const REMOTE_HEALTH_TIMEOUT_MS = 10_000;
 const RETRY_DELAY_MS = 800;
+
+type ResponseFormatMode = 'json_schema' | 'json_object';
 
 export interface OpenAiCompatibleOptions {
   endpoint: string;
@@ -97,6 +99,8 @@ export class OpenAiCompatibleProvider implements InferenceProvider {
   private readonly apiKey: string;
   private readonly timeoutMs: number;
   private model: string;
+  /** Gemini và một số endpoint từ chối `json_schema`; hạ xuống JSON mode nếu cần. */
+  private responseFormatMode: ResponseFormatMode = 'json_schema';
 
   constructor(options: OpenAiCompatibleOptions) {
     this.endpoint = trimEndpoint(options.endpoint);
@@ -134,9 +138,22 @@ export class OpenAiCompatibleProvider implements InferenceProvider {
     let response = await this.postCompletion(request);
 
     // 429/5xx: thử lại đúng một lần, chờ theo Retry-After nhưng tối đa 2 giây.
-    // 400/422 (schema) không retry để tránh vòng lặp vô hạn.
+    // Đặt trước bước hạ schema để lần thử lại (có thể trả 400) vẫn được xử lý.
     if (response.status === 429 || response.status >= 500) {
       await sleep(retryAfterMs(response.headers) ?? RETRY_DELAY_MS);
+      response = await this.postCompletion(request);
+    }
+
+    // Gemini có thể từ chối toàn bộ `json_schema` bằng 400/422 INVALID_ARGUMENT
+    // (schema quá nhiều trạng thái hoặc khác dialect). Hạ đúng một lần sang JSON
+    // mode; `parseRawExtraction` + Zod vẫn kiểm tra lại nên hợp đồng không đổi.
+    // Chỉ hạ khi còn ở `json_schema`: đoạn sau lỗi 400 vì lý do khác thì không
+    // gửi lặp vô ích.
+    if (
+      this.responseFormatMode === 'json_schema' &&
+      (response.status === 400 || response.status === 422)
+    ) {
+      this.responseFormatMode = 'json_object';
       response = await this.postCompletion(request);
     }
 
@@ -184,10 +201,17 @@ export class OpenAiCompatibleProvider implements InferenceProvider {
       max_tokens: request.maxTokens,
       temperature: request.temperature,
       stream: false,
-      response_format: {
-        type: 'json_schema',
-        json_schema: { name: 'extraction', strict: true, schema: EXTRACTION_RESPONSE_SCHEMA },
-      },
+      response_format:
+        this.responseFormatMode === 'json_object'
+          ? { type: 'json_object' }
+          : {
+              type: 'json_schema',
+              json_schema: {
+                name: 'extraction',
+                strict: true,
+                schema: EXTRACTION_WIRE_SCHEMA,
+              },
+            },
     };
     if (this.model) body.model = this.model;
 

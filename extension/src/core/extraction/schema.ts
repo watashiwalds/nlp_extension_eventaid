@@ -54,7 +54,7 @@ export const EXTRACTION_RESPONSE_SCHEMA = {
         ],
         properties: {
           title: { type: 'string', maxLength: 120 },
-          label: { enum: [...LABELS] },
+          label: { type: 'string', enum: [...LABELS] },
           start: { type: ['string', 'null'] },
           end: { type: ['string', 'null'] },
           startRaw: { type: 'string' },
@@ -68,6 +68,38 @@ export const EXTRACTION_RESPONSE_SCHEMA = {
     },
   },
 } as const;
+
+/**
+ * Schema gửi cho endpoint OpenAI-compatible.
+ *
+ * Gemini có thể trả 400 INVALID_ARGUMENT khi schema sinh ra quá nhiều trạng thái
+ * ràng buộc — tài liệu của họ nêu đích danh `maxItems` lồng nhau và
+ * `minimum`/`maximum`. Bỏ các ràng buộc đó trên đường truyền là an toàn vì
+ * `parseRawExtraction` vẫn kiểm tra lại toàn bộ output bằng Zod.
+ */
+const DROPPED_WIRE_KEYS = new Set([
+  'maxItems',
+  'minItems',
+  'maxLength',
+  'minLength',
+  'minimum',
+  'maximum',
+  'uniqueItems',
+]);
+
+export const EXTRACTION_WIRE_SCHEMA = stripGeneratorConstraints(
+  EXTRACTION_RESPONSE_SCHEMA,
+) as Record<string, unknown>;
+
+function stripGeneratorConstraints(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripGeneratorConstraints);
+  if (value === null || typeof value !== 'object') return value;
+  const result: Record<string, unknown> = {};
+  for (const [key, child] of Object.entries(value)) {
+    if (!DROPPED_WIRE_KEYS.has(key)) result[key] = stripGeneratorConstraints(child);
+  }
+  return result;
+}
 
 export type RawParseResult =
   | { ok: true; value: RawExtraction }
