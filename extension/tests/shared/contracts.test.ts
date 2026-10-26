@@ -102,8 +102,39 @@ describe('hợp đồng lớp trích xuất LLM', () => {
     expect(() => EventCandidateSchema.parse({ ...valid, label: 'nghi_mat' })).toThrow();
   });
 
+  it('ExtractionMeta nhận provider openai-compatible', () => {
+    const event = makeEvent(
+      {
+        title: 'Sự kiện từ endpoint ngoài',
+        label: 'công_vụ',
+        startValue: '2026-11-02T09:00',
+        endValue: null,
+        durationMinutesInput: 60,
+        summary: [],
+        relatedProfiles: [],
+        sources: [],
+        origin: 'llm',
+        extractionMeta: {
+          runId: 'run_1',
+          documentId: 'doc_1',
+          provider: 'openai-compatible',
+          model: 'gemini-test',
+          promptVersion: 'v4',
+          chunkIndex: 0,
+          chunkCount: 1,
+          confidence: 0.7,
+          latencyMs: 100,
+        },
+      },
+      NOW,
+    );
+    expect(EventSchema.parse(event).extractionMeta?.provider).toBe('openai-compatible');
+  });
+
   it('LlmSettings điền mặc định và từ chối giá trị ngoài ngưỡng', () => {
     const settings = LlmSettingsSchema.parse({});
+    expect(settings.provider).toBe('local');
+    expect(settings.consentByOrigin).toEqual({});
     expect(settings.endpoint).toBe('http://127.0.0.1:8080');
     expect(settings.model).toBe('');
     expect(settings.chunkChars).toBe(5000);

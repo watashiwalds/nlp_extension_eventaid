@@ -247,12 +247,22 @@ export const ExtractionJobSchema = z.object({
 });
 export type ExtractionJob = z.infer<typeof ExtractionJobSchema>;
 
-/** Cấu hình máy chủ mô hình cục bộ (llama.cpp) — đọc lên phải validate bằng Zod. */
+export const LLM_PROVIDERS = ['local', 'openai-compatible'] as const;
+export const LlmProviderSchema = z.enum(LLM_PROVIDERS);
+export type LlmProvider = z.infer<typeof LlmProviderSchema>;
+
+/**
+ * Cấu hình nơi chạy suy luận — đọc lên phải validate bằng Zod.
+ * Bản ghi cũ thiếu `provider`/`consentByOrigin` được đọc với mặc định local.
+ */
 export const LlmSettingsSchema = z.object({
+  provider: LlmProviderSchema.default('local'),
   endpoint: z.string().url().default('http://127.0.0.1:8080'),
   apiKey: z.string().default(''),
   /** Để trống = dùng đúng model llama-server đang nạp; không khoá cứng một tên. */
   model: z.string().trim().max(200).default(''),
+  /** origin -> ISO thời điểm đồng ý; chỉ dùng cho origin remote. */
+  consentByOrigin: z.record(z.string(), z.string().min(1)).default({}),
   temperature: z.number().min(0).max(1).default(0.1),
   maxTokens: z.number().int().positive().max(2048).default(1200),
   timeoutMs: z.number().int().positive().max(180_000).default(120_000),

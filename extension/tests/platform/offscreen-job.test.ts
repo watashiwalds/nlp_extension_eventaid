@@ -3,6 +3,7 @@ import { MOCK_EXTRACTION, MockProvider } from '../../src/core/extraction/mock-pr
 import { makeEvent } from '../../src/core/events';
 import type { ExtractionProgress } from '../../src/core/extraction/pipeline';
 import { runExtractionJob } from '../../src/platform/offscreen/run-job';
+import { LlmSettingsSchema } from '../../src/shared/contracts';
 import type { Event, LlmSettings, NormalizedDocument, Profile } from '../../src/shared/contracts';
 
 const NOW = new Date(2026, 9, 23, 8, 0, 0);
@@ -23,35 +24,37 @@ const document: NormalizedDocument = {
   charCount: 0,
 };
 
-const settings: LlmSettings = {
+const settings: LlmSettings = LlmSettingsSchema.parse({
   endpoint: 'http://127.0.0.1:8080',
-  apiKey: '',
-  model: '',
   temperature: 0.1,
   maxTokens: 1200,
   timeoutMs: 120000,
   chunkChars: 5000,
   maxChunks: 4,
-};
+});
 
 function deps(overrides: {
   saved: Event[];
   existing?: Event[];
   now?: Date;
+  settings?: LlmSettings;
+  createProvider?: Parameters<typeof runExtractionJob>[1]['createProvider'];
 }): Parameters<typeof runExtractionJob>[1] {
   return {
     getDocument: async () => document,
     listProfiles: async (): Promise<Profile[]> => [],
     listEvents: async () => overrides.existing ?? [],
-    loadLlmSettings: async () => settings,
+    loadLlmSettings: async () => overrides.settings ?? settings,
+    createProvider:
+      overrides.createProvider ??
+      (() =>
+        new MockProvider(
+          () => MOCK_EXTRACTION,
+          0,
+        )),
     saveEvent: async (event) => {
       overrides.saved.push(event);
     },
-    createProvider: () =>
-      new MockProvider(
-        () => MOCK_EXTRACTION,
-        0,
-      ),
     now: () => overrides.now ?? NOW,
   };
 }
@@ -121,5 +124,26 @@ describe('chạy job trong offscreen', () => {
       'Không tìm thấy nội dung',
     );
     expect(saved).toHaveLength(0);
+  });
+
+  it('chặn endpoint remote chưa đồng ý trước khi tạo provider', async () => {
+    const remote = LlmSettingsSchema.parse({
+      provider: 'openai-compatible',
+      endpoint: 'https://example.test/v1',
+    });
+    let created = 0;
+    const job = deps({
+      saved: [],
+      settings: remote,
+      createProvider: () => {
+        created += 1;
+        return new MockProvider(() => MOCK_EXTRACTION, 0);
+      },
+    });
+
+    await expect(runExtractionJob('doc_offscreen', job, () => {})).rejects.toThrow(
+      'Chưa đồng ý gửi nội dung tới https://example.test',
+    );
+    expect(created).toBe(0);
   });
 });

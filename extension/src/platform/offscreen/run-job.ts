@@ -1,4 +1,5 @@
 import type { Event, FilterDecision, LlmSettings, NormalizedDocument, Profile } from '../../shared/contracts';
+import { providerAccessProblem, providerLabel } from '../../core/inference/provider-choice';
 import { eventDedupInput } from '../../core/extraction/dedup';
 import { candidateToEvent } from '../../core/extraction/normalize';
 import { extractEvents } from '../../core/extraction/pipeline';
@@ -63,11 +64,18 @@ export async function runExtractionJob(
     deps.loadLlmSettings(),
   ]);
   if (signal?.aborted) throw new Error('Đã huỷ trích xuất.');
+
+  // Defense in depth: UI đã hỏi consent trước khi gửi job, nhưng settings có thể
+  // bị sửa/thu hồi trong lúc job chờ. Không gửi nội dung tới origin chưa đồng ý.
+  const accessProblem = providerAccessProblem(settings);
+  if (accessProblem) throw new Error(accessProblem);
+
   const provider = deps.createProvider(settings);
   const health = await provider.health();
   if (!health.ok) throw new Error(health.reason);
   if (signal?.aborted) throw new Error('Đã huỷ trích xuất.');
 
+  const label = providerLabel(settings);
   const now = deps.now();
   const outcome = await extractEvents({
     document,
@@ -82,7 +90,7 @@ export async function runExtractionJob(
     now,
     signal,
     existing: existingEvents.map(eventDedupInput),
-    onProgress,
+    onProgress: (progress) => onProgress({ ...progress, stage: `${progress.stage} · ${label}` }),
   });
 
   const candidateCount = outcome.items.length + outcome.duplicates.length;

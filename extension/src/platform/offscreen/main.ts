@@ -1,7 +1,7 @@
 import { RuntimeMessageSchema } from '../../shared/messages';
 import type { RuntimeMessage } from '../../shared/messages';
 import { isAbortedError } from '../../core/ports/inference';
-import { LlamaCppProvider } from '../inference/llama-cpp';
+import { createInferenceProvider } from '../inference/factory';
 import { getDocument, listEvents, listProfiles, saveEvent } from '../storage/db';
 import { loadLlmSettings } from '../storage/settings';
 import { runExtractionJob } from './run-job';
@@ -31,7 +31,7 @@ async function start(jobId: string, documentId: string): Promise<void> {
     type: 'JOB_PROGRESS',
     jobId,
     status: 'running',
-    stage: 'Đang kiểm tra máy chủ mô hình…',
+    stage: 'Đang kiểm tra nơi chạy suy luận…',
     chunkIndex: 0,
     chunkCount: 0,
   });
@@ -46,13 +46,7 @@ async function start(jobId: string, documentId: string): Promise<void> {
         loadLlmSettings,
         saveEvent,
         now: () => new Date(),
-        createProvider: (settings) =>
-          new LlamaCppProvider({
-            endpoint: settings.endpoint,
-            apiKey: settings.apiKey,
-            model: settings.model,
-            timeoutMs: settings.timeoutMs,
-          }),
+        createProvider: createInferenceProvider,
       },
       (progress) => {
         void post({

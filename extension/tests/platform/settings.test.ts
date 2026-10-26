@@ -15,7 +15,46 @@ beforeEach(async () => {
 describe('cài đặt máy chủ mô hình', () => {
   it('trả mặc định khi chưa có bản ghi', async () => {
     expect(await loadLlmSettings()).toEqual(DEFAULT_LLM_SETTINGS);
+    expect(DEFAULT_LLM_SETTINGS.provider).toBe('local');
     expect(DEFAULT_LLM_SETTINGS.endpoint).toBe('http://127.0.0.1:8080');
+    expect(DEFAULT_LLM_SETTINGS.consentByOrigin).toEqual({});
+  });
+
+  it('bản ghi cũ thiếu provider/consentByOrigin được đọc với mặc định local', async () => {
+    await setSetting(LLM_SETTINGS_KEY, {
+      endpoint: 'http://127.0.0.1:8080',
+      apiKey: '',
+      model: '',
+      temperature: 0.1,
+      maxTokens: 1200,
+      timeoutMs: 120_000,
+      chunkChars: 5000,
+      maxChunks: 4,
+    });
+
+    const loaded = await loadLlmSettings();
+    expect(loaded.provider).toBe('local');
+    expect(loaded.consentByOrigin).toEqual({});
+  });
+
+  it('lưu endpoint ngoài + mốc đồng ý theo origin', async () => {
+    const saved = await saveLlmSettings({
+      provider: 'openai-compatible',
+      endpoint: 'https://example.test/v1',
+      apiKey: 'secret',
+      model: 'gemini-test',
+      consentByOrigin: { 'https://example.test': '2026-10-26T00:00:00.000Z' },
+      temperature: 0.1,
+      maxTokens: 1200,
+      timeoutMs: 120_000,
+      chunkChars: 5000,
+      maxChunks: 4,
+    });
+
+    expect(saved.provider).toBe('openai-compatible');
+    expect((await loadLlmSettings()).consentByOrigin['https://example.test']).toBe(
+      '2026-10-26T00:00:00.000Z',
+    );
   });
 
   it('lưu rồi đọc lại đúng giá trị', async () => {
