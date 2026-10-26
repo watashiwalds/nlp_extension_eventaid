@@ -36,7 +36,7 @@ export type EventOrigin = z.infer<typeof EventOriginSchema>;
 export const ExtractionMetaSchema = z.object({
   runId: z.string().min(1),
   documentId: z.string().min(1),
-  provider: z.enum(['llama.cpp', 'mock']),
+  provider: z.enum(['llama.cpp', 'openai-compatible', 'mock']),
   model: z.string().min(1),
   promptVersion: z.string().min(1),
   chunkIndex: z.number().int().nonnegative(),

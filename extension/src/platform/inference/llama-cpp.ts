@@ -6,6 +6,17 @@ import type {
   InferenceRequest,
   InferenceResult,
 } from '../../core/ports/inference';
+import {
+  authHeaders,
+  displayModelName,
+  fetchWithTimeout,
+  firstModelId,
+  shortBody,
+  trimEndpoint,
+} from './http';
+import type { ModelsBody } from './http';
+
+export { displayModelName } from './http';
 
 /**
  * Cổng gọi `llama-server` chạy trên chính máy người dùng.
@@ -36,12 +47,6 @@ export interface LlamaCppOptions {
   timeoutMs?: number;
 }
 
-/** Tên ngắn để hiển thị, vì llama-server thường trả đường dẫn tuyệt đối của file GGUF. */
-export function displayModelName(id: string): string {
-  const parts = id.split(/[\\/]/);
-  return parts[parts.length - 1] || id;
-}
-
 /** Dựng `response_format` ở một dạng cụ thể — tách riêng để test và chốt sau khi có model. */
 export function buildResponseFormat(mode: ResponseFormatMode = 'openai'): Record<string, unknown> {
   if (mode === 'object') return { type: 'json_object' };
@@ -54,39 +59,9 @@ export function buildResponseFormat(mode: ResponseFormatMode = 'openai'): Record
   return { type: 'json_schema', schema: EXTRACTION_RESPONSE_SCHEMA };
 }
 
-function trimEndpoint(endpoint: string): string {
-  return endpoint.trim().replace(/\/+$/, '');
-}
-
-function authHeaders(apiKey: string | undefined): Record<string, string> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (apiKey?.trim()) headers.Authorization = `Bearer ${apiKey.trim()}`;
-  return headers;
-}
-
-function shortBody(body: string): string {
-  const compact = body.replace(/\s+/g, ' ').trim();
-  return compact.length > 160 ? `${compact.slice(0, 160)}…` : compact;
-}
-
 interface ChatCompletionBody {
   model?: unknown;
   choices?: Array<{ message?: { content?: unknown; reasoning_content?: unknown } }>;
-}
-
-interface ModelsBody {
-  data?: Array<{ id?: unknown }>;
-  models?: Array<{ name?: unknown; model?: unknown }>;
-}
-
-function firstModelId(data: ModelsBody | null): string | null {
-  const fromData = data?.data?.[0]?.id;
-  if (typeof fromData === 'string' && fromData.trim()) return fromData.trim();
-  const first = data?.models?.[0];
-  for (const value of [first?.model, first?.name]) {
-    if (typeof value === 'string' && value.trim()) return value.trim();
-  }
-  return null;
 }
 
 export class LlamaCppProvider implements InferenceProvider {
@@ -142,7 +117,7 @@ export class LlamaCppProvider implements InferenceProvider {
       const body = await response.text().catch(() => '');
       throw new InferenceError(
         'http',
-        `Máy chủ mô hình trả lỗi ${response.status}${body ? `: ${shortBody(body)}` : ''}`,
+        `Máy chủ mô hình trả lỗi ${response.status}${body ? `: ${shortBody(body, this.apiKey)}` : ''}`,
         response.status,
       );
     }
@@ -202,47 +177,19 @@ export class LlamaCppProvider implements InferenceProvider {
     );
   }
 
-  /** `fetch` có timeout và tôn trọng `AbortSignal` của người dùng. */
-  private async request(
+  private request(
     url: string,
     init: { method: string; body?: string },
     timeoutMs: number,
     outerSignal?: AbortSignal,
   ): Promise<Response> {
-    const controller = new AbortController();
-    let timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      controller.abort();
-    }, timeoutMs);
-    const onAbort = (): void => controller.abort();
-    outerSignal?.addEventListener('abort', onAbort, { once: true });
-
-    try {
-      return await fetch(url, {
-        method: init.method,
-        headers: authHeaders(this.apiKey),
-        ...(init.body ? { body: init.body } : {}),
-        signal: controller.signal,
-      });
-    } catch {
-      if (outerSignal?.aborted) {
-        throw new InferenceError('aborted', 'Đã huỷ trích xuất.');
-      }
-      if (timedOut) {
-        throw new InferenceError(
-          'timeout',
-          `Máy chủ mô hình không phản hồi sau ${Math.round(timeoutMs / 1_000)} giây.`,
-        );
-      }
-      throw new InferenceError(
-        'network',
-        `Không kết nối được máy chủ mô hình tại ${this.endpoint}. Hãy kiểm tra llama-server đã chạy chưa.`,
-      );
-    } finally {
-      clearTimeout(timer);
-      outerSignal?.removeEventListener('abort', onAbort);
-    }
+    return fetchWithTimeout(
+      url,
+      { ...init, headers: authHeaders(this.apiKey) },
+      timeoutMs,
+      outerSignal,
+      `Không kết nối được máy chủ mô hình tại ${this.endpoint}. Hãy kiểm tra llama-server đã chạy chưa.`,
+    );
   }
 }
 

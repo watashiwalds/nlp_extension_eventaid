@@ -50,7 +50,7 @@ export function isAbortedError(error: unknown): boolean {
 }
 
 export interface InferenceProvider {
-  readonly id: 'llama.cpp' | 'mock';
+  readonly id: 'llama.cpp' | 'openai-compatible' | 'mock';
   health(): Promise<InferenceHealth>;
   run(request: InferenceRequest): Promise<InferenceResult>;
 }
