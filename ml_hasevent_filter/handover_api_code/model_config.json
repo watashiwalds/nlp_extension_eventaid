@@ -1,6 +1,6 @@
 {
   "model_name": "vinai/phobert-base-v2",
-  "model_path": "/content/drive/MyDrive/NLP_TASK_NON_TASK/models/phobert_task_classifier_final",
+  "model_path": "./phobert_task_classifier_final",
   "max_length": 128,
   "task_threshold": 0.5,
   "review_threshold": 0.65,
