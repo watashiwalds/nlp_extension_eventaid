@@ -1,8 +1,18 @@
 # Trích xuất & quản lý lịch trình cá nhân — Demo
 
 Chrome Extension **Manifest V3** đọc nội dung trang web, quản lý **hồ sơ** và tạo **sự kiện lịch trình**
-thủ công hoặc bằng **LLM cục bộ** (llama.cpp). Toàn bộ dữ liệu và suy luận nằm trên máy;
-không có backend từ xa.
+thủ công hoặc bằng **LLM cục bộ** (llama.cpp). Mặc định toàn bộ dữ liệu và suy luận nằm trên máy;
+bản demo hiện tại không có backend từ xa.
+
+> **Đã chốt nhưng chưa triển khai (2026-10-26):** người dùng sẽ chọn được nơi chạy suy luận —
+> **Máy này** (mặc định), một endpoint **OpenAI-compatible** (ví dụ Gemini), hoặc **máy trạm ở nhà
+> qua Cloudflared** — theo `script.md` KS-14 và [`docs/ke-hoach-da-provider.md`](docs/ke-hoach-da-provider.md).
+> Bản demo hiện tại **vẫn chỉ chạy localhost**.
+>
+> Cùng ngày, dự án chốt thêm **bước sàng lọc nội dung bằng PhoBERT** (dịch vụ Python cục bộ tại
+> `127.0.0.1:8000`, dùng model bàn giao trong `ml_hasevent_filter/`) chạy **trước** LLM để bỏ qua
+> tài liệu không liên quan. Đây là **Slice F, chưa triển khai**; xem
+> [`docs/ke-hoach-bo-loc-noi-dung.md`](docs/ke-hoach-bo-loc-noi-dung.md).
 
 Repo này chứa cả bộ tài liệu kế hoạch (gốc) và mã nguồn demo (`extension/`).
 
@@ -21,7 +31,7 @@ Repo này chứa cả bộ tài liệu kế hoạch (gốc) và mã nguồn demo
 | 7 | **Duyệt nháp + chống trùng** | Chế độ **Duyệt nháp**: badge **Máy đề xuất**, mức tin cậy (Thấp/Vừa/Cao, không hiện %), nguồn/trích dẫn đầy đủ; chọn nhiều nháp để **Duyệt đã chọn** (`nhap → dang_theo_doi`) hoặc **Xoá nháp đã chọn** có xác nhận; cảnh báo khi thiếu giờ/ngày; gợi ý **Có thể trùng** cho paraphrase, không tự gộp |
 
 **Chưa có (đúng phạm vi demo hiện tại):** nhắc việc sự kiện (`chrome.alarms`/KS-10), Gmail/PDF/DOCX,
-classifier TF-IDF. Gộp nguồn tự động và sửa nhanh tại chỗ chưa làm — xem [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md).
+**sàng lọc nội dung PhoBERT (Slice F)**, **chọn nơi chạy suy luận (KS-14)**. Gộp nguồn tự động và sửa nhanh tại chỗ chưa làm — xem [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md).
 Chi tiết lệch so với kế hoạch: [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md).
 Bảng đối chiếu đầy đủ chức năng chính thức vs. demo: [`docs/chuc-nang-demo-vs-chinh-thuc.md`](docs/chuc-nang-demo-vs-chinh-thuc.md).
 
@@ -45,6 +55,10 @@ npm run build
 5. Muốn trích bằng LLM: chạy `llama-server` tại `127.0.0.1:8080`, mở **Cài đặt** → kiểm tra
    kết nối → quay lại tab **Quét nội dung** và bấm **Trích sự kiện**. Có thể đóng side panel;
    job vẫn chạy và sẽ có thông báo khi xong. Kết quả được lưu ở trạng thái **Nháp**.
+   Hiện chỉ hỗ trợ provider localhost; chọn Gemini/máy trạm là kế hoạch **S7**, chưa có trong bản này.
+   Bước **sàng lọc PhoBERT** (Slice F) cũng **chưa có**, nên hiện không cần chạy dịch vụ thứ hai;
+   job gọi thẳng `llama-server`. Khi làm Slice F, lệnh chạy dịch vụ sàng lọc nằm trong
+   [`extension/README.md`](extension/README.md).
 
 > `dist/` không được commit. Mỗi lần đổi code: `npm run build` rồi bấm **Reload** ở `chrome://extensions`.
 
@@ -67,8 +81,8 @@ npm run build
 .
 ├─ base_idea.md                  # Yêu cầu gốc (7 trường sự kiện)
 ├─ proposed_technical.md         # Kiến trúc kỹ thuật
-├─ script.md                     # Kịch bản sử dụng KS-01…KS-13
-├─ ke_hoach_phat_trien.md        # Kế hoạch 7 sprint
+├─ script.md                     # Kịch bản sử dụng KS-01…KS-14
+├─ ke_hoach_phat_trien.md        # Kế hoạch 7 sprint + S7 hậu demo
 ├─ ke_hoach_thiet_ke_frontend.md # Kế hoạch thiết kế UI
 ├─ AGENTS.md                     # Hướng dẫn cho agent/contributor
 ├─ docs/
@@ -76,6 +90,8 @@ npm run build
 │  ├─ chuc-nang-demo-vs-chinh-thuc.md # Đối chiếu chức năng kế hoạch vs demo
 │  ├─ kiem-thu-demo.md           # Checklist kiểm thử thủ công theo KS
 │  ├─ ke-hoach-llm-trich-xuat.md # Kế hoạch lớp trích xuất LLM (Slice A–E)
+│  ├─ ke-hoach-da-provider.md    # Kế hoạch chọn nơi chạy suy luận (KS-14, chưa triển khai)
+│  ├─ ke-hoach-bo-loc-noi-dung.md # Kế hoạch sàng lọc PhoBERT trước LLM (Slice F, chưa triển khai)
 │  ├─ ban-giao-slice-d.md        # Bàn giao & phạm vi Slice D (đã nghiệm thu)
 │  ├─ kiem-tra-slice-d.md        # Bản ghi nghiệm thu Slice D
 │  ├─ ban-giao-slice-e.md        # Bàn giao & phạm vi Slice E (đo chất lượng)
@@ -88,6 +104,7 @@ npm run build
 │  ├─ src/ui/                    # Side panel + popup (HTML/CSS/TS view functions)
 │  ├─ tests/                     # Vitest (core + smoke UI)
 │  └─ scripts/                   # Sinh icon
+├─ ml_hasevent_filter/           # Model PhoBERT + dịch vụ FastAPI bàn giao (không sửa)
 └─ .github/workflows/ci.yml      # typecheck + lint + test + build
 ```
 
@@ -99,9 +116,17 @@ npm run build
 ## 4. Quyền & quyền riêng tư
 
 - Permissions: `activeTab`, `scripting`, `storage`, `offscreen`, `notifications`, `sidePanel`, `contextMenus`.
-- Host permission duy nhất: `http://127.0.0.1:8080/*` cho `llama-server` cục bộ. Không có backend từ xa, không gửi nội dung ra ngoài máy.
+- Host permission tĩnh duy nhất: `http://127.0.0.1:8080/*` cho `llama-server` cục bộ. **Bản demo hiện tại** không có backend từ xa và không gửi nội dung ra ngoài máy.
+- **Kế hoạch S7 (chưa có trong code):** endpoint remote phải dùng HTTPS (chỉ localhost được HTTP), chỉ dùng sau khi người dùng chọn + đồng ý
+  một lần cho mỗi origin; quyền host xin lúc chạy cho đúng origin; API key lưu cục bộ, không xuất
+  JSON/log. Xem [`docs/ke-hoach-da-provider.md`](docs/ke-hoach-da-provider.md).
+- **Kế hoạch Slice F (chưa có trong code):** thêm host tĩnh `http://127.0.0.1:8000/*` và
+  `http://localhost:8000/*` cho dịch vụ sàng lọc PhoBERT cục bộ. Đây vẫn là loopback, **không phải**
+  backend từ xa; nội dung chỉ rời máy nếu sau này người dùng chọn endpoint remote ở S7.
 - Chỉ đọc khi người dùng bấm hoặc chọn menu chuột phải; Readability chạy trong side panel, không inject thư viện vào trang.
 - CSP giữ `script-src 'self'`, `connect-src` chỉ mở `http://127.0.0.1:8080`; không remote code, không WASM.
+  Khi làm S7, `connect-src` sẽ mở thêm `https://*` cho endpoint người dùng chọn (và localhost/`::1` cổng 8080 nếu hỗ trợ; vẫn không đổi `script-src`).
+  Khi làm Slice F, `connect-src` mở thêm `http://127.0.0.1:8000` + `http://localhost:8000` cho dịch vụ sàng lọc (loopback).
 - Toàn bộ nội dung động được escape trước khi chèn vào `innerHTML`.
 
 ---
@@ -121,9 +146,15 @@ Checklist thủ công (theo kịch bản KS): [`docs/kiem-thu-demo.md`](docs/kie
 
 1. **Slice E đã đo ngày 2026-10-24:** chốt **9B IQ4_XS**; 4B Q5_K_S bị loại vì recall
    dưới 80%. Xem [`docs/ket-qua-danh-gia-slice-e.md`](docs/ket-qua-danh-gia-slice-e.md).
-2. Bổ sung **classifier từ khoá** (không cần train) để gợi ý “trang có sự kiện”.
-3. **Nhắc việc sự kiện** bằng `chrome.alarms` + `notifications` (KS-10, tối đa 2 nút).
-4. Gmail read-only + PDF/DOCX ở sprint cuối.
+2. **Chọn nơi chạy suy luận** (KS-14, S7): localhost mặc định + endpoint OpenAI-compatible
+   (Gemini, máy trạm Cloudflared), consent theo origin, key cục bộ. Xem
+   [`docs/ke-hoach-da-provider.md`](docs/ke-hoach-da-provider.md).
+3. **Sàng lọc nội dung bằng PhoBERT** (Slice F — chưa triển khai): dịch vụ Python cục bộ tại
+   `127.0.0.1:8000` quyết định tài liệu có nội dung sự kiện hay không **trước khi gọi LLM**; tài
+   liệu không liên quan không tốn 20–34 s gọi model. Không cắt câu gửi LLM; lọc vùng chọn bị bỏ qua.
+   Xem [`docs/ke-hoach-bo-loc-noi-dung.md`](docs/ke-hoach-bo-loc-noi-dung.md).
+4. **Nhắc việc sự kiện** bằng `chrome.alarms` + `notifications` (KS-10, tối đa 2 nút).
+5. Gmail read-only + PDF/DOCX ở sprint cuối.
 
 Xem lộ trình đầy đủ trong [`ke_hoach_phat_trien.md`](ke_hoach_phat_trien.md) §9.
 Kế hoạch lớp trích xuất bằng LLM cục bộ: [`docs/ke-hoach-llm-trich-xuat.md`](docs/ke-hoach-llm-trich-xuat.md).

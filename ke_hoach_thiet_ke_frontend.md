@@ -7,6 +7,10 @@
 > - Chỉ **P0 (Giai đoạn 1–2)**.
 > - **Chỉ light mode** trước (giữ token dạng ngữ nghĩa để thêm dark sau).
 > - **Notification: 2 nút + bấm thân mở side panel** (thay cho 3 nút trong kịch bản, do giới hạn Chrome Notification API).
+>
+> **Bổ sung 2026-10-26 (P1, chưa triển khai):** board **B26–B28** cho **KS-14 — Chọn nơi chạy
+> suy luận**. Đây là thiết kế đi kèm kế hoạch `docs/ke-hoach-da-provider.md`; demo hiện tại
+> **chưa có** màn hình này và vẫn chỉ chạy localhost.
 
 ---
 
@@ -38,7 +42,7 @@
 | `03 Scanning` | KS-04 (web), KS-05 (Gmail), KS-06 (attachment) |
 | `04 Review` | KS-08 |
 | `05 Events` | KS-09 |
-| `06 Notify & Settings` | KS-10 + Cài đặt |
+| `06 Notify & Settings` | KS-10 + Cài đặt + **Nơi chạy suy luận (KS-14, P1)** |
 | `09 Spec sheets` | OAuth, context menu, notification OS (mock + annotation) |
 
 ---
@@ -58,7 +62,7 @@
 
 ---
 
-## 3. Component library — P0 (20 component)
+## 3. Component library — P0 (20 component) + P1 cho KS-14 (4)
 
 Mỗi dòng là **1 Penpot component + variants**.
 
@@ -85,9 +89,18 @@ Mỗi dòng là **1 Penpot component + variants**.
 | 19 | `Toast/Banner` — tone=info/success/warning/error | KS-11 |
 | 20 | `NotificationMock` — 2 nút + vùng thân bấm được | KS-10 (spec) |
 
+**P1 — bổ sung cho KS-14 (vẽ cùng library, chỉ khi làm S7):**
+
+| # | Component (variants) | Dùng ở (KS) |
+|---|---|---|
+| 21 | `RadioCard` — state=selected/default/disabled | KS-14 (chọn **Máy này** / **Endpoint khác**) |
+| 22 | `SecretField` — state=hidden/revealed/error; có nút **Xoá key** | KS-14 |
+| 23 | `ConsentDialog` — kind=first-use/revoke; nút **Đồng ý** / **Huỷ** | KS-14 |
+| 24 | `StatusPill` — tone=ok/warning/error; nhãn model/endpoint | KS-14, KS-11 |
+
 ---
 
-## 4. Boards — P0 (17 board)
+## 4. Boards — P0 (17 board) + P1 cho KS-14 (3)
 
 ### 4.1. Shell & khởi tạo
 
@@ -109,7 +122,7 @@ Mỗi dòng là **1 Penpot component + variants**.
 | # | Board | Size | Nội dung |
 |---|---|---|---|
 | B6 | Small UI — tiến trình quét | 360 × 240 | thu thập → **lọc nhiễu** → phân tích → trích xuất |
-| B7 | Dashboard — card tiến trình pipeline | 400 | 6 bước: phân loại → trích xuất → chuẩn hoá → kiểm định → khử trùng lặp → so khớp hồ sơ |
+| B7 | Dashboard — card tiến trình pipeline | 400 | 6 bước: **sàng lọc** (PhoBERT cục bộ — Slice F, chưa triển khai) → trích xuất → chuẩn hoá → kiểm định → khử trùng lặp → so khớp hồ sơ |
 | B8 | Cấu hình quét Gmail | 400 | khoảng thời gian, nhãn, từ khoá, nút Bắt đầu / Dừng |
 
 ### 4.4. Duyệt (KS-08)
@@ -136,9 +149,20 @@ Mỗi dòng là **1 Penpot component + variants**.
 | B16 | Cài đặt | 400 | mốc **1 tuần / 1 ngày / ngày diễn ra**; bật/tắt Small UI |
 | B17 | Notification mock (spec) | 380 × 150 | **2 nút** (Đã xem · Không nhắc lại) + **thân thông báo bấm mở side panel** (thay nút "Huỷ sự kiện" thứ 3) |
 
+### 4.7. Chọn nơi chạy suy luận — KS-14 (P1, chưa triển khai)
+
+> Vẽ khi làm **S7**. Mặc định vẫn là **Máy này**; không có board nào được phép ngụ ý remote là
+> lựa chọn sẵn. Toàn bộ nằm trong tab **Cài đặt**, cùng cột 400px.
+
+| # | Board | Size | Nội dung | KS |
+|---|---|---|---|---|
+| B26 | Cài đặt — Nơi chạy suy luận (mặc định) | 400 | `RadioCard` **Máy này** đang chọn (`127.0.0.1:8080`, model đang nạp); `RadioCard` **Endpoint khác** chưa chọn; nút **Kiểm tra kết nối** | KS-14 |
+| B27 | Endpoint khác — form + kiểm tra | 400 | base URL, API key (`SecretField`), model (để trống = tự dò); `StatusPill` cho health; lỗi 401/403/404/429/5xx; nút **Lưu**, **Xoá key** | KS-14, KS-11 |
+| B28 | Consent dialog + trạng thái đã đồng ý | 400 | Modal một lần: origin nhận nội dung, dữ liệu rời trình duyệt, key lưu cục bộ; **Đồng ý/Huỷ**; trạng thái sau đó có **Thu hồi đồng ý**; cảnh báo đổi origin phải đồng ý lại | KS-14 |
+
 ---
 
-## 5. Luồng Prototype (6 flow)
+## 5. Luồng Prototype (6 flow P0 + 1 flow P1)
 
 | Flow | Chuỗi board |
 |---|---|
@@ -148,6 +172,7 @@ Mỗi dòng là **1 Penpot component + variants**.
 | CRUD | Sự kiện list → Detail → Sửa → Modal xoá |
 | Thông báo | Notification mock → 2 nhánh (Đã xem / Không nhắc lại) |
 | Điều hướng | Dashboard → tab Sự kiện |
+| **Chọn nơi chạy suy luận (P1)** | Cài đặt → B26 → B27 → B28 (consent) → quay lại **Máy này** |
 
 > Penpot làm được: overlay (Small UI, modal, toast). Không mô phỏng được: đếm ngược tự đóng, animation tiến trình → biểu diễn bằng nhiều board trạng thái thay vì 1 board động.
 
@@ -180,6 +205,7 @@ Mỗi dòng là **1 Penpot component + variants**.
 | KS-11 | B12 + component Toast/Banner/Badge |
 | KS-12 | *(backlog P1)* |
 | KS-13 | *(backlog P4)* |
+| KS-14 | B26, B27, B28 *(P1 — chưa triển khai)* |
 
 ---
 
@@ -207,6 +233,7 @@ Mỗi dòng là **1 Penpot component + variants**.
 5. B6–B8 (Giai đoạn 2: Gmail) + B16–B17.
 6. Nối prototype → rà soát liền mạch.
 7. Mở rộng P1/P4 từ backlog (chỉ dùng lại library).
+8. **(S7)** B26–B28 + flow **Chọn nơi chạy suy luận**; kiểm tra lại ở 320/360/400px.
 
 ---
 
@@ -215,7 +242,8 @@ Mỗi dòng là **1 Penpot component + variants**.
 - **Notification 2 nút:** hành động "Huỷ sự kiện" (nút thứ 3 trong KS-10) chuyển vào side panel khi bấm thân thông báo → thể hiện rõ ở B17 + spec sheet. Cần kiểm chứng lại giới hạn nút của Chrome Notification API trước khi chốt.
 - **Light-only:** token giữ dạng ngữ nghĩa để nhánh dark chỉ tốn 1 lần chỉnh, không phải vẽ lại board.
 - **Phạm vi P0:** ~17 board + 20 component + 1 token set + 6 flow. Toàn bộ P1/P4 chỉ mở rộng trên library đã có.
+- **Provider choice (KS-14, P1):** thêm 3 board + 4 component, không đổi token hay shell. Nguyên tắc thiết kế: **Máy này** luôn là mặc định và đứng trước; remote chỉ mở form sau khi người dùng chọn; consent là modal chặn, không phải toast; API key không bao giờ hiện đầy đủ trong ảnh chụp màn hình demo. Xem `docs/ke-hoach-da-provider.md`.
 
 ---
 
-*Tài liệu này rút ra từ `script.md` (13 kịch bản KS-01…KS-13), chốt danh sách thiết kế tối thiểu P0 cho frontend trên Penpot.*
+*Tài liệu này rút ra từ `script.md` (14 kịch bản KS-01…KS-14), chốt danh sách thiết kế tối thiểu P0 cho frontend trên Penpot; B26–B28 là phần P1 cho KS-14, chưa triển khai.*

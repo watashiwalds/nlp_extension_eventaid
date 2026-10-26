@@ -3,6 +3,8 @@
 > Bản hoàn thiện kịch bản sử dụng dựa trên bản nháp `unfinished_script.svg`, đáp ứng yêu cầu trong `base_idea.md` và kiến trúc kỹ thuật trong `proposed_technical.md`.
 >
 > **Sản phẩm:** Chrome Extension (Manifest V3). Giai đoạn hiện tại: **Gmail API** (kênh chính) + **Browser Page Parser** (kênh bổ sung, lọc nội dung chính bằng **Mozilla Readability** trước khi đưa vào NLP pipeline), dùng chung Document Processing Layer và NLP Pipeline.
+>
+> **Nơi chạy suy luận:** mặc định là **máy này** (`llama-server` tại `127.0.0.1:8080`); người dùng có thể chọn một endpoint **OpenAI-compatible** khác (dịch vụ ngoài hoặc máy trạm của mình) theo **KS-14**. Đây là kế hoạch đã chốt ngày 2026-10-26, **chưa triển khai** trong demo hiện tại.
 
 ---
 
@@ -26,7 +28,8 @@
 | Gmail API client | OAuth, `messages.list/get`, `attachments.get` | KS-03, 05, 06 |
 | Document Processing Layer | Parser theo định dạng (PDF.js, Mammoth.js, ICS, OCR) | KS-06 |
 | NLP pipeline | Phân loại, trích xuất, chuẩn hoá, kiểm định, dedup, so khớp hồ sơ | KS-04, 05, 06, 07, 12 |
-| Storage (IndexedDB + chrome.storage) | Sự kiện + metadata; hồ sơ, tuỳ chọn, token | KS-02, 08, 09, 10 |
+| Inference provider | Gọi `llama-server` cục bộ hoặc endpoint OpenAI-compatible đã chọn; health, timeout, abort | KS-04, 05, 06, 07, 14 |
+| Storage (IndexedDB + chrome.storage) | Sự kiện + metadata; hồ sơ, tuỳ chọn, token | KS-02, 08, 09, 10, 14 |
 | Notification engine | Chrome Notification API, trạng thái mốc đã bắn / mute | KS-10 |
 
 **Vòng đời trạng thái của sự kiện** *(trạng thái trong `[...]`; hành động viết thường; kết thúc thô trong `(...)`)*:
@@ -71,6 +74,7 @@ Cài đặt → Thiết lập hồ sơ → (Liên kết Gmail) → Quét (trang 
 | **E — Nhắc việc** | KS-10 | Thông báo sự kiện sắp tới | SVG (Trước khi sự kiện hoàn thành) |
 | **F — Ngoại lệ** | KS-11 | Các luồng lỗi và ngoại lệ | `proposed_technical.md` §9 |
 | **G — Mở rộng (Giai đoạn 4)** | KS-13 | Xung đột lịch & xuất ICS/tích hợp calendar | `proposed_technical.md` §10 (Giai đoạn 4) |
+| **H — Cấu hình suy luận** | KS-14 | Chọn nơi chạy suy luận (local / dịch vụ ngoài) | Kế hoạch đa provider 2026-10-26 |
 
 ---
 
@@ -143,7 +147,7 @@ Cài đặt → Thiết lập hồ sơ → (Liên kết Gmail) → Quét (trang 
 | 2 | Nhấp icon extension → **mở side panel** → nhấn **"Quét trang đang mở"** (Analyze current page). | Yêu cầu quyền `activeTab` cho tab hiện tại (tạm thời, không kéo dài). |
 | 3 | Quan sát **Small UI pop-out hiển thị quá trình quét nội dung** (tiến trình: thu thập → **lọc nhiễu** → phân tích → trích xuất). | Inject hàm trích xuất vào tab; **nhân bản DOM** (không làm hỏng trang đang mở) rồi chạy **Mozilla Readability** để lấy nội dung chính — loại menu, quảng cáo, thanh bên, footer. URL nguồn lấy từ tab, thời điểm trích xuất ghi tại thời điểm chạy. Chi tiết ở "Giai đoạn lọc nhiễu" bên dưới. |
 | 4 | **Thao tác tiếp trên web — Small UI sẽ tự đóng** khi bước thu thập xong (người dùng không phải chờ). | Đóng Small UI; văn bản sau khi lọc nhiễu được chuyển thành `NormalizedDocument` (source=`web_page`, documentId, title, text, sourceUrl, sourceTimestamp, extractionMethod). |
-| 5 | Nhấp icon extension → **mở side panel** bất cứ lúc nào sau đó. | Hiển thị **main dashboard như bình thường, có card hiển thị tiến trình xử lý nội dung** (pipeline: phân loại → trích xuất → chuẩn hoá → kiểm định → khử trùng lặp → so khớp hồ sơ). |
+| 5 | Nhấp icon extension → **mở side panel** bất cứ lúc nào sau đó. | Hiển thị **main dashboard như bình thường, có card hiển thị tiến trình xử lý nội dung** (pipeline: sàng lọc → trích xuất → chuẩn hoá → kiểm định → khử trùng lặp → so khớp hồ sơ). |
 | 6 | Chờ xử lý xong (hoặc làm việc khác). | **Xử lý xong** → chuyển sang KS-08 (Full UI, danh sách sự kiện chờ duyệt). |
 
 **Giai đoạn lọc nhiễu — Mozilla Readability (chạy trong tab, trước khi vào pipeline):**
@@ -162,12 +166,12 @@ DOM gốc ──nhân bản (không ảnh hưởng trang đang mở)──> Read
 → NormalizedDocument (extractionMethod: "readability" | "raw_dom")
 ```
 
-**Lợi ích:** văn bản vào classifier sạch hơn → ít cảnh báo nhiễu, đồng thời giảm kích thước văn bản đưa vào mô hình (giúp giới hạn kích thước theo §9 `proposed_technical.md`).
+**Lợi ích:** văn bản vào bước sàng lọc sạch hơn → ít cảnh báo nhiễu, đồng thời giảm kích thước văn bản đưa vào mô hình (giúp giới hạn kích thước theo §9 `proposed_technical.md`).
 
 **Luồng xử lý nội bộ (NLP pipeline dùng chung):**
 
 ```text
-Văn bản chính (sau lọc nhiễu) → Relevance classification (có chứa "sự kiện" không?)
+Văn bản chính (sau lọc nhiễu) → Sàng lọc PhoBERT (Slice F, chưa triển khai) — tài liệu có liên quan?
            → Schedule extraction (tên sự kiện, ngày giờ, địa điểm, hạn chót, quy tắc lặp)
            → Normalization (ngày giờ, múi giờ, diễn đạt tương đối: "thứ Tư tới", "tuần sau")
            → Validation (thiếu năm? thiếu múi giờ? → đánh dấu "chưa xác định", KHÔNG tự suy diễn)
@@ -203,9 +207,15 @@ Văn bản chính (sau lọc nhiễu) → Relevance classification (có chứa "
 
 **Luồng thay thế:**
 - 1a. Quá nhiều email → HT quét theo lô (batch) và cho phép dừng; kết quả từng lô vẫn được duyệt riêng.
-- 4a. Email không liên quan → bị classifier loại bỏ sớm, không đưa vào extractor (tiết kiệm, giảm nhiễu).
+- 4a. Email không liên quan → bị bước sàng lọc (PhoBERT, Slice F — chưa triển khai) loại bỏ sớm, không đưa vào extractor (tiết kiệm, giảm nhiễu).
 
 **Kết quả:** Danh sách `NormalizedDocument` (source=`gmail`) đã qua pipeline; sự kiện mới chờ duyệt (KS-08); sự kiện khớp một bản đã duyệt nhưng lệch giá trị → chuyển KS-12.
+
+> **Ghi chú (2026-10-26):** bước "phân loại" dùng **dịch vụ PhoBERT TASK/NON_TASK cục bộ**
+> (`127.0.0.1:8000`, model bàn giao trong `ml_hasevent_filter/`). Đây là **Slice F, chưa triển khai**.
+> Quy tắc đã chốt: chỉ sàng lọc **cấp tài liệu**; **không lọc vùng bôi đen/văn bản dán**; fail-open
+> khi dịch vụ lỗi; tài liệu dương thì LLM nhận **toàn văn** (không cắt câu); mọi lần bỏ qua đều có
+> lý do + nút **Trích xuất toàn bộ**. Chi tiết: `docs/ke-hoach-bo-loc-noi-dung.md`.
 
 ---
 
@@ -330,6 +340,9 @@ Theo nguyên tắc §9 của `proposed_technical.md`: chỉ đọc khi người 
 | Token Gmail hết hạn / bị thu hồi | Tự refresh; nếu thất bại → dừng quét, yêu cầu liên kết lại (KS-03), giữ an toàn dữ liệu đã có. | KS-03, KS-05 |
 | Tệp đính kèm không hỗ trợ / parser thất bại / PDF scan cần OCR | Bỏ qua tệp, ghi vào danh sách "chưa xử lý được" kèm lý do; các phần khác vẫn chạy. | KS-06 |
 | OCR/inference cần backend | Chỉ gửi khi có thông báo rõ cho người dùng; kiểm soát quyền truy cập, mã hoá truyền tải, thời gian lưu trữ và quy trình xoá dữ liệu. | KS-05, KS-06 |
+| Endpoint remote trả 401/403/404/429/5xx | Báo đúng loại lỗi (key/quyền, model, giới hạn, dịch vụ); không lưu sự kiện rác; cho phép đổi provider về **Máy này**. | KS-14 |
+| Chưa đồng ý gửi nội dung tới origin remote | Chặn job, hiện lại cảnh báo consent; không gửi request. | KS-14 |
+| Đổi origin remote (Cloudflared cấp URL mới) | Yêu cầu đồng ý lại; không tự dùng endpoint cũ. | KS-14 |
 | Máy tắt → lỡ mốc thông báo | Khi mở trình duyệt, bù một thông báo muộn nhất kèm nhãn "trễ"; không bắn dồn nhiều notification cũ. | KS-10 |
 | Sự kiện đã duyệt xuất hiện lại ở lần quét sau nhưng **thay đổi lịch** (VD: email Reply dời giờ họp) | Không tạo trùng lặp — chuyển luồng KS-12: so sánh, gợi ý cập nhật, ND quyết định. | KS-12 |
 | Sự kiện đang theo dõi **thiếu thời điểm bắt đầu hợp lệ** | Không xếp mốc thông báo; đưa vào "Cần bổ sung thời gian" (KS-09) chờ ND xác nhận. | KS-09, KS-10 |
@@ -373,6 +386,41 @@ Theo nguyên tắc §9 của `proposed_technical.md`: chỉ đọc khi người 
 
 ---
 
+### KS-14 — Chọn nơi chạy suy luận (local / dịch vụ ngoài)
+
+**Mục tiêu:** Người dùng kiểm soát suy luận chạy ở đâu — máy mình (mặc định), một dịch vụ
+OpenAI-compatible, hay máy trạm riêng — mà không đổi pipeline trích xuất.
+**Trạng thái:** đã chốt ngày 2026-10-26, **chưa triển khai** trong demo hiện tại.
+**Tiền điều kiện:** đã có nội dung cần trích (KS-04/05/06/07); extension đang dùng provider mặc định.
+
+| # | Người dùng | Hệ thống |
+|---|---|---|
+| 1 | Mở **Cài đặt → Nơi chạy suy luận**. | Hiển thị hai lựa chọn: **Máy này** (đang chọn, `127.0.0.1:8080`) và **Endpoint khác**. |
+| 2 | Chọn **Endpoint khác**, nhập base URL, API key (nếu cần) và tên model. | Chuẩn hoá URL; từ chối HTTP ngoài localhost (mọi host khác phải dùng HTTPS); yêu cầu quyền host cho đúng origin nếu chưa có. |
+| 3 | Bấm **Kiểm tra kết nối**. | Nếu origin chưa được đồng ý: hiện cảnh báo một lần — *"Nội dung trang sẽ được gửi tới `<host>`. Dữ liệu rời trình duyệt và có thể đi qua nhà cung cấp. API key chỉ lưu trên máy này."* — kèm **Đồng ý** / **Huỷ**. |
+| 4 | Chọn **Đồng ý**. | Gọi health; thành công thì lưu `provider`, `endpoint`, `apiKey`, `model` + mốc đồng ý theo origin; hiện model/endpoint. |
+| 5 | Quay lại **Quét nội dung** và bấm **Trích sự kiện**. | Job dùng provider đã chọn; pipeline, prompt, schema, dedup, lưu `nhap` không đổi; tiến trình ghi rõ provider/model. |
+| 6 | (Tuỳ chọn) Chọn **Máy này** rồi trích lại. | Dùng lại `llama-server` cục bộ; không hỏi consent; endpoint/key remote vẫn được giữ để đổi lại. |
+| 7 | (Tuỳ chọn) Bấm **Thu hồi đồng ý** hoặc **Xoá key**. | Xoá mốc đồng ý/key tương ứng; lần chạy remote sau bị chặn cho tới khi đồng ý lại. |
+
+**Luồng thay thế / lỗi:**
+
+| Tình huống | Phản hồi |
+|---|---|
+| Người dùng **Huỷ** ở bước đồng ý | Không lưu endpoint, không gửi request; giữ provider cũ. |
+| Origin đã đổi (ví dụ Cloudflared cấp URL mới) | Yêu cầu đồng ý lại cho origin mới; endpoint cũ không tự chạy. |
+| 401/403 | "API key không đúng hoặc chưa được cấp quyền"; không lưu trạng thái "đã kết nối". |
+| 404 | "Không thấy model/endpoint"; gợi ý kiểm tra base URL và tên model. |
+| 429 / 5xx | Báo giới hạn tần suất/dịch vụ lỗi; retry có giới hạn, không lưu rác. |
+| Timeout / mất mạng | Job dừng, báo lỗi; sự kiện đã lưu trước đó vẫn nguyên. |
+| Provider remote bỏ qua JSON schema | Output vẫn qua `parseRawExtraction`; retry 1 lần rồi báo lỗi, không lưu sự kiện rác. |
+| Người dùng xoá toàn bộ dữ liệu | Xoá cả settings, key và mốc đồng ý. |
+
+**Kết quả:** Người dùng chủ động chọn nơi suy luận; mặc định vẫn là máy này; dữ liệu chỉ rời
+máy sau khi có đồng ý rõ ràng, và có thể thu hồi bất cứ lúc nào.
+
+---
+
 ## 3. Ma trận phủ yêu cầu
 
 **Từ `base_idea.md`:**
@@ -386,6 +434,7 @@ Theo nguyên tắc §9 của `proposed_technical.md`: chỉ đọc khi người 
 | So khớp sự kiện với thông tin cá nhân | KS-02 (hồ sơ) + bước matching trong pipeline; cột "Hồ sơ liên quan" (KS-08/09) |
 | CRUD sự kiện | KS-09 (đủ 4 thao tác bản nháp SVG) |
 | Cách thông báo khi có sự kiện đến | KS-10 (3 mốc, 3 lựa chọn theo bản nháp SVG) |
+| Kiểm soát dữ liệu rời máy | KS-14 (chọn local/remote, consent theo origin, thu hồi) |
 | Cấu trúc 7 trường của sự kiện | Mô hình dữ liệu Phụ lục A; hiển thị ở KS-08, KS-09 |
 
 **Từ `proposed_technical.md`:**
@@ -400,6 +449,7 @@ Theo nguyên tắc §9 của `proposed_technical.md`: chỉ đọc khi người 
 | NLP pipeline 6 bước | Mô tả trong KS-04 (bước 6), áp dụng chung mọi kênh |
 | Lưu trữ + review UI | KS-08, KS-09 (IndexedDB) |
 | Bảo mật & xử lý lỗi | Rải khắp các kịch bản; tổng hợp tại KS-11 |
+| §9 — lựa chọn nơi chạy suy luận, consent, key | KS-14 |
 | Lộ trình 4 giai đoạn | Xem Phụ lục B |
 
 ---
@@ -416,6 +466,16 @@ interface NormalizedDocument {
   sourceUrl?: string;
   sourceTimestamp?: string;    // Ưu tiên article.publishedTime của Readability khi có
   extractionMethod: "readability" | "raw_dom" | "selection" | "parser";
+}
+
+// Cấu hình nơi chạy suy luận (KS-14; kế hoạch, chưa triển khai)
+// Mở rộng `LlmSettings` hiện có trong src/shared/contracts.ts
+interface LlmSettings {
+  provider: "local" | "openai-compatible";   // mặc định: "local"
+  endpoint: string;                          // mặc định: http://127.0.0.1:8080
+  apiKey: string;                            // chỉ lưu cục bộ, KHÔNG xuất trong JSON
+  model: string;                             // rỗng = model đang nạp (local) hoặc tự dò
+  consentByOrigin: Record<string, string>;   // origin -> thời điểm đồng ý; {} nếu chưa
 }
 
 // Sự kiện (base_idea.md) + trạng thái vận hành
@@ -494,7 +554,8 @@ interface SourceRef {
 | 2 — Kết hợp Gmail API | KS-03, KS-05, KS-06, dedup cơ bản |
 | 3 — Cải thiện chất lượng trích xuất | KS-07, heuristic bảo toàn bảng khi lọc nhiễu Readability, xử lý trang động/nội dung dài, PDF/DOCX/OCR đầy đủ |
 | 4 — Hoàn thiện quản lý lịch | KS-09 (đầy đủ CRUD + hoàn thành), KS-10, KS-12 (trùng lặp/thay đổi lịch), KS-13 (xung đột lịch, xuất ICS/tích hợp calendar) |
+| Bổ sung sau Giai đoạn 4 (đã chốt 2026-10-26) | KS-14 (chọn nơi chạy suy luận: local / dịch vụ ngoài / máy trạm) |
 
 ---
 
-*Tài liệu này hoàn thiện kịch bản trong `unfinished_script.svg` — bổ sung: lọc nhiễu Readability (KS-04), trích vùng chọn (KS-07), tệp đính kèm (KS-06), cập nhật lịch từ nguồn (KS-12), placeholder Giai đoạn 4 (KS-13), hậu điều kiện đồng bộ cho mọi kịch bản, phân rã thành phần hệ thống, mô hình dữ liệu và ma trận phủ yêu cầu — sẵn sàng dùng làm kịch bản demo/báo cáo tiến độ.*
+*Tài liệu này hoàn thiện kịch bản trong `unfinished_script.svg` — bổ sung: lọc nhiễu Readability (KS-04), trích vùng chọn (KS-07), tệp đính kèm (KS-06), cập nhật lịch từ nguồn (KS-12), placeholder Giai đoạn 4 (KS-13), chọn nơi chạy suy luận (KS-14, chốt 2026-10-26, chưa triển khai), hậu điều kiện đồng bộ cho mọi kịch bản, phân rã thành phần hệ thống, mô hình dữ liệu và ma trận phủ yêu cầu — sẵn sàng dùng làm kịch bản demo/báo cáo tiến độ.*

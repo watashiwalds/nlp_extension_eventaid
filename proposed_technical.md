@@ -31,8 +31,10 @@ Data Sources
              |
              v
     Shared NLP Pipeline
-    ├── Schedule relevance classification
-    ├── Schedule information extraction
+    ├── Schedule relevance screening (PhoBERT cục bộ — Slice F, chưa triển khai)
+    ├── Schedule information extraction ──► Inference provider
+    │                                       (local llama.cpp mặc định;
+    │                                        endpoint OpenAI-compatible tuỳ chọn)
     ├── Date/time normalization
     ├── Validation
     └── Deduplication
@@ -152,7 +154,7 @@ Nên giữ lại định danh và tham chiếu nguồn để hỗ trợ truy xu�
 
 Pipeline được đề xuất gồm:
 
-1. **Relevance classification:** Phân loại nội dung có khả năng chứa thông tin lịch trình hay không.
+1. **Relevance screening (Slice F — chưa triển khai):** Dịch vụ PhoBERT cục bộ phân loại **cấp tài liệu**; chỉ quyết định có gọi LLM hay không, không cắt câu. Fail-open khi dịch vụ lỗi; không áp dụng cho vùng bôi đen/văn bản dán tay.
 2. **Schedule extraction:** Trích xuất tên sự kiện, ngày giờ, địa điểm, hạn chót và quy tắc lặp.
 3. **Normalization:** Chuẩn hóa ngày giờ, múi giờ và các cách diễn đạt thời gian tương đối.
 4. **Validation:** Kiểm tra dữ liệu thiếu, ngày không hợp lệ và các giá trị chưa chắc chắn.
@@ -170,6 +172,39 @@ Không nên tự suy diễn các trường không có trong nguồn. Ví dụ, n
 - Xử lý các trường hợp trang không thể inject script, nội dung chưa tải xong, tệp không hỗ trợ và parser thất bại.
 - Không thực thi script hoặc macro từ tài liệu đầu vào.
 
+### 9.1. Lựa chọn nơi chạy suy luận (đã chốt 2026-10-26, chưa triển khai)
+
+Mặc định suy luận chạy **trên máy người dùng** qua `llama-server` tại `127.0.0.1:8080`.
+Người dùng có thể chọn một endpoint **OpenAI-compatible** khác (dịch vụ ngoài như Gemini, hoặc
+máy trạm của chính mình qua Cloudflared) theo kế hoạch `docs/ke-hoach-da-provider.md` và kịch bản
+`script.md` KS-14.
+
+Các ràng buộc bắt buộc khi triển khai:
+
+- **Opt-in, không mặc định:** không có dữ liệu rời máy nếu người dùng chưa chọn endpoint remote.
+- **Consent theo origin:** cảnh báo một lần cho mỗi origin không phải localhost, lưu mốc đồng ý,
+  có nút thu hồi; đổi origin phải đồng ý lại.
+- **API key:** chỉ lưu cục bộ, không xuất trong JSON, không ghi log; có nút xoá key.
+- **Quyền host:** giữ static cho localhost; endpoint remote xin quyền lúc chạy cho đúng origin,
+  không thêm host permission tĩnh trên toàn bộ web.
+- **TLS:** endpoint remote phải dùng HTTPS; chỉ localhost (`127.0.0.1`, `::1`, `localhost`) được dùng HTTP.
+- **Lỗi:** phân loại 401/403/404/429/5xx, timeout, mất mạng; retry có giới hạn; không lưu sự kiện
+  rác khi output không qua schema.
+- **Không đổi pipeline:** prompt, JSON schema, normalize, dedup và trạng thái `nhap` giữ nguyên.
+
+### 9.2. Sàng lọc nội dung trước LLM (Slice F — đã chốt 2026-10-26, chưa triển khai)
+
+Dùng **dịch vụ PhoBERT TASK/NON_TASK cục bộ** tại `127.0.0.1:8000` (model bàn giao trong
+`ml_hasevent_filter/`) để quyết định **cấp tài liệu** trước khi gọi LLM. Đây vẫn là suy luận trên
+máy người dùng; không gửi nội dung ra ngoài.
+
+- Chỉ bỏ qua khi `has_task = false`, `confidence ≥ 0.85` và `total_sentences ≥ 3`.
+- Mọi trường hợp khác **fail-open**: gọi LLM như hiện tại.
+- Không lọc vùng bôi đen/văn bản dán tay; không cắt câu — tài liệu dương nhận **toàn văn**.
+- Mọi lần bỏ qua hiện lý do + nút **Trích xuất toàn bộ**.
+- Host permission chỉ thêm loopback `127.0.0.1:8000` / `localhost:8000`.
+- Chi tiết, hợp đồng và tiêu chí nghiệm thu: `docs/ke-hoach-bo-loc-noi-dung.md`.
+
 ## 10. Lộ trình triển khai
 
 ### Giai đoạn 1 — Browser Page Parser cơ bản
@@ -177,7 +212,7 @@ Không nên tự suy diễn các trường không có trong nguồn. Ví dụ, n
 - Thêm nút `Analyze current page`.
 - Inject hàm trích xuất vào tab hiện tại.
 - Thu thập title, URL và text.
-- Kết nối dữ liệu với classifier và extractor hiện có.
+- Kết nối dữ liệu với pipeline dùng chung (sàng lọc PhoBERT — Slice F, chưa triển khai — và extractor).
 
 ### Giai đoạn 2 — Kết hợp Gmail API
 
@@ -198,6 +233,16 @@ Không nên tự suy diễn các trường không có trong nguồn. Ví dụ, n
 - Lưu trữ sự kiện và nguồn tham chiếu.
 - Phát hiện trùng lặp và xung đột lịch.
 - Xem xét tích hợp calendar hoặc xuất dữ liệu.
+
+### Giai đoạn 5 — Chọn nơi chạy suy luận (đã chốt 2026-10-26)
+
+- Giữ localhost là mặc định.
+- Thêm provider OpenAI-compatible (Gemini, máy trạm qua Cloudflared) + factory chọn provider.
+- Consent theo origin, quyền host cấp lúc chạy, API key cục bộ không xuất JSON.
+- Kiểm thử 3 nơi chạy + lỗi 401/403/404/429/5xx; không chạy lại toàn bộ golden set.
+- Chi tiết và tiêu chí nghiệm thu: `docs/ke-hoach-da-provider.md`, `script.md` KS-14.
+
+> Giai đoạn 5 nằm **sau** phạm vi demo hiện tại; bản demo vẫn chỉ chạy local cho tới khi triển khai.
 
 ## Kết luận
 

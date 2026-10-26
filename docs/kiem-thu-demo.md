@@ -97,7 +97,81 @@ Lịch sử hai phiên trước: [`docs/archive/phien-lam-viec-tiep-theo.md`](./
 - [x] Ở 320px và 400px: bấm mọi nút hiển thị đúng action, kể cả khi toast đang hiện.
 - [x] Chỉ dùng bàn phím: Tab qua các nút/ô nhập, focus ring rõ.
 - [x] Tắt/mở lại Chrome → dữ liệu còn (IndexedDB).
-- [x] Mở DevTools → Network: **không có** request ra ngoài.
+- [x] Mở DevTools → Network: **không có** request ra ngoài; chỉ có request tới `127.0.0.1:8080` khi bấm **Trích sự kiện** (demo hiện tại local-only).
+- [ ] Sau khi làm S7: mọi request remote chỉ xuất hiện **sau** khi người dùng chọn endpoint và đồng ý; không có request nền.
+- [ ] Sau khi làm Slice F: chỉ có thêm request tới `127.0.0.1:8000`/`localhost:8000` khi bấm **Trích sự kiện**; không có request nền.
+
+## 8. Chọn nơi chạy suy luận (KS-14) — chờ triển khai S7
+
+> **Chưa chạy được:** các mục dưới đây là checklist sẽ dùng khi S7 xong. Hiện tại mục 8 phải để
+> trống; demo chỉ có provider localhost. Kế hoạch: [`ke-hoach-da-provider.md`](./ke-hoach-da-provider.md).
+
+### 8.1. Localhost (mặc định)
+
+- [ ] Cài đặt → **Nơi chạy suy luận** hiện **Máy này** đang chọn, endpoint `http://127.0.0.1:8080`.
+- [ ] **Kiểm tra kết nối** báo OK + tên model đang nạp; không hỏi consent.
+- [ ] Trích 1 trang mẫu → kết quả như trước khi có S7, không đổi schema.
+
+### 8.2. Dịch vụ ngoài (Gemini hoặc OpenAI-compatible)
+
+- [ ] Chọn **Endpoint khác**, nhập base URL HTTPS + API key + model → **Kiểm tra kết nối**.
+- [ ] Lần đầu: modal consent hiện đúng origin; **Huỷ** → không lưu, không gửi request, giữ provider cũ.
+- [ ] **Đồng ý** → lưu, health OK, trích 1 trang mẫu; JSON hợp lệ, không bịa ngày.
+- [ ] Sai key → 401/403 rõ ràng; sai model/URL → 404; quota → 429; dịch vụ lỗi → 5xx.
+- [ ] **Thu hồi đồng ý** → lần chạy sau bị chặn tới khi đồng ý lại.
+- [ ] Đổi sang origin khác → bắt buộc đồng ý lại, không tự dùng consent cũ.
+
+### 8.3. Máy trạm qua Cloudflared
+
+- [ ] `llama-server` ở nhà + `cloudflared tunnel` → nhập URL `https://…trycloudflare.com`.
+- [ ] Consent + quyền host cấp lúc chạy cho đúng origin; health OK.
+- [ ] Trích 1 trang ngắn thành công; trang dài cho thấy giới hạn timeout (~100s proxy) với thông báo rõ.
+
+### 8.4. Key và dữ liệu
+
+- [ ] Xuất JSON → **không** có `apiKey`/`consentByOrigin` trong tệp.
+- [ ] Console/log/toast không chứa key; thông báo lỗi chỉ nêu host/status.
+- [ ] **Xoá key** → health remote báo thiếu key; **Xoá toàn bộ dữ liệu** xoá cả settings + consent.
+- [ ] Quay về **Máy này** → trích lại bình thường, không cần nhập lại key.
+
+## 9. Sàng lọc nội dung (PhoBERT) — chờ triển khai Slice F
+
+> **Chưa chạy được:** checklist dùng khi Slice F xong. Hiện job gọi LLM trực tiếp, không có bước
+> sàng lọc. Kế hoạch: [`ke-hoach-bo-loc-noi-dung.md`](./ke-hoach-bo-loc-noi-dung.md).
+
+Chuẩn bị: chạy dịch vụ PhoBERT cục bộ (xem `extension/README.md`), mở Cài đặt → **Sàng lọc nội dung**.
+
+### 9.1. Chế độ `off`
+
+- [ ] Chọn `off` → trích một trang như trước; không có request tới cổng 8000; kết quả giống baseline.
+
+### 9.2. Chế độ `report`
+
+- [ ] Chọn `report` → trích tài liệu âm (menu/quảng cáo) → vẫn gọi LLM, số sự kiện không đổi; có dòng kết luận sàng lọc + độ chắc chắn.
+
+### 9.3. Chế độ `screen`
+
+- [ ] Tài liệu dương (thông báo họp có ngày giờ) → sự kiện y hệt baseline; LLM nhận toàn văn.
+- [ ] Tài liệu âm rõ ràng → **0 sự kiện**, job xong với lý do; có nút **Trích xuất toàn bộ**.
+- [ ] Bấm **Trích xuất toàn bộ** → chạy LLM trên toàn văn, lưu nháp như bình thường.
+- [ ] Tài liệu ngắn < 3 câu hoặc confidence < 0.85 → **không** tự bỏ qua (fail-open).
+
+### 9.4. Vùng chọn / dán tay
+
+- [ ] Bôi đen hoặc dán văn bản → **không** gọi dịch vụ sàng lọc; đi thẳng vào LLM.
+
+### 9.5. Lỗi và huỷ
+
+- [ ] Tắt dịch vụ Python giữa chừng → job vẫn xong với toàn văn + cảnh báo rõ; không mất kết quả.
+- [ ] Huỷ job trong bước sàng lọc → trạng thái `Đã huỷ`, không lưu nháp.
+- [ ] Đổi endpoint sai/không tồn tại → **Kiểm tra kết nối** báo lỗi, panel không crash.
+
+### 9.6. Quyền và dữ liệu
+
+- [ ] DevTools → Network: chỉ thấy request tới loopback `8000` khi chạy sàng lọc; không có host remote.
+- [ ] Tắt dịch vụ → không có request nền lặp lại.
+
+---
 
 # VẤN ĐỀ
 

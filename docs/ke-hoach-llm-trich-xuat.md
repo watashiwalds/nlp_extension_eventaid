@@ -15,6 +15,10 @@
 > **Slice E đã đo ngày 2026-10-24:** chốt 9B IQ4_XS, 4B Q5_K_S bị loại vì recall
 > dưới 80%. Bàn giao tại [`ban-giao-slice-e.md`](./ban-giao-slice-e.md); kết quả tại
 > [`ket-qua-danh-gia-slice-e.md`](./ket-qua-danh-gia-slice-e.md).
+> **Sàng lọc trước LLM (Slice F — chưa triển khai):** từ 2026-10-26, pipeline có thêm bước sàng
+> lọc PhoBERT cục bộ (`127.0.0.1:8000`) **trước** lớp mô tả ở đây. Bước này chỉ quyết định có gọi
+> LLM; prompt/schema/normalize/dedup của tài liệu này **không đổi**. Xem
+> [`ke-hoach-bo-loc-noi-dung.md`](./ke-hoach-bo-loc-noi-dung.md).
 > **Phạm vi:** nối `llama-server` (llama.cpp) vào demo hiện có để trích sự kiện, duyệt và lưu.
 > Tài liệu này **không thay thế** `ke_hoach_phat_trien.md` (build order) hay `script.md`
 > (hành vi); nó là bản chi tiết hoá cho lớp LLM sau khi đã chốt phạm vi với người dùng.
@@ -123,7 +127,7 @@ không gọi mạng, không sửa UI. Mục tiêu là chốt hình dạng dữ l
 - Parse PDF/DOCX bằng quyền đọc rộng; chỉ nhận qua clipboard hoặc dán tay.
 - Nhắc việc theo mốc (KS-10) và cập nhật khi nguồn đổi (KS-12).
 - Resume sau khi tắt trình duyệt; hàng đợi nhiều job song song.
-- Classifier TF-IDF; LLM được gọi trực tiếp.
+- Sàng lọc PhoBERT trước LLM (Slice F, chưa triển khai); trong phạm vi Slice A–E, LLM được gọi trực tiếp.
 - Đồng bộ đám mây, tài khoản, telemetry.
 
 ---
@@ -166,6 +170,8 @@ export const ExtractionMetaSchema = z.object({
   latencyMs: z.number().int().nonnegative(),
 });
 ```
+
+> **S7 mở rộng (chưa triển khai):** `provider` thêm `'openai-compatible'` — xem §16.2.
 
 Trong `EventSchema`:
 
@@ -251,6 +257,10 @@ Lưu qua `setSetting('llm', ...)` và **validate bằng Zod khi đọc** (đã c
 `platform/storage/settings.ts`; bản đánh giá lịch sử ở
 `docs/archive/thiet-ke-demo-va-san-sang-llama-cpp.md` §2.4).
 
+> **Mở rộng S7 (chưa triển khai):** thêm `provider: 'local' | 'openai-compatible'` (default
+> `'local'`) và `consentByOrigin: Record<string, string>` (default `{}`). Chi tiết §16 và
+> [`ke-hoach-da-provider.md`](./ke-hoach-da-provider.md).
+
 ---
 
 ## 5. Pipeline trong `core/`
@@ -334,6 +344,9 @@ export interface InferenceProvider {
 
 `core/` chỉ biết interface này. `platform/inference/llama-cpp.ts` hiện thực bằng `fetch`;
 `core/extraction/mock-provider.ts` hiện thực bằng fixture.
+
+> **S7 mở rộng (chưa triển khai):** `id` thêm `'openai-compatible'`; factory chọn provider —
+> xem §16.3.
 
 ---
 
@@ -887,7 +900,9 @@ hồ sơ đúng, JSON hợp lệ, latency. Từ đó tính recall và tỉ lệ 
 1. GPU cụ thể là model nào, bao nhiêu nhân CPU? Ảnh hưởng trực tiếp latency và `-ngl`.
 2. Có cần API key cho llama-server không? Nếu chỉ dùng máy cá nhân, có thể bỏ trống.
 3. Model mặc định: chốt 9B IQ4_XS sau Slice E; 4B Q5_K_S không đạt recall.
-4. Có giữ classifier TF-IDF về sau để lọc trước khi gọi LLM không, hay bỏ hẳn?
+4. ~~Có giữ classifier TF-IDF về sau để lọc trước khi gọi LLM không, hay bỏ hẳn?~~ **Đã chốt
+   2026-10-26:** bỏ TF-IDF, dùng dịch vụ PhoBERT cục bộ (Slice F, chưa triển khai) — xem
+   [`ke-hoach-bo-loc-noi-dung.md`](./ke-hoach-bo-loc-noi-dung.md).
 5. Có cần ADR riêng cho D2/D3/D5 (offscreen, session, model) trước khi code không?
    `ke_hoach_phat_trien.md` §3 đang thiếu ADR-001/002/003.
 6. Quy tắc suy ra năm khi nguồn chỉ ghi "15/11": hiện chọn **không suy ra** (null +
@@ -899,15 +914,94 @@ hồ sơ đúng, JSON hợp lệ, latency. Từ đó tính recall và tỉ lệ 
 
 | Tài liệu / quy tắc | Liên quan |
 |---|---|
-| `AGENTS.md` §4 | Chỉ suy luận cục bộ; host permission hẹp; không bịa trường thiếu; kích hoạt thủ công |
-| `AGENTS.md` §5 | Kiến trúc đích có offscreen + `InferenceProvider` |
+| `AGENTS.md` §4 | Suy luận cục bộ mặc định; remote chỉ khi opt-in + consent theo origin (KS-14); host permission hẹp; không bịa trường thiếu; kích hoạt thủ công |
+| `AGENTS.md` §5 | Kiến trúc đích có offscreen + `InferenceProvider` + factory (local/remote) |
 | `script.md` KS-04, KS-07 | Quét trang / vùng chọn — đầu vào của pipeline |
 | `script.md` KS-08 | Duyệt sự kiện nháp — UI đích |
-| `script.md` KS-11 | Luồng lỗi: server chưa chạy, model đang tải, JSON sai |
+| `script.md` KS-11 | Luồng lỗi: server chưa chạy, model đang tải, JSON sai, lỗi remote 401/403/404/429/5xx |
+| `script.md` KS-14 | Chọn nơi chạy suy luận; consent, key, quyền host (S7, chưa triển khai) |
 | `ke_hoach_phat_trien.md` §7 | Model, prompt, ngân sách token gốc |
-| `ke_hoach_phat_trien.md` §8.1 | State machine pipeline (bản đầy đủ có classifier; bản này rút gọn) |
+| `ke_hoach_phat_trien.md` §8.1 | State machine pipeline (bản đầy đủ có sàng lọc; bản này rút gọn) |
 | `docs/archive/thiet-ke-demo-va-san-sang-llama-cpp.md` §3 | Điểm nối và hợp đồng đề xuất ban đầu (lịch sử) |
 
 **Việc phải đồng bộ khi kết thúc Slice E:** `AGENTS.md` §11 (Current status),
 `README.md` + `extension/README.md` (tính năng, cách chạy, file map),
 `DEVIATIONS.md` (bỏ dòng "không ML"), `chuc-nang-demo-vs-chinh-thuc.md` (đánh dấu phần đã có).
+
+---
+
+## 16. Mở rộng S7 — chọn nơi chạy suy luận (chưa triển khai)
+
+> Chốt ngày **2026-10-26**. Nguồn hiện hành cho thay đổi này là
+> [`ke-hoach-da-provider.md`](./ke-hoach-da-provider.md); kịch bản người dùng là `script.md` KS-14.
+> Phần dưới chỉ ghi phần **bổ sung** vào lớp LLM đã mô tả ở §1–§15; không thay đổi pipeline.
+
+### 16.1. Phạm vi
+
+- Giữ **localhost là mặc định** (`llama-server`, `127.0.0.1:8080`).
+- Thêm một provider **OpenAI-compatible** cho endpoint remote: `/models` để health + lấy model,
+  `/chat/completions` với `response_format` JSON schema, `Authorization: Bearer`.
+- Gemini là **một cấu hình** của provider này; adapter native chỉ là phương án dự phòng (F6) nếu
+  kiểm chứng cho thấy `response_format`/thinking không đáp ứng.
+- Không đổi prompt, schema output, chunking, normalize, dedup, profile match hay trạng thái `nhap`.
+
+### 16.2. Thay đổi hợp đồng
+
+```ts
+// LlmSettingsSchema — thêm, giữ default để bản ghi cũ đọc được
+provider: z.enum(['local', 'openai-compatible']).default('local'),
+consentByOrigin: z.record(z.string(), z.string()).default({}),
+
+// InferenceProvider.id / ExtractionMeta.provider — thêm giá trị
+'llama.cpp' | 'mock' | 'openai-compatible'
+```
+
+- Mọi chỗ switch theo `InferenceProvider.id` phải xử lý giá trị mới; test cũ vẫn phải xanh.
+- API key **không** vào `ExportPayload`, không log; thông báo lỗi chỉ nêu host/status.
+
+### 16.3. Điểm nối code
+
+```text
+src/platform/offscreen/main.ts  →  createProvider(settings)
+                                        │
+                    src/platform/inference/factory.ts
+                     ├─ llama-cpp.ts          (local, giữ /health)
+                     └─ openai-compatible.ts  (remote, thêm ở S7)
+```
+
+- Hiện factory nằm inline trong `offscreen/main.ts`; S7 tách ra file riêng.
+- `runExtractionJob()` và `core/extraction/**` **không đổi** — đây là lý do seam
+  `InferenceProvider` tồn tại.
+
+### 16.4. Consent, quyền host, CSP
+
+- Consent một lần cho mỗi origin **không phải localhost**; lưu `consentByOrigin[origin] = ISO`;
+  có nút thu hồi; đổi origin phải đồng ý lại.
+- Manifest giữ static `http://127.0.0.1:8080/*`; thêm `optional_host_permissions` (gồm `https://*/*`
+  cho remote và `http://localhost:8080/*`, `http://[::1]:8080/*` cho local alias) và
+  `chrome.permissions.request()` cho đúng origin lúc lưu/kiểm tra. Local alias không cần consent.
+- CSP `connect-src` mở thêm `https://*`; `script-src 'self'` giữ nguyên.
+- Từ chối quyền/consent → không gửi request, giữ provider cũ.
+
+### 16.5. Lỗi và thinking
+
+- Map 401/403 (key/quyền), 404 (model/URL), 429 (quota), 5xx (dịch vụ), timeout/abort.
+- Retry có giới hạn; output vẫn qua `parseRawExtraction` + Zod; không lưu sự kiện rác.
+- Với Gemini: kiểm `finishReason` (`MAX_TOKENS`, `SAFETY`, `RECITATION`) và
+  `promptFeedback.blockReason`; tắt/hạ thinking để không ăn hết `maxTokens`.
+- Cloudflared free có timeout proxy ~100s — giảm chunk hoặc báo lỗi 524 rõ.
+
+### 16.6. Kiểm thử và nghiệm thu
+
+- Unit: `openai-compatible` (URL/header/body, parse models/choices, lỗi, abort, finishReason),
+  factory (default local), contracts (settings cũ vẫn đọc được).
+- Thủ công: localhost, Gemini/OpenAI-compatible, Cloudflared; consent (đồng ý/từ chối/thu hồi/đổi
+  origin); key không xuất hiện trong JSON/log; quay về localhost.
+- **Không** chạy lại toàn bộ 15 fixtures; chỉ 1–2 trang mẫu mỗi nơi.
+- Checklist: `docs/kiem-thu-demo.md` §8 (chờ triển khai).
+
+### 16.7. Việc phải đồng bộ khi S7 xong
+
+`docs/ke-hoach-da-provider.md` (trạng thái + tick nghiệm thu), `AGENTS.md` §11,
+`docs/DEVIATIONS.md` (bỏ dòng "chưa có provider"), `docs/kiem-thu-demo.md` §8,
+`README.md` + `extension/README.md`, `docs/chuc-nang-demo-vs-chinh-thuc.md` mục H.

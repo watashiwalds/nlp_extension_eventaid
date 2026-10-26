@@ -1,12 +1,18 @@
 # Đối chiếu chức năng: kế hoạch chính thức vs. demo hiện tại
 
-Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức** (`script.md` KS-01…KS-13,
-`proposed_technical.md`, lộ trình S0–S6 trong `ke_hoach_phat_trien.md`) và đánh dấu mức độ
+Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức** (`script.md` KS-01…KS-14,
+`proposed_technical.md`, lộ trình S0–S7 trong `ke_hoach_phat_trien.md`) và đánh dấu mức độ
 đã có trong **demo** tại `extension/`.
 
 - **Ngày đối chiếu:** 2026-10-24
-- **Mốc demo:** sau Slice B (LLM cục bộ) + Slice C (offscreen job + notification) + Slice D (duyệt nháp, chống trùng); Slice E là việc tiếp theo
+- **Mốc demo:** sau Slice B (LLM cục bộ) + Slice C (offscreen job + notification) + Slice D (duyệt nháp, chống trùng); Slice E đã đo ngày 2026-10-24
 - **Nguồn tham chiếu chéo:** [`DEVIATIONS.md`](./DEVIATIONS.md), [`kiem-thu-demo.md`](./kiem-thu-demo.md)
+
+> **Cập nhật 2026-10-26:** KS-14 (chọn nơi chạy suy luận) đã được chốt nhưng **chưa triển khai**.
+> Cùng ngày, **Slice F — sàng lọc nội dung PhoBERT** cũng đã chốt nhưng **chưa triển khai**.
+> Bảng và số liệu bên dưới vẫn phản ánh demo ngày 2026-10-24 (local-only, không sàng lọc); xem thêm
+> mục **H**, [`ke-hoach-da-provider.md`](./ke-hoach-da-provider.md) và
+> [`ke-hoach-bo-loc-noi-dung.md`](./ke-hoach-bo-loc-noi-dung.md).
 
 ## Chú giải
 
@@ -28,7 +34,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 |---|---|---:|---:|---:|---:|
 | A | Nền tảng & kiến trúc | 8 | 2 | 0 | 10 |
 | B | Thu thập dữ liệu | 9 | 1 | 3 | 13 |
-| C | Pipeline NLP (classifier + LLM) | 5 | 4 | 2 | 11 |
+| C | Pipeline NLP (sàng lọc + LLM) | 5 | 4 | 2 | 11 |
 | D | Xem lại & quản lý sự kiện | 6 | 2 | 2 | 10 |
 | E | Nhắc việc | 0 | 1 | 5 | 6 |
 | F | Mở rộng (KS-12, KS-13) | 1 | 0 | 4 | 5 |
@@ -41,7 +47,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
   tạo/sửa/xoá sự kiện đủ 7 trường, máy trạng thái, nguồn trích, xuất–nhập JSON.
 - **Phần LLM cục bộ đã có:** `InferenceProvider` cho llama.cpp, prompt + JSON schema, validate
   bằng Zod, normalize, dedup, khớp hồ sơ, chunking; job chạy trong offscreen và lưu nháp.
-  **Classifier TF-IDF vẫn chưa có**, nên không có bước lọc trước khi gọi LLM.
+  **Sàng lọc PhoBERT (Slice F) vẫn chưa có**, nên job gọi LLM trực tiếp, không có bước lọc trước.
 - **Các kênh dữ liệu ngoài trang web chưa có:** Gmail API, PDF/DOCX/OCR, ICS. Trang Gmail chỉ được đọc **best-effort** như một trang web.
 - **Nhắc việc sự kiện chưa có:** trường dữ liệu tồn tại nhưng luôn rỗng; `notifications` mới
   dùng cho job trích xuất, chưa có `chrome.alarms`/engine KS-10.
@@ -62,7 +68,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 264 test Vitest / 27 file (+17 live skip) |
 | A7 | Content script inject Readability theo yêu cầu | 🟡 | `scripting.executeScript` chạy page snapshot (lọc `main`/landmark, bỏ menu/khung ẩn), **Readability chạy trong side panel**; chưa có content script thường trú |
 | A8 | Job queue bền, tiến trình, resume sau service worker restart | 🟡 | Có **một** job active trong `chrome.storage.session`, tiến trình + huỷ; SW restart vẫn thấy job/offscreen; **không resume sau khi tắt trình duyệt** |
-| A9 | Offscreen document chạy classifier + LLM | ✅ | Offscreen chỉ cho LLM; classifier chưa có. Tạo theo nhu cầu, đóng sau khi xong |
+| A9 | Offscreen document chạy sàng lọc + LLM | ✅ | Offscreen chỉ cho LLM; **sàng lọc chưa có** (Slice F). Tạo theo nhu cầu, đóng sau khi xong |
 | A10 | `Settings` store được đọc/ghi trong luồng thật | ✅ | `LlmSettings` đọc/ghi qua IndexedDB; cờ quét và job dùng `chrome.storage.session` |
 
 ## B. Thu thập dữ liệu
@@ -87,8 +93,8 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 
 | Mã | Chức năng theo kế hoạch | Trạng thái | Demo hiện tại / ghi chú |
 |---|---|---|---|
-| C1 | Classifier TF-IDF + Logistic Regression (có/không sự kiện + score) | ❌ | Không có; mọi sự kiện do người dùng tạo |
-| C2 | `core/classifier.ts` + `public/models/classifier.json` | ❌ | Không có model, không có script train |
+| C1 | Sàng lọc PhoBERT TASK/NON_TASK cấp tài liệu (dịch vụ cục bộ, Slice F) | ❌ | Chưa có; job gọi LLM trực tiếp. Kế hoạch đã chốt 2026-10-26, 5–6,5 ngày công |
+| C2 | `ContentFilter` port + `phobert-filter.ts` + `FilterSettings` | ❌ | Chưa có; xem `ke-hoach-bo-loc-noi-dung.md` |
 | C3 | LLM cục bộ llama.cpp qua `fetch` (`127.0.0.1:8080`) | ✅ | `platform/inference/llama-cpp.ts` + `InferenceProvider`; `host_permissions` và CSP chỉ mở `127.0.0.1:8080` |
 | C4 | `MockProvider` để làm UI trước khi có model | ✅ | `core/extraction/mock-provider.ts`; dùng trong test pipeline/offscreen |
 | C5 | Prompt + JSON schema + `LlmEvent` validate bằng Zod | ✅ | `prompt.ts`, `schema.ts`, `contracts.ts`; retry 1 lần khi JSON sai |
@@ -151,6 +157,22 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | G10 | **KS-11** Luồng lỗi: token hết hạn, quota, model chết, trang không inject được | 🟡 | Có xử lý `chrome://`, nội dung rỗng, JSON rác, trang SPA chưa render, model chết, huỷ/job lỗi; thiếu lỗi OAuth/quota |
 | G11 | Đóng gói CRX + privacy policy + báo cáo eval | ❌ | Mới ở mức load unpacked `dist/` |
 
+## H. Kế hoạch đã chốt nhưng chưa triển khai
+
+| Mã | Chức năng theo kế hoạch | Trạng thái | Demo hiện tại / ghi chú |
+|---|---|---|---|
+| H1 | **KS-14** Chọn nơi chạy suy luận: **Máy này** (mặc định) / endpoint OpenAI-compatible (Gemini) / máy trạm Cloudflared | ❌ | Chỉ có `LlamaCppProvider` + `127.0.0.1:8080`; chưa có form chọn provider, consent hay quyền host động |
+| H2 | Consent một lần theo origin remote + thu hồi; đổi origin phải đồng ý lại | ❌ | Chưa có `consentByOrigin` |
+| H3 | API key cục bộ, không xuất JSON/log; nút xoá key | 🟡 | `LlmSettings.apiKey` đã lưu cục bộ và export hiện không chứa settings; **chưa có UI xoá key riêng** |
+| H4 | Health/lỗi remote 401/403/404/429/5xx, timeout, `response_format` | ❌ | `LlamaCppProvider` có health/timeout/abort cho localhost; nhánh remote chưa có |
+| H5 | Quyền host cấp lúc chạy cho đúng origin (`optional_host_permissions`) | ❌ | Manifest hiện chỉ có static `http://127.0.0.1:8080/*` |
+| H6 | **Slice F** Sàng lọc nội dung bằng PhoBERT cục bộ (`127.0.0.1:8000`) trước khi gọi LLM | ❌ | Không có; demo gọi LLM trực tiếp. Không cắt câu, chỉ bỏ lần gọi LLM trên tài liệu âm |
+
+> H1–H5 thuộc **S7**, ước lượng 7–11 ngày công. **H6** thuộc **Slice F**, ước lượng 5–6,5 ngày
+> công và **độc lập S7**. Không tính vào tổng 66 mục của bảng A–G.
+> Chi tiết, tiêu chí nghiệm thu và rủi ro: [`ke-hoach-da-provider.md`](./ke-hoach-da-provider.md),
+> [`ke-hoach-bo-loc-noi-dung.md`](./ke-hoach-bo-loc-noi-dung.md).
+
 ---
 
 ## Tóm tắt theo mốc sprint
@@ -158,12 +180,13 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | Sprint | Mục tiêu | Demo đạt được |
 |---|---|---|
 | **S0** | Foundation + de-risk | ✅ Phần lớn: TS/Vite/CRXJS, contracts, CI, Readability; ❌ chưa có benchmark llama.cpp, ADR, golden set |
-| **S1** | Capture + classifier | 🟡 Capture ✅ (selection/context menu + lọc nội dung chính cho trang động); ❌ classifier; job nền đã có cho LLM |
+| **S1** | Capture + sàng lọc | 🟡 Capture ✅ (selection/context menu + lọc nội dung chính cho trang động); ❌ sàng lọc (chuyển Slice F, chưa triển khai); job nền đã có cho LLM |
 | **S2** | LLM extraction | ✅ Phần lớn: provider, pipeline, prompt v4, normalize, dedup, profile match, offscreen job; nghiệm thu Slice B/C 2026-10-23/24 |
 | **S3** | Review + CRUD | 🟡 CRUD và form 7 trường ✅; duyệt hàng loạt + gợi ý trùng ✅; sửa nhanh tại chỗ/thu thập feedback, `versionHistory` ❌ |
 | **S4** | Notifications + KS-12 | 🟡 Notification kết quả trích xuất ✅; nhắc việc sự kiện + KS-12 ❌ |
 | **S5** | Gmail + attachment | ❌ Chưa có |
 | **S6** | Hardening + release | 🟡 Có test/build/CI; chưa có eval, CRX, privacy policy |
+| **S7** (hậu demo) | Chọn nơi chạy suy luận (KS-14) | ❌ Chưa triển khai; kế hoạch đã chốt 2026-10-26 |
 
 ## Ghi chú khi dùng cho báo cáo
 
@@ -173,8 +196,9 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 2. **Điểm mạnh nên nhấn:** hợp đồng dữ liệu 7 trường, máy trạng thái, nguồn trích, cờ không bịa dữ liệu,
    job offscreen không mất khi đóng panel, kiến trúc tách lớp, và các quy tắc riêng tư
    (suy luận cục bộ, quyền tối thiểu).
-3. **Điểm cần nói rõ là giả lập/thay thế:** dán văn bản thay Gmail/PDF; chưa có classifier
-   TF-IDF; hoàn thành sự kiện thủ công thay tự động theo giờ; nhắc việc sự kiện chưa có.
+3. **Điểm cần nói rõ là giả lập/thay thế:** dán văn bản thay Gmail/PDF; chưa có sàng lọc
+   PhoBERT; hoàn thành sự kiện thủ công thay tự động theo giờ; nhắc việc sự kiện chưa có;
+   **chọn provider remote (KS-14) mới là kế hoạch, demo vẫn local-only**.
 4. **Trước khi báo cáo:** chạy lại `npm run typecheck && npm run lint && npm test && npm run build`
    và hoàn tất các ô còn trống trong `docs/kiem-thu-demo.md`.
 

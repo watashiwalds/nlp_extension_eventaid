@@ -15,6 +15,16 @@ Collection channels (build order is intentional):
 
 Both feed one **Document Processing Layer** and one **NLP Pipeline**.
 
+Inference runs **locally by default** (`llama.cpp` at `127.0.0.1:8080`). The approved extension
+**provider choice** — local, any OpenAI-compatible endpoint (Gemini), or a home workstation via
+Cloudflared — is documented in `docs/ke-hoach-da-provider.md` and **not implemented yet**. Until
+it ships, the demo remains local-only.
+
+A local **PhoBERT TASK/NON_TASK screening service** (handed-over `ml_hasevent_filter/`, FastAPI at
+`127.0.0.1:8000`) is approved as a **document-level pre-filter** before the LLM (Slice F,
+2026-10-26). It is **not implemented yet**; see `docs/ke-hoach-bo-loc-noi-dung.md`. When enabled it
+only decides whether to call the LLM — it never trims the text sent to it.
+
 ---
 
 ## 2. Repository layout
@@ -23,15 +33,18 @@ Both feed one **Document Processing Layer** and one **NLP Pipeline**.
 |---|---|---|
 | `base_idea.md` | Original problem statement; defines the **7-field event structure**. Source of truth for *what*. | Vietnamese |
 | `proposed_technical.md` | Technical architecture, NLP pipeline, I/O formats, security, roadmap. Source of truth for *how*. | Vietnamese |
-| `script.md` | Complete usage scenarios **KS-01 … KS-13** (+ appendices: data model, requirement matrices, roadmap mapping). Source of truth for *behavior*. | Vietnamese |
+| `script.md` | Complete usage scenarios **KS-01 … KS-14** (+ appendices: data model, requirement matrices, roadmap mapping). Source of truth for *behavior*. | Vietnamese |
 | `unfinished_script.svg` | Excalidraw draft of the original 4 flows; the seed for `script.md`. | — |
-| `ke_hoach_thiet_ke_frontend.md` | Minimum frontend design plan for **Penpot** (P0 scope). Source of truth for *UI*. | Vietnamese |
-| `ke_hoach_phat_trien.md` | Development plan: **TypeScript + Vite** stack, data contracts, model strategy, sprints, acceptance criteria. Source of truth for *build order*. | Vietnamese |
+| `ke_hoach_thiet_ke_frontend.md` | Minimum frontend design plan for **Penpot** (P0 scope + P1 boards B26–B28 for KS-14, not implemented). Source of truth for *UI*. | Vietnamese |
+| `ke_hoach_phat_trien.md` | Development plan: **TypeScript + Vite** stack, data contracts, model strategy, sprints (S0–S6 + S7 provider choice + Slice F screening), acceptance criteria. Source of truth for *build order*. | Vietnamese |
 | `README.md` | Repo overview, demo features, how to build/load, next steps. | Vietnamese |
-| `extension/` | Working MV3 demo (TypeScript + Vite; local llama.cpp extraction, no classifier). See `extension/README.md` for the file map. | TypeScript |
+| `extension/` | Working MV3 demo (TypeScript + Vite; local llama.cpp extraction, no content screening). See `extension/README.md` for the file map. | TypeScript |
 | `docs/DEVIATIONS.md` | Where the demo intentionally differs from the plan, and why. | Vietnamese |
 | `docs/kiem-thu-demo.md` | Manual test checklist mapped to KS scenarios. | Vietnamese |
 | `docs/ke-hoach-llm-trich-xuat.md` | Implementation plan for the local LLM extraction layer (contracts, offscreen job, prompt, slices, eval). Source of truth for *LLM scope/order*. | Vietnamese |
+| `docs/ke-hoach-da-provider.md` | Approved provider-choice plan (local default, OpenAI-compatible remote, Gemini, Cloudflared workstation, consent, key). Source of truth for *inference location*. **Not implemented.** | Vietnamese |
+| `docs/ke-hoach-bo-loc-noi-dung.md` | Approved plan for the local **PhoBERT document-level screening** step before the LLM (Slice F0–F3, decisions, contracts, eval). Source of truth for *screening scope*. **Not implemented.** | Vietnamese |
+| `ml_hasevent_filter/` | Handed-over PhoBERT model + FastAPI service consumed over HTTP. **Do not modify.** | Python |
 | `docs/ban-giao-slice-d.md` | Handoff from accepted Slice C to Slice D: reviewed scope, closed decisions, task order, acceptance criteria, KS-08 deviations. | Vietnamese |
 | `docs/ban-giao-slice-e.md` | Handoff from accepted Slice D to Slice E: evaluation sample set, deterministic eval harness, real-model measurement protocol, model decision. | Vietnamese |
 | `docs/ket-qua-danh-gia-slice-e.md` | Measured Slice E results (recall, invented dates, latency, 9B-vs-4B comparison, model decision). | Vietnamese |
@@ -42,7 +55,7 @@ Both feed one **Document Processing Layer** and one **NLP Pipeline**.
 > This `AGENTS.md` is intentionally in English (agent-facing).
 
 A git repository now exists at the root and the demo code lives in `extension/`. The stack is locked in §3; keep this file in sync when code changes.
-The demo contains **no classifier** but **does include local LLM extraction** (Slices A–C accepted; see §11) — check `docs/DEVIATIONS.md` before assuming a pipeline feature exists.
+The demo contains **no content screening yet** but **does include local LLM extraction** (Slices A–C accepted; see §11) — check `docs/DEVIATIONS.md` before assuming a pipeline feature exists. **Provider choice (KS-14) and content screening (Slice F) are planned, not implemented.**
 
 ---
 
@@ -59,9 +72,9 @@ The demo contains **no classifier** but **does include local LLM extraction** (S
 | Storage | **IndexedDB** + typed wrapper (~150 lines) | No Dexie |
 | Validation | **Zod** | Runtime validation of LLM output and messages; types inferred from schemas |
 | Page extraction | **`@mozilla/readability`** (npm) | Bundled by Vite |
-| Classifier | **scikit-learn TF-IDF + Logistic Regression** → JSON → TS inference | No ONNX Runtime / WASM |
-| LLM | **llama.cpp server** via `fetch` (`127.0.0.1:8080`) | `InferenceProvider` interface; model-agnostic (empty model = loaded model); `MockProvider` for UI work |
-| Training / eval | **Python + scikit-learn + pandas** | `tools/train_classifier.py`, `tools/eval/` |
+| Content screening | **PhoBERT TASK/NON_TASK microservice** (FastAPI, `127.0.0.1:8000`, handed-over `ml_hasevent_filter/`) — **planned (Slice F), not implemented** | Document-level only; never trims the text sent to the LLM. Supersedes the old TF-IDF plan. No ONNX Runtime / WASM in the extension |
+| LLM | **llama.cpp server** via `fetch` (`127.0.0.1:8080`) by default; **planned** any OpenAI-compatible endpoint (Gemini, home workstation via Cloudflared) | `InferenceProvider` interface; model-agnostic (empty model = loaded model); `MockProvider` for UI work; provider choice in `docs/ke-hoach-da-provider.md` |
+| Training / eval | **Python + pandas** for eval; the PhoBERT model is handed over (no training in this repo) | `ml_hasevent_filter/` (do not modify), `tools/eval/` |
 | Tests | **Vitest** + manual KS checklist | No Playwright in the MVP |
 
 ### Deliberately avoided (and why)
@@ -87,14 +100,15 @@ The demo contains **no classifier** but **does include local LLM extraction** (S
 
 - **Chrome Extension Manifest V3.**
 - Permissions: `activeTab`, `scripting`, `storage`, `unlimitedStorage`, `offscreen`, `alarms`, `notifications`, `sidePanel`, `contextMenus` (+ `identity` only when Gmail is added).
-- **Host permission is limited to `http://127.0.0.1:8080/*`** (the local llama.cpp server). Do not add broad `<all_urls>` host permissions.
-- **All inference is local.** Page/email content must never be sent to a remote backend. The only network call is to the local llama.cpp server.
-- **No remote code and no WASM in the MVP.** CSP stays `script-src 'self'`; model weights and JS are bundled or loaded as data, never as executable remote code.
+- **Host permission is minimal by default:** static `http://127.0.0.1:8080/*` for the local llama.cpp server. Remote inference is **planned** via `optional_host_permissions` + a runtime `chrome.permissions.request()` for the exact origin the user entered. The optional list may also include `http://localhost:8080/*` and `http://[::1]:8080/*` for local aliases (requested at runtime, no consent). **Slice F (planned)** adds static `http://127.0.0.1:8000/*` and `http://localhost:8000/*` for the local PhoBERT screening service — loopback only, not remote. Do not add a broad static `<all_urls>` host permission.
+- **Inference is local by default.** Page/email content must not leave the browser unless the user has explicitly selected a remote endpoint and given one-time consent for that origin. The provider-choice plan is the only approved remote-inference path (`docs/ke-hoach-da-provider.md`); it is **not implemented yet**, so the demo remains local-only.
+- **Remote inference constraints (when implemented):** opt-in only, never a silent default; **HTTPS only for every non-local host** (only `127.0.0.1`, `::1`, `localhost` may use HTTP); consent stored per non-local origin with a revoke action; API key stored locally, never exported in JSON or logged; no page/email content sent to an endpoint the user has not selected; bounded retries and clear 401/403/404/429/5xx errors. Do not add any other remote backend for OCR/inference.
+- **No remote code and no WASM in the MVP.** CSP stays `script-src 'self'`; `connect-src` may list only the local server and approved remote endpoint patterns. Model weights and JS are bundled or loaded as data, never as executable remote code.
 - **All extension code is bundled by Vite** into `dist/`; no CDN imports or runtime script loading.
 - **Gmail scope must stay read-only**: `https://www.googleapis.com/auth/gmail.readonly`. It is a restricted scope → public distribution may require OAuth verification.
 - **A user must actively trigger** extraction; no silent/background reading of pages or mail.
 - **Never execute scripts/macros from input documents** (PDF/DOCX/HTML). Parse content only.
-- **Do not add a remote backend for OCR/inference.** If one is ever introduced, it requires explicit user notice, data-handling guarantees, and an update to §3.
+- **Do not add a remote backend for OCR/inference** outside the approved provider-choice plan. Any new remote service requires explicit user notice, data-handling guarantees, and an update to §3 and `docs/ke-hoach-da-provider.md`.
 - **Limit document text size** fed to the model; report when truncation occurs.
 - Readability failure → **fall back to raw DOM** (`raw_fallback`); bypass Readability entirely for user text selections.
 - **Never invent uncertain fields.** If year/timezone/location is absent from the source, mark it `uncertain` — do not guess.
@@ -112,7 +126,7 @@ Data Sources
 Document Processing Layer      (per-format parsers: HTML, PDF, DOCX, TXT, ICS, OCR)
           │
           ▼
-Shared NLP Pipeline            (classify → extract → normalize → validate → dedup → profile match)
+Shared NLP Pipeline            (screen → extract → normalize → validate → dedup → profile match)
           │
           ▼
 Schedule Store / Review UI     (IndexedDB; review & edit; notifications; export)
@@ -132,14 +146,17 @@ src/platform/capture ──NormalizedDocument──► IndexedDB / side panel
                                                   ▼  │ JOB_PROGRESS / JOB_DONE / …
                                       src/platform/offscreen
                                       ├─ src/platform/offscreen/run-job.ts
+                                      ├─ (planned, Slice F) src/core/filter/** + phobert-filter.ts ──HTTP──► PhoBERT service 127.0.0.1:8000
                                       ├─ src/core/extraction/pipeline.ts
-                                      └─ src/platform/inference/llama-cpp.ts ──HTTP──► llama-server 127.0.0.1:8080
+                                      └─ src/platform/inference/factory.ts (planned; currently inline in offscreen/main.ts)
+                                            ├─ llama-cpp.ts ──HTTP──► llama-server 127.0.0.1:8080
+                                            └─ (planned) openai-compatible.ts ──HTTPS──► user-selected endpoint
                                                   │
                                                   ▼
                                       IndexedDB ◄──► src/ui/sidepanel.ts
 ```
 
-System components (from `script.md` §0): Side panel (Full UI), Small UI pop-out, Content script, Service worker, Offscreen inference host, Classifier, Local LLM client, Gmail API client, Document Processing Layer, NLP pipeline, Storage (IndexedDB + `chrome.storage`), Notification engine.
+System components (from `script.md` §0): Side panel (Full UI), Small UI pop-out, Content script, Service worker, Offscreen inference host, **Content screening service (planned, Slice F)**, **Inference provider (local/remote)**, Gmail API client, Document Processing Layer, NLP pipeline, Storage (IndexedDB + `chrome.storage`), Notification engine.
 
 ---
 
@@ -162,6 +179,12 @@ Completion is triggered **automatically** when the end time passes (service work
 - `notifications.{milestones, fired, mute}` — milestones: `1_tuan_truoc` / `1_ngay_truoc` / `ngay_dien_ra`.
 - `completedAt`, `versionHistory` (populated by KS-12 updates).
 - An event with **no `start.value`** (including date-only) is excluded from notification milestones until the user fills in the time.
+
+### Inference settings (`LlmSettings`) — provider choice planned
+`provider`: `local` (default) | `openai-compatible`; `endpoint`, `apiKey`, `model`;
+`consentByOrigin: Record<origin, ISO timestamp>`. The API key is local-only and never exported.
+Current code has only the local fields; the `provider`/consent fields are added in S7 per
+`docs/ke-hoach-da-provider.md`.
 
 See **Appendix A** of `script.md` for the documented interfaces. Once code exists, `src/shared/contracts.ts` is the canonical implementation — keep the two in sync.
 
@@ -190,13 +213,13 @@ Use Vietnamese in docs, but map to these English concepts:
 
 ## 8. Documentation conventions
 
-- **Scenario IDs are stable.** `KS-01 … KS-13` are referenced across files, matrices, and the roadmap. Never renumber; append new scenarios (`KS-14`, …).
+- **Scenario IDs are stable.** `KS-01 … KS-14` are referenced across files, matrices, and the roadmap. Never renumber; append new scenarios (`KS-15`, …).
 - **Keep cross-references in sync.** If you add/rename a scenario, update: the catalog table (`script.md` §1), the requirement matrices (§3), Appendix B (roadmap map), and any references in `ke_hoach_thiet_ke_frontend.md` and `ke_hoach_phat_trien.md`.
 - **Event field names must match Appendix A** of `script.md` exactly (`start`, `end`, `label`, `title`, `summary`, `relatedProfiles`, `sources`, `status`, …). When code exists, update `src/shared/contracts.ts` in the same change.
 - **Message payloads live in `src/shared/messages.ts`.** Changing a message requires updating every sender/receiver and the contract tests.
 - **`proposed_technical.md` uses numbered sections (§1–§10).** Preserve numbering when referencing (e.g. "§6 formats", "§7 NormalizedDocument").
 - **Each scenario should have:** objective, precondition, user↔system step table, alternative flows, and a **result/postcondition** line. Maintain this shape when editing.
-- **Roadmap phases (Appendix B):** Phase 1 Browser Page Parser → Phase 2 Gmail API → Phase 3 extraction quality → Phase 4 schedule management (KS-09 full, KS-10, KS-12, KS-13).
+- **Roadmap phases (Appendix B):** Phase 1 Browser Page Parser → Phase 2 Gmail API → Phase 3 extraction quality → Phase 4 schedule management (KS-09 full, KS-10, KS-12, KS-13) → **post-Phase-4 provider choice (KS-14, approved 2026-10-26, not implemented)**.
 
 ### Editing the SVG
 `unfinished_script.svg` is Excalidraw. Text rows are encoded as `<g transform="translate(X Y)">` … `<text x y>…</text>`. Prefer deriving content into `script.md` rather than hand-editing the SVG.
@@ -216,6 +239,7 @@ Use Vietnamese in docs, but map to these English concepts:
 **Don't**
 - Don't translate the docs to English unless asked.
 - Don't introduce requirements that contradict the read-only / active-trigger / no-invented-fields rules.
+- Don't send page/email content to a remote endpoint without an explicit, per-origin user consent — the local default is part of the product contract.
 - Don't delete or rewrite `unfinished_script.svg` (original source artifact).
 - Don't add a UI framework, Dexie, ONNX Runtime, or a second state library without an ADR.
 - Don't introduce a build step other than Vite; don't add remote CDN imports.
@@ -232,7 +256,9 @@ Use Vietnamese in docs, but map to these English concepts:
 | Fix build/manifest config | `vite.config.ts` / `manifest.config.ts` |
 | Adjust frontend design scope | `ke_hoach_thiet_ke_frontend.md` |
 | Adjust tech stack / sprint plan | `ke_hoach_phat_trien.md` (and §3 of this file) |
-| Change classifier or LLM model | `ke_hoach_phat_trien.md` §6–§7, then `proposed_technical.md` |
+| Change screening or LLM model | `ke_hoach_phat_trien.md` §6–§7, `docs/ke-hoach-bo-loc-noi-dung.md`, then `proposed_technical.md` |
+| Change inference location/provider | `docs/ke-hoach-da-provider.md`, then update `script.md` KS-14, `proposed_technical.md` §9, `ke_hoach_phat_trien.md` §7/§9, `ke_hoach_thiet_ke_frontend.md`, and `AGENTS.md` §3–§4 |
+| Content screening (Slice F) | `docs/ke-hoach-bo-loc-noi-dung.md`, then update `script.md` KS-04/KS-05, `proposed_technical.md` §8–§9, `ke_hoach_phat_trien.md` §6/§9, `AGENTS.md` §3–§5, and `docs/DEVIATIONS.md` |
 | Adjust architecture/NLP/security | `proposed_technical.md` |
 | Clarify original requirements | `base_idea.md` (rarely — treat as historical intent) |
 | Backport a new flow into scenarios | `script.md` (derive from `unfinished_script.svg` if relevant) |
@@ -246,12 +272,14 @@ Use Vietnamese in docs, but map to these English concepts:
 - **LLM extraction (Slices A + B accepted 2026-10-23; Slice C accepted 2026-10-24; Slice D accepted 2026-10-24):** contracts carry `origin`/`extractionMeta`/`EventCandidate`/`ExtractionJob`/`LlmSettings`; `src/core/extraction/**` has chunk/prompt/schema/normalize/dedup/pipeline + `profile-match` + `MockProvider`; `src/core/ports/inference.ts` defines `InferenceProvider`; `src/platform/inference/llama-cpp.ts` implements it (health + `/v1/models`, timeout, abort, OpenAI-schema first with fallback, `enable_thinking:false`). Settings form + connection check exist. **Verified against llama.cpp build b10101 with Qwen3.5-4B Q5_K_S (8k context): 6 sample docs, 0 invented dates, 0.3–8.6 s/doc; prompt v2 at measurement time, now prompt v4; only OpenAI `response_format` actually enforces the schema. Chrome UI E2E passed; real-model rerun with v3/profile matching passed 2026-10-23 (9 events, 0 duplicates, 0 invented dates, 0.26–8.4 s/doc; missing-year guard added to `normalizeDateTime`). Slice C offscreen/notification work passed manual acceptance 2026-10-24; Slice D review/duplicate UI passed manual acceptance 2026-10-24; Slice E was measured on 2026-10-24 — 15 fixtures, deterministic MockProvider suite + live `llama-server` harness, 9B IQ4_XS selected, 4B Q5_K_S eliminated for recall < 80%** (`docs/ke-hoach-llm-trich-xuat.md` §9.3, `docs/ban-giao-slice-e.md`, `docs/ket-qua-danh-gia-slice-e.md`, `docs/kiem-tra-slice-d.md`; historical records in `docs/archive/kiem-tra-slice-b.md` and `docs/archive/kiem-tra-slice-c.md`).
 - **Post-acceptance fix done:** event-first extraction + deterministic profile matching after normalize (SB-01, prompt v3); truncation toast also hints at increasing limits (SB-03); date-only sources now keep `DateTimeRef.date` instead of losing the date, ISO dates are checked against the source (`ngay_khong_khop`), and prompt v4 forbids inventing `00:00` (SB-12). Historical details: `docs/archive/ke-hoach-sau-nghiem-thu-b.md`. Slice D adds the review mode, bulk approve/delete, confidence/origin badges, full-quote source view and paraphrase duplicate suggestions (`src/core/event-review.ts`, `src/core/extraction/{confidence,similar}.ts`, `src/ui/{views/event-card.ts,views/event-review.ts,actions/review.ts}`).
 - **Slice D (accepted 2026-10-24):** review mode sorts attention-needing `llm` drafts first without changing global `sortEvents()`; selection/approve/delete are UI-only state; date-only/no-date approval requires confirmation; duplicate suggestions are display-only (no auto-merge). KS-08 deviations recorded in `docs/DEVIATIONS.md`; checklist in `docs/kiem-thu-demo.md` §4.1; record in `docs/kiem-tra-slice-d.md`.
-- **Manual checks pending:** re-run `docs/kiem-thu-demo.md` in Chrome for context menu (page + selection), side-panel widths 320/360/400px, click areas, Gmail best-effort capture, and SPA/regression checks (KT-13/KT-14). Slice C offscreen/notification checks and Slice D review checks are closed by acceptance (2026-10-24).
-- **Build plan:** `ke_hoach_phat_trien.md` — 7 sprints / 14 weeks; web first, Gmail in the final sprint.
-- **Tech stack:** locked in §3 (TypeScript + Vite, no UI framework, local llama.cpp server, linear classifier).
+- **Provider choice (approved 2026-10-26, not implemented):** `docs/ke-hoach-da-provider.md` + `script.md` KS-14 define local default, any OpenAI-compatible endpoint (Gemini), home workstation via Cloudflared, per-origin consent, key handling, optional host permission and acceptance. Current code and demo remain **local-only**; do not claim KS-14 works until S7 ships.
+- **Content screening — Slice F (approved 2026-10-26, not implemented):** local PhoBERT TASK/NON_TASK microservice (`ml_hasevent_filter/`, FastAPI at `127.0.0.1:8000`) used as a **document-level** pre-filter. Modes `off`/`report`/`screen` (default `screen` once shipped), skip threshold `0.85` + at least 3 sentences, fail-open, never screens selections/pasted text, and the LLM always receives the full text (no sentence trimming). Estimated **5–6.5 person-days**, independent of S7. Plan: `docs/ke-hoach-bo-loc-noi-dung.md`; checklist §9 of `docs/kiem-thu-demo.md` is pending implementation.
+- **Manual checks pending:** re-run `docs/kiem-thu-demo.md` in Chrome for context menu (page + selection), side-panel widths 320/360/400px, click areas, Gmail best-effort capture, and SPA/regression checks (KT-13/KT-14). Slice C offscreen/notification checks and Slice D review checks are closed by acceptance (2026-10-24). Provider-choice checks (§8) and content-screening checks (§9) are pending implementation.
+- **Build plan:** `ke_hoach_phat_trien.md` — 7 sprints / 14 weeks; web first, Gmail in the final sprint; **S7 (post-demo) = provider choice**, 7–11 person-days; **Slice F (post-demo, independent) = PhoBERT screening**, 5–6.5 person-days.
+- **Tech stack:** locked in §3 (TypeScript + Vite, no UI framework, local llama.cpp server by default, optional OpenAI-compatible endpoint planned, local PhoBERT screening microservice planned).
 - **Quality gate:** `tsc --noEmit` + ESLint + Vitest + `vite build`; `dist/` is the load-unpacked target.
-- **Inference:** local `llama-server`; **no hard-coded model name** (empty setting uses the loaded model). Verified with Qwen3.5-4B Q5_K_S and Qwen3.5-9B IQ4_XS, 8k context, `enable_thinking:false`; Slice E measured 2–10 s/doc (4B) and 20–34 s/doc (9B). p95 acceptance target is ≤ 90 s/page; 9B measured 34 s.
+- **Inference:** local `llama-server` by default; **no hard-coded model name** (empty setting uses the loaded model). Verified with Qwen3.5-4B Q5_K_S and Qwen3.5-9B IQ4_XS, 8k context, `enable_thinking:false`; Slice E measured 2–10 s/doc (4B) and 20–34 s/doc (9B). p95 acceptance target is ≤ 90 s/page; 9B measured 34 s. Remote OpenAI-compatible endpoint is **planned** (S7).
 - **Storage:** results are saved as drafts (`nhap`); user review moves them to `dang_theo_doi`.
-- **Frontend design scope:** frozen at **P0**, **light mode only**, notification UI capped at **2 buttons** (Chrome Notification API limit; a 3rd action moves into the side panel).
-- **Open follow-ups:** golden set + classifier dataset; OAuth verification requirements; confirmation of Chrome notification button limit; sync `proposed_technical.md` with the new pipeline.
-- **Next demo steps:** Slice E review/commit → event reminders (`chrome.alarms`, KS-10) → Gmail/PDF/DOCX (see `README.md` §6).
+- **Frontend design scope:** frozen at **P0**, **light mode only**, notification UI capped at **2 buttons** (Chrome Notification API limit; a 3rd action moves into the side panel). **P1 addition:** boards B26–B28 for KS-14 (planned for S7, not implemented).
+- **Open follow-ups:** golden set (currently 15/150); screening eval set + real-model measurement (Slice F3); OAuth verification requirements; confirmation of Chrome notification button limit; sync `proposed_technical.md` with the new pipeline; **verify Gemini OpenAI-compatible `response_format` + thinking before S7**; Cloudflared 100 s proxy timeout.
+- **Next demo steps:** provider choice (KS-14, S7) and content screening (Slice F) → event reminders (`chrome.alarms`, KS-10) → Gmail/PDF/DOCX (see `README.md` §6).
