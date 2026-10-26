@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { LlmSettingsSchema } from '../../src/shared/contracts';
 import {
   DEFAULT_LOCAL_ENDPOINT,
+  activeEndpoint,
   effectiveLocalApiKey,
   effectiveLocalEndpoint,
   effectiveLocalValue,
@@ -107,5 +108,19 @@ describe('quay về Máy này giữ cấu hình remote', () => {
   it('local alias đang lưu vẫn được dùng', () => {
     const alias = settings({ provider: 'local', endpoint: 'http://localhost:8080' });
     expect(effectiveLocalEndpoint(alias)).toBe('http://localhost:8080');
+  });
+
+  it('activeEndpoint: local bỏ endpoint remote, remote giữ đúng endpoint đã nhập', () => {
+    const retained = settings({
+      provider: 'local',
+      endpoint: 'https://example.test/v1',
+    });
+    expect(activeEndpoint(retained)).toBe(DEFAULT_LOCAL_ENDPOINT);
+
+    const remote = settings({
+      provider: 'openai-compatible',
+      endpoint: 'https://example.test/v1/',
+    });
+    expect(activeEndpoint(remote)).toBe('https://example.test/v1');
   });
 });

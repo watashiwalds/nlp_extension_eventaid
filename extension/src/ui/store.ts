@@ -89,12 +89,6 @@ export interface ProfileFormState {
   errors: FormErrors;
 }
 
-/** Kết quả kiểm tra kết nối máy chủ mô hình (hiển thị ngay dưới form). */
-export interface LlmHealthState {
-  status: 'checking' | 'ok' | 'error';
-  message: string;
-}
-
 /** Tiến trình một lần trích, hiển thị ở tab Quét nội dung. */
 export interface ExtractionState {
   /** ID job trong `chrome.storage.session`; `'pending'` khi vừa gửi yêu cầu. */
@@ -129,7 +123,6 @@ export interface AppState {
   expandedDocument: boolean;
   pasteOpen: boolean;
   llm: LlmSettings;
-  llmHealth: LlmHealthState | null;
   extraction: ExtractionState | null;
   toast: Toast | null;
   busy: string | null;
@@ -185,7 +178,6 @@ export const store = createStore<AppState>({
   expandedDocument: false,
   pasteOpen: false,
   llm: DEFAULT_LLM_SETTINGS,
-  llmHealth: null,
   extraction: null,
   toast: null,
   busy: null,

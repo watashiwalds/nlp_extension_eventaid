@@ -1,6 +1,11 @@
 import type { ExtractionJob } from '../../shared/contracts';
 import type { RuntimeResponse } from '../../shared/messages';
+import {
+  activeEndpoint,
+  providerAccessProblem,
+} from '../../core/inference/provider-choice';
 import { readJob } from '../../platform/background/jobs';
+import { ensureHostPermission, needsHostPermission } from '../../platform/permissions';
 import { activeDocument, loadAll, showToast, store } from '../store';
 import { messageOf } from './shared';
 
@@ -90,16 +95,36 @@ export async function extractEventsAction(): Promise<void> {
   }
 
   sending = true;
-  store.set({
-    extraction: {
-      jobId: 'pending',
-      stage: 'Đang chuẩn bị trích xuất…',
-      chunkIndex: 0,
-      chunkCount: 0,
-    },
-  });
-
   try {
+    // Chặn trước khi mở job: chưa đồng ý origin remote thì không gửi nội dung.
+    const llm = store.get().llm;
+    const problem = providerAccessProblem(llm);
+    if (problem) {
+      showToast('error', problem);
+      store.set({ tab: 'settings' });
+      return;
+    }
+
+    // Quyền host có thể bị thu hồi trong Chrome; xin lại ngay trong cú click này.
+    const endpoint = activeEndpoint(llm);
+    if (needsHostPermission(endpoint)) {
+      const permission = await ensureHostPermission(endpoint);
+      if (!permission.granted) {
+        showToast('error', permission.reason ?? 'Chưa được cấp quyền truy cập endpoint.');
+        store.set({ tab: 'settings' });
+        return;
+      }
+    }
+
+    store.set({
+      extraction: {
+        jobId: 'pending',
+        stage: 'Đang chuẩn bị trích xuất…',
+        chunkIndex: 0,
+        chunkCount: 0,
+      },
+    });
+
     const response = (await chrome.runtime.sendMessage({
       to: 'background',
       type: 'RUN_EXTRACTION',

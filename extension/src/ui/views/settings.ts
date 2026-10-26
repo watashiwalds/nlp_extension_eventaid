@@ -1,8 +1,15 @@
 import { METHOD_TEXT, SOURCE_TEXT } from '../../shared/constants';
+import type { LlmSettings } from '../../shared/contracts';
+import {
+  DEFAULT_LOCAL_ENDPOINT,
+  effectiveLocalEndpoint,
+  effectiveLocalValue,
+} from '../../core/inference/provider-choice';
 import type { AppState } from '../store';
 import { activeDocument } from '../store';
 import {
   badge,
+  escapeAttr,
   escapeHtml,
   field,
   icon,
@@ -12,45 +19,114 @@ import {
 } from '../components';
 import { formatCharCount } from '../format';
 
-function llmServerCard(state: AppState): string {
-  const llm = state.llm;
-  const health = state.llmHealth;
-  const healthBox = health
-    ? `<p class="alert ${health.status === 'ok' ? 'alert--success' : health.status === 'error' ? 'alert--danger' : ''}">
-        ${health.status === 'checking' ? '<span class="spinner"></span>' : icon(health.status === 'ok' ? 'check' : 'alert')}
-        <span>${escapeHtml(health.message)}</span>
-      </p>`
-    : '';
+function formatConsentTime(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? iso : date.toLocaleString('vi-VN');
+}
+
+function consentList(llm: LlmSettings): string {
+  const entries = Object.entries(llm.consentByOrigin).sort(([a], [b]) => a.localeCompare(b));
+  if (entries.length === 0) {
+    return `<p class="muted small">Chưa đồng ý origin ngoài nào. Lần kiểm tra endpoint ngoài đầu tiên sẽ hỏi trước khi gửi.</p>`;
+  }
+
+  return `<ul class="consent-list">${entries
+    .map(
+      ([origin, at]) => `<li>
+        <div>
+          <code>${escapeHtml(origin)}</code>
+          <span class="muted small">Đồng ý lúc ${escapeHtml(formatConsentTime(at))}</span>
+        </div>
+        <button type="button" class="btn btn--small btn--danger-ghost" data-action="revoke-consent" data-origin="${escapeAttr(
+          origin,
+        )}">Thu hồi</button>
+      </li>`,
+    )
+    .join('')}</ul>`;
+}
+
+function providerChoices(llm: LlmSettings): string {
+  const remote = llm.provider === 'openai-compatible';
+  const localEndpoint = effectiveLocalEndpoint(llm);
+  const localModel = effectiveLocalValue(llm);
+  const remoteEndpoint =
+    remote || llm.endpoint !== DEFAULT_LOCAL_ENDPOINT ? llm.endpoint : '';
+  const consentCount = Object.keys(llm.consentByOrigin).length;
 
   return `<section class="card">
-    ${sectionHeader('Máy chủ mô hình')}
-    <p class="muted small">Trích sự kiện bằng mô hình chạy trên chính máy bạn. Bản này chỉ cấp quyền tới <code>http://127.0.0.1:8080</code>.</p>
+    ${sectionHeader('Nơi chạy suy luận')}
+    <p class="muted small">Mặc định chạy trên máy này. Nội dung chỉ rời trình duyệt khi bạn chọn endpoint ngoài và đồng ý cho đúng origin.</p>
     <form id="llm-settings-form" class="form" novalidate>
-      ${field({
-        id: 'llm-endpoint',
-        label: 'Địa chỉ máy chủ',
-        control: textInput('llm-endpoint', 'endpoint', llm.endpoint, {
-          placeholder: 'http://127.0.0.1:8080',
-        }),
-        hint: 'Địa chỉ của llama-server. Đổi cổng khác sẽ cần cập nhật quyền của tiện ích.',
-      })}
-      ${field({
-        id: 'llm-model',
-        label: 'Tên model (không bắt buộc)',
-        control: textInput('llm-model', 'model', llm.model, { placeholder: 'Để trống = model đang nạp' }),
-        hint: 'Để trống để dùng đúng model llama-server đang nạp; chỉ nhập khi muốn ghi đè nhãn gửi kèm.',
-      })}
-      ${field({
-        id: 'llm-api-key',
-        label: 'API key',
-        control: textInput('llm-api-key', 'apiKey', llm.apiKey, {
-          type: 'password',
-          placeholder: 'Để trống nếu máy chủ không đặt khoá',
-        }),
-        hint: 'Chỉ lưu trên máy này và gửi trong header Authorization.',
-      })}
+      <fieldset class="provider-choices">
+        <legend class="provider-choices__legend">Nơi chạy suy luận</legend>
+        <label class="provider-option">
+          <input class="provider-option__input" type="radio" name="provider" value="local" ${
+            remote ? '' : 'checked'
+          }>
+          <span class="provider-option__body">
+            <span class="provider-option__title">Máy này ${badge('Mặc định', 'success')}</span>
+            <span class="muted small">llama-server tại <code>${escapeHtml(localEndpoint)}</code> · ${
+              localModel ? `model ${escapeHtml(localModel)}` : 'model đang nạp'
+            }</span>
+          </span>
+        </label>
+        <label class="provider-option">
+          <input class="provider-option__input" type="radio" name="provider" value="openai-compatible" ${
+            remote ? 'checked' : ''
+          }>
+          <span class="provider-option__body">
+            <span class="provider-option__title">Endpoint khác ${badge('OpenAI-compatible', 'info')}</span>
+            <span class="muted small">Gemini, dịch vụ OpenAI-compatible hoặc máy trạm qua Cloudflared.</span>
+          </span>
+        </label>
+      </fieldset>
+
+      <div class="provider-config" data-provider-panel="local" ${remote ? 'hidden' : ''}>
+        <dl class="detail-grid">
+          <div><dt>Địa chỉ</dt><dd><code>${escapeHtml(localEndpoint)}</code></dd></div>
+          <div><dt>Model</dt><dd>${localModel ? escapeHtml(localModel) : 'Model đang nạp'}</dd></div>
+        </dl>
+        <p class="field__hint">Không gửi nội dung ra ngoài máy. Muốn dùng <code>localhost</code> hoặc <code>[::1]</code> cổng 8080, chọn Endpoint khác và nhập địa chỉ đó (vẫn không cần đồng ý gửi dữ liệu).</p>
+      </div>
+
+      <div class="provider-config" data-provider-panel="openai-compatible" ${remote ? '' : 'hidden'}>
+        ${field({
+          id: 'llm-endpoint',
+          label: 'Base URL',
+          control: textInput('llm-endpoint', 'endpoint', remoteEndpoint, {
+            placeholder: 'https://api.example.com/v1',
+          }),
+          hint: 'Phần trước /chat/completions, thường kết thúc bằng /v1. Endpoint ngoài bắt buộc HTTPS.',
+        })}
+        ${field({
+          id: 'llm-model',
+          label: 'Tên model (không bắt buộc)',
+          control: textInput('llm-model', 'model', llm.model, { placeholder: 'Để trống = tự dò từ /models' }),
+          hint: 'Để trống để extension tự dò model đầu tiên; chỉ nhập khi muốn ghi đè.',
+        })}
+        <div class="field">
+          <label class="field__label" for="llm-api-key">API key (nếu endpoint yêu cầu)</label>
+          ${textInput('llm-api-key', 'apiKey', llm.apiKey, {
+            type: 'password',
+            placeholder: 'Chỉ lưu trên máy này',
+          })}
+          <p class="field__hint">Gửi trong header Authorization, không đưa vào URL hay tệp xuất JSON.</p>
+          <div class="form__actions">
+            <button type="button" class="btn btn--small btn--danger-ghost" data-action="delete-llm-key" ${
+              llm.apiKey ? '' : 'disabled'
+            }>${icon('trash')}<span>Xoá key đã lưu</span></button>
+          </div>
+        </div>
+
+        <div class="consent-box">
+          <p class="consent-box__title">${icon('alert')} Quyền gửi dữ liệu</p>
+          ${consentList(llm)}
+          ${consentCount > 0 ? `<p class="field__hint">Đổi sang origin khác sẽ phải đồng ý lại. Thu hồi sẽ chặn lần chạy remote tiếp theo.</p>` : ''}
+        </div>
+      </div>
+
       <details class="about">
-        <summary>Nâng cao</summary>
+        <summary>Nâng cao (áp dụng cho cả hai nơi)</summary>
         <div class="grid-2">
           ${field({
             id: 'llm-temperature',
@@ -89,11 +165,12 @@ function llmServerCard(state: AppState): string {
           })}
         </div>
       </details>
+
       <div class="form__actions">
         <button type="submit" class="btn btn--primary">${icon('check')}<span>Lưu cài đặt</span></button>
         ${secondaryButton('check-llm', 'Kiểm tra kết nối', 'link')}
       </div>
-      ${healthBox}
+      <div id="llm-health" class="llm-health" role="status" aria-live="polite"></div>
     </form>
   </section>`;
 }
@@ -108,7 +185,7 @@ export function settingsView(state: AppState): string {
       </div>
     </div>
 
-    ${llmServerCard(state)}
+    ${providerChoices(state.llm)}
 
     <section class="card">
       ${sectionHeader('Dữ liệu cục bộ')}
@@ -132,7 +209,7 @@ export function settingsView(state: AppState): string {
       <div class="danger-zone">
         <div>
           <strong>Xoá toàn bộ dữ liệu</strong>
-          <p class="muted small">Xoá nội dung đã đọc, hồ sơ và sự kiện khỏi trình duyệt. Không thể hoàn tác.</p>
+          <p class="muted small">Xoá nội dung đã đọc, hồ sơ, sự kiện, cài đặt và consent. Không thể hoàn tác.</p>
         </div>
         <button type="button" class="btn btn--danger" data-action="clear-all">${icon('trash')}<span>Xoá</span></button>
       </div>
@@ -142,7 +219,9 @@ export function settingsView(state: AppState): string {
       ${sectionHeader('Quyền riêng tư')}
       <ul class="bullets">
         <li><strong>Chỉ đọc khi bạn bấm.</strong> Trang chỉ được đọc khi bạn chủ động quét hoặc chọn menu chuột phải; không đọc nền.</li>
-        <li><strong>Chỉ gửi tới máy của bạn.</strong> Nội dung chỉ được gửi tới máy chủ mô hình chạy trên chính máy bạn (<code>127.0.0.1</code>); không có máy chủ từ xa.</li>
+        <li><strong>Mặc định chỉ chạy trên máy bạn.</strong> Suy luận dùng <code>llama-server</code> tại <code>127.0.0.1</code>; không có dữ liệu nào rời máy nếu bạn không đổi cấu hình.</li>
+        <li><strong>Endpoint ngoài phải được bạn cho phép.</strong> Nội dung chỉ được gửi sau khi bạn đồng ý cho đúng origin, và có thể thu hồi bất cứ lúc nào.</li>
+        <li><strong>API key chỉ lưu cục bộ.</strong> Key nằm trong bộ nhớ trình duyệt trên máy này, không có trong tệp xuất JSON và không ghi log.</li>
       </ul>
     </section>
 
@@ -161,7 +240,7 @@ export function settingsView(state: AppState): string {
           <li>Chưa có nhắc việc theo mốc thời gian.</li>
           <li>Chưa đọc trực tiếp Gmail hay tệp PDF/DOCX — hãy dùng “Dán văn bản”.</li>
         </ul>
-        <p class="small muted">Mọi suy luận chạy trên máy này; nội dung không được gửi ra ngoài.</p>
+        <p class="small muted">Mặc định mọi suy luận chạy trên máy này. Nếu bạn chọn endpoint ngoài, nội dung chỉ được gửi sau khi bạn đồng ý.</p>
       </details>
     </section>
   </div>`;

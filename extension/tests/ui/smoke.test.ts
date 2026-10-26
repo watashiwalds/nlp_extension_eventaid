@@ -163,7 +163,8 @@ describe('render side panel', () => {
     const settings = renderApp(store.get());
     expect(settings).toContain('Xuất JSON');
     expect(settings).toContain('Về phiên bản này');
-    expect(settings).toContain('máy chủ mô hình chạy trên chính máy bạn');
+    expect(settings).toContain('Mặc định chạy trên máy này');
+    expect(settings).toContain('Endpoint khác');
     expect(settings).toContain('llm-settings-form');
     expect(settings).toContain('Kiểm tra kết nối');
   });

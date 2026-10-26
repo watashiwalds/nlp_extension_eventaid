@@ -1,6 +1,7 @@
 import { DOCUMENT_PREVIEW_CHARS, METHOD_TEXT, SOURCE_TEXT } from '../../shared/constants';
 import { relativeLabel } from '../../core/dates';
 import { unlinkedDocuments } from '../../core/documents';
+import { endpointOrigin } from '../../core/inference/provider-choice';
 import type { AppState } from '../store';
 import { activeDocument } from '../store';
 import {
@@ -127,6 +128,10 @@ function extractionCard(state: AppState): string {
   const counter = progress.chunkCount
     ? `<span class="muted small">Đoạn ${progress.chunkIndex}/${progress.chunkCount}</span>`
     : '';
+  const where =
+    state.llm.provider === 'openai-compatible'
+      ? `Đang gửi nội dung tới ${endpointOrigin(state.llm.endpoint) ?? 'endpoint ngoài'}.`
+      : 'Máy chủ mô hình chạy trên chính máy bạn.';
   return `<section class="card extraction-card" role="status" aria-live="polite">
     <div class="extraction-card__head">
       <span class="spinner"></span>
@@ -136,7 +141,7 @@ function extractionCard(state: AppState): string {
       </div>
       <button type="button" class="btn btn--small btn--danger-ghost" data-action="cancel-extraction">Huỷ</button>
     </div>
-    <p class="muted small">Máy chủ mô hình chạy trên chính máy bạn. Có thể đóng bảng điều khiển; quá trình trích xuất vẫn chạy tiếp và sẽ có thông báo khi xong.</p>
+    <p class="muted small">${escapeHtml(where)} Có thể đóng bảng điều khiển; quá trình trích xuất vẫn chạy tiếp và sẽ có thông báo khi xong.</p>
   </section>`;
 }
 

@@ -2,6 +2,7 @@ import type { EventStatus, Label } from '../../shared/contracts';
 import { clearAll, exportAll, importAll } from '../../platform/storage/db';
 import { DEFAULT_LLM_SETTINGS } from '../../platform/storage/settings';
 import { EMPTY_EVENT_DRAFT, EMPTY_PROFILE_DRAFT, loadAll, showToast, store } from '../store';
+import { clearSessionConsent } from './settings';
 import { messageOf, valueOf } from './shared';
 
 export async function exportData(): Promise<void> {
@@ -48,6 +49,7 @@ export function clearAllData(): void {
     store.set({ busy: 'Đang xoá dữ liệu…' });
     try {
       await clearAll();
+      clearSessionConsent();
       store.set({
         documents: [],
         activeDocumentId: null,
@@ -68,7 +70,6 @@ export function clearAllData(): void {
         },
         profileForm: { open: false, editingId: null, values: EMPTY_PROFILE_DRAFT, errors: {} },
         llm: DEFAULT_LLM_SETTINGS,
-        llmHealth: null,
       });
       showToast('success', 'Đã xoá toàn bộ dữ liệu cục bộ.');
     } catch (error) {

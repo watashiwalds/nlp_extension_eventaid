@@ -4,6 +4,7 @@ import { parseStoredJob } from '../platform/background/jobs';
 import { hideToast, loadAll, store } from './store';
 import type { Tab } from './store';
 import { renderApp } from './render';
+import { handleProviderChange, syncProviderPanels } from './provider-panels';
 import { activeDocument } from './store';
 import {
   applyFilterFromForm,
@@ -21,6 +22,7 @@ import {
   consumePendingOpen,
   deleteActiveDocumentAction,
   deleteEventAction,
+  deleteLlmApiKeyAction,
   deleteProfileAction,
   deleteSelectedDrafts,
   deleteUnlinkedDocumentsAction,
@@ -33,6 +35,7 @@ import {
   openDuplicateEvent,
   openEventForm,
   openProfileForm,
+  revokeLlmConsentAction,
   saveEventFromForm,
   saveLlmSettingsFromForm,
   savePastedText,
@@ -57,6 +60,7 @@ function render(): void {
   const currentView = root.querySelector('#view');
   if (currentView instanceof HTMLElement) scrollTop = currentView.scrollTop;
   root.innerHTML = renderApp(store.get());
+  syncProviderPanels(root);
   syncReviewSelectionUi(root);
   const nextView = root.querySelector('#view');
   if (nextView instanceof HTMLElement) nextView.scrollTop = scrollTop;
@@ -111,8 +115,16 @@ function handleClick(event: MouseEvent): void {
     case 'cancel-extraction':
       cancelExtractionAction();
       break;
-    case 'check-llm':
-      void checkLlmHealthAction();
+    case 'check-llm': {
+      const form = trigger.closest('form');
+      void checkLlmHealthAction(form instanceof HTMLFormElement ? form : undefined);
+      break;
+    }
+    case 'revoke-consent':
+      void revokeLlmConsentAction(trigger.dataset.origin ?? '');
+      break;
+    case 'delete-llm-key':
+      void deleteLlmApiKeyAction();
       break;
     case 'open-paste':
       store.set({ tab: 'capture', pasteOpen: true });
@@ -252,6 +264,8 @@ function handleChange(event: Event): void {
     selectDocument(target.value);
     return;
   }
+
+  if (handleProviderChange(root, target)) return;
 
   if (target.dataset.action === 'toggle-draft') {
     toggleDraftSelection(target.dataset.id ?? '');

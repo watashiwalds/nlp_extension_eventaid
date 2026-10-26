@@ -19,7 +19,13 @@ export {
   extractEventsAction,
   syncExtractionJob,
 } from './extract';
-export { checkLlmHealthAction, saveLlmSettingsFromForm } from './settings';
+export {
+  checkLlmHealthAction,
+  clearLlmHealth,
+  deleteLlmApiKeyAction,
+  revokeLlmConsentAction,
+  saveLlmSettingsFromForm,
+} from './settings';
 export {
   closeProfileForm,
   deleteProfileAction,

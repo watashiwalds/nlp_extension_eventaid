@@ -137,3 +137,12 @@ export function effectiveLocalApiKey(settings: Pick<LlmSettings, 'endpoint' | 'a
 export function providerLabel(settings: Pick<LlmSettings, 'provider'>): string {
   return settings.provider === 'openai-compatible' ? 'endpoint ngoài' : 'Máy này';
 }
+
+/** Endpoint thật sẽ được gọi, đã áp quy tắc giữ/không dùng giá trị remote khi chọn local. */
+export function activeEndpoint(
+  settings: Pick<LlmSettings, 'provider' | 'endpoint'>,
+): string {
+  return settings.provider === 'openai-compatible'
+    ? normalizeEndpoint(settings.endpoint)
+    : effectiveLocalEndpoint(settings);
+}
