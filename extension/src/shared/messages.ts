@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FilterDecisionSchema, FilterRunModeSchema } from './contracts';
 import type { EventStatus, NormalizedDocument } from './contracts';
 
 /**
@@ -25,6 +26,8 @@ export const RuntimeMessageSchema = z.union([
     to: z.literal('background'),
     type: z.literal('RUN_EXTRACTION'),
     documentId: z.string().min(1),
+    /** Không có = `auto` (theo cài đặt đã lưu). */
+    filterRunMode: FilterRunModeSchema.optional(),
   }),
   z.object({
     to: z.literal('background'),
@@ -36,6 +39,7 @@ export const RuntimeMessageSchema = z.union([
     type: z.literal('RUN_EXTRACTION'),
     jobId: z.string().min(1),
     documentId: z.string().min(1),
+    filterRunMode: FilterRunModeSchema.optional(),
   }),
   z.object({
     to: z.literal('offscreen'),
@@ -60,6 +64,14 @@ export const RuntimeMessageSchema = z.union([
     duplicateCount: z.number().int().nonnegative(),
     chunkCount: z.number().int().nonnegative(),
     truncated: z.boolean(),
+    /** Bộ trường sàng lọc — mặc định để message cũ vẫn parse được. */
+    filterApplied: z.boolean().default(false),
+    filterDecision: FilterDecisionSchema.nullable().default(null),
+    filterEvidenceCount: z.number().int().nonnegative().default(0),
+    filterTotalSentences: z.number().int().nonnegative().default(0),
+    filterConfidence: z.number().min(0).max(1).nullable().default(null),
+    filterLatencyMs: z.number().int().nonnegative().default(0),
+    filterNote: z.string().nullable().default(null),
   }),
   z.object({
     to: z.literal('background'),

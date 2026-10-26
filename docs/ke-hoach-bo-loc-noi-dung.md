@@ -1,7 +1,9 @@
 # Kế hoạch tích hợp bước sàng lọc nội dung PhoBERT (ml_hasevent_filter)
 
-> Trạng thái: **kế hoạch đã chốt hướng, chưa triển khai** (chốt 2026-10-26).
-> Tài liệu liên quan đã được đồng bộ ngày 2026-10-26 (xem §13); **mã nguồn chưa đổi**.
+> Trạng thái: **F0 đã triển khai (2026-10-26); F1–F4 chưa triển khai.**
+> Hợp đồng + lõi thuần đã có trong mã nhưng **chưa nối vào job/UI** — bước sàng lọc chưa hoạt động;
+> xem nhật ký §12.4. Tài liệu liên quan đã đồng bộ ngày 2026-10-26 (xem §13).
+> Chia phiên triển khai chi tiết ở §12.1 (P0–P12); ba điểm bổ sung khi rà soát code ở §0.1.
 > Phạm vi: dùng `ml_hasevent_filter` làm **bước sàng lọc cấp tài liệu** trước khi gọi LLM.
 > **Không sửa một dòng nào trong `ml_hasevent_filter/`.**
 > Liên quan: `script.md` KS-05 (pipeline 6 bước), `ke_hoach_phat_trien.md` §2/§6,
@@ -24,6 +26,17 @@ Hệ quả quan trọng của Q1: pipeline **không cắt bớt câu** gửi cho
 **không** hứa giảm số đoạn/giảm latency LLM trên tài liệu có sự kiện; giá trị nằm ở
 (a) bỏ hẳn lần gọi LLM trên tài liệu không liên quan, (b) giảm sự kiện rác, (c) tín hiệu rõ ràng
 cho người dùng. Đổi lại, rủi ro mất ngữ cảnh khi cắt câu biến mất hoàn toàn.
+
+### 0.1. Bổ sung khi rà soát code (2026-10-26)
+
+Ba điểm dưới đây được phát hiện khi đối chiếu kế hoạch với mã nguồn hiện tại; đã chốt để không
+phải quyết định lại trong lúc code.
+
+| # | Vấn đề | Quyết định |
+|---|---|---|
+| Q7 | Bản trước xếp E01–E15 là mẫu dương, nhưng `E06` trong `tests/fixtures/eval/cases-b.ts` là mẫu âm: `category: 'negative'`, `expected: []`, `source: 'paste'` | Bộ dương là **14 mẫu E01–E05, E07–E15**; E06 chuyển sang bộ âm. Chỉ số “0 tài liệu dương bị bỏ sót” tính trên 14 mẫu. Vì `source = 'paste'`, E06 chỉ đo được ở mức model, không đo qua pipeline (Q2 luôn bỏ qua `paste`). |
+| Q8 | §9.2 cần hiển thị “chắc chắn 91%” và “1,8 s” nhưng §5.3 thiếu trường | Thêm `filterConfidence` và `filterLatencyMs` vào `ExtractionJobSchema` và `JOB_DONE`, đều có mặc định để tương thích ngược. |
+| Q9 | Chưa viết rõ thứ tự ưu tiên của `filterRunMode`, tài liệu rỗng và nghĩa của `filterApplied` | `filterRunMode = 'off'` thắng mọi cấu hình; `'force'` chạy `screen`; `'auto'`/không có thì theo `settings.mode`; `selection`/`paste` luôn `off`. Không có cửa sổ nào ⇒ `uncertain`. `filterApplied = true` chỉ khi **tất cả** cửa sổ phân tích xong; lỗi/timeout bất kỳ ⇒ `false` + `filterNote` (fail-open). |
 
 ---
 
@@ -222,14 +235,17 @@ Mở rộng **tương thích ngược** (mọi trường mới có `.default()`)
 
 ```ts
 // ExtractionJobSchema
-filterApplied: z.boolean().default(false),        // đã chạy và có kết quả dùng được
+filterApplied: z.boolean().default(false),        // đã chạy và có kết quả dùng được cho toàn tài liệu
 filterDecision: z.enum(['has_event', 'no_event', 'uncertain']).nullable().default(null),
 filterEvidenceCount: z.number().int().nonnegative().default(0),   // số câu TASK
 filterTotalSentences: z.number().int().nonnegative().default(0),
+/** Xác suất của quyết định (TASK nếu has_event, NON_TASK nếu no_event); null nếu không có. */
+filterConfidence: z.number().min(0).max(1).nullable().default(null),
+filterLatencyMs: z.number().int().nonnegative().default(0),
 filterNote: z.string().nullable().default(null),  // vd "Sàng lọc không phản hồi — đã trích xuất toàn bộ"
 ```
 
-`JOB_DONE` mang đúng bộ trường trên (1 cờ + 1 enum + 2 số + 1 ghi chú); cập nhật mọi
+`JOB_DONE` mang đúng bộ trường trên (1 cờ + 1 enum + 4 số + 1 ghi chú); cập nhật mọi
 sender/receiver và `tests/shared/contracts.test.ts`.
 
 ---
@@ -253,6 +269,7 @@ function aggregateDecision(windows, results, settings): FilterDecision
 | Trường hợp | Kết quả |
 |---|---|
 | Có **bất kỳ** cửa sổ `hasTask = true` | `'has_event'` |
+| Không có cửa sổ nào (văn bản rỗng) | `'uncertain'` |
 | Có cửa sổ lỗi/timeout | `'uncertain'` (fail-open) |
 | `Σ totalSentences < minSentencesToSkip` | `'uncertain'` (tài liệu quá ngắn để kết luận) |
 | `min(confidence)` của mọi cửa sổ ≥ `skipConfidence` | `'no_event'` |
@@ -261,6 +278,9 @@ function aggregateDecision(windows, results, settings): FilterDecision
 `min(...)` (không phải `max`) là cố ý: lấy **bằng chứng yếu nhất**, bảo thủ cho recall. Khi tất cả
 cửa sổ đều `has_task = false`, `confidence` của từng cửa sổ là xác suất NON_TASK cao nhất — đúng
 đại lượng cần so với `skipConfidence`.
+
+`filterApplied` chỉ `true` khi **tất cả** cửa sổ phân tích thành công (kể cả ở `report`); lỗi giữa
+chừng chuyển sang fail-open với `filterApplied = false` và `filterNote` cụ thể.
 
 ### 6.3. Hành vi theo chế độ
 
@@ -332,10 +352,12 @@ offscreen   runExtractionJob(documentId, deps, onProgress, signal)
        ✗ lỗi giữa chừng → fail-open, filterNote, đi tiếp
        ✗ signal.aborted → FilterError('aborted') → JOB_CANCELLED
   6. decision = aggregateDecision(...)
-       'no_event' + mode 'screen' → JOB_DONE (0 sự kiện, filterDecision = 'no_event')
+       'no_event' + mode 'screen' → JOB_DONE (0 sự kiện, filterDecision = 'no_event',
+                                    KHÔNG tạo provider/health LLM)
        còn lại → extractEvents(document NGUYÊN VĂN)   // không đổi tham số
   7. lưu nháp như hiện tại
-  8. JOB_DONE kèm filterApplied / filterDecision / evidenceCount / totalSentences / note
+  8. JOB_DONE kèm filterApplied / filterDecision / evidenceCount / totalSentences /
+     confidence / latencyMs / note
 ```
 
 Kết thúc sớm ở bước 6 **không phải lỗi**: `JOB_DONE` với `savedCount = 0`,
@@ -420,17 +442,19 @@ Health hiển thị thiết bị (`cpu`/`cuda`) vì ảnh hưởng trực tiếp
 |---|---|
 | `tests/core/extraction-prefilter.test.ts` | cửa sổ ≤ `windowChars`, phủ kín `effectiveChars`, không cắt giữa từ, tài liệu rỗng/1 cửa sổ, tài liệu dài hơn ngân sách; `aggregateDecision` bảng chân trị (8 ca: có task ở cửa sổ 2, lỗi 1 cửa sổ, tài liệu 2 câu, confidence 0.84/0.85, nhiều cửa sổ lấy min, …); `summarizeFilter` |
 | `tests/platform/phobert-filter.test.ts` | mock `fetch` như `llama-cpp.test.ts`: 200 hợp lệ; 200 thiếu trường ⇒ `invalid-response`; 422 (quá 5000) ⇒ `http` kèm gợi ý; 500; timeout; abort; `/health` 200/503/không kết nối; cắt `/` cuối endpoint |
-| `tests/platform/offscreen-job.test.ts` (mở rộng) | `screen` + `no_event` ⇒ không gọi provider, `savedCount = 0`; `screen` + `has_event` ⇒ provider nhận **nguyên văn**; `report` + `no_event` ⇒ **vẫn** gọi provider; `selection`/`paste` ⇒ không gọi filter; lỗi filter ⇒ toàn văn + `filterNote`; `filterRunMode: 'off'` ⇒ không gọi filter; huỷ giữa bước sàng lọc ⇒ `aborted` |
+| `tests/platform/offscreen-job.test.ts` (mở rộng) | `screen` + `no_event` ⇒ không gọi provider, `savedCount = 0`; `screen` + `has_event` ⇒ provider nhận **nguyên văn**; `report` + `no_event` ⇒ **vẫn** gọi provider; `selection`/`paste` ⇒ không gọi filter; lỗi filter ⇒ toàn văn + `filterNote` + `filterApplied = false`; `filterRunMode: 'off'` ⇒ không gọi filter; huỷ giữa bước sàng lọc ⇒ `aborted`; `filterConfidence`/`filterLatencyMs` khớp kết quả |
 | `tests/shared/contracts.test.ts` (mở rộng) | job cũ thiếu trường lọc vẫn parse được (mặc định) |
 | `tests/ui/smoke.test.ts` (mở rộng) | card cài đặt render, không lỗi escape |
 
 ### 11.2. Bộ mẫu
 
 `tests/fixtures/filter/`:
-- **Dương (15 mẫu E01–E15 sẵn có)** — mọi mẫu đều phải cho `has_event`. Đây là phép thử
-  "không bỏ sót" quan trọng nhất.
-- **Âm (10–15 mẫu mới tự soạn)** — menu điều hướng, footer, quảng cáo, luồng bình luận, trang
+- **Dương (14 mẫu E01–E05, E07–E15 sẵn có)** — mọi mẫu đều phải cho `has_event`. Đây là phép thử
+  "không bỏ sót" quan trọng nhất. E06 **không** thuộc bộ dương: đây là bản tin không có sự kiện,
+  `expected: []`, `source: 'paste'` (§0.1 Q7).
+- **Âm (E06 + 10–15 mẫu mới tự soạn)** — menu điều hướng, footer, quảng cáo, luồng bình luận, trang
   đăng nhập, email xã giao, thông báo bảo trì không có mốc thời gian. Không có dữ liệu cá nhân thật.
+  Vì E06 là `paste`, nó chỉ đo được ở mức model; không dùng nó để đo tỉ lệ bỏ qua của pipeline.
 
 `tests/eval/filter.eval.test.ts` (tất định, `MockContentFilter`): kiểm tra **hành vi pipeline** —
 `screen` chặn đúng khi mock trả `no_event`, vẫn trích xuất khi `has_event`/`uncertain`, không gọi
@@ -447,12 +471,15 @@ khi chạy `screen`** để so với baseline không lọc. Đây là nguồn s�
 
 | Chỉ số | Ngưỡng |
 |---|---|
-| **Tài liệu dương bị bỏ sót** (15 mẫu E01–E15 → `no_event`) | **0** |
+| **Tài liệu dương bị bỏ sót** (14 mẫu E01–E05, E07–E15 → `no_event`) | **0** |
 | Tỉ lệ bỏ qua trên mẫu âm | ≥ 70% |
 | Sự kiện bị mất khi so `screen` với baseline không lọc (trên mẫu dương) | **0** |
 | Latency sàng lọc/tài liệu | p95 ≤ 8 s (CPU), ≤ 2 s (CUDA) |
 | Lỗi bước sàng lọc | **không lần nào** làm hỏng job (fail-open) |
 | `npm run typecheck` / `lint` / `test` / `build` | pass; test mới chạy trong CI không cần Python |
+
+> Bộ dương gồm **14 mẫu** (E01–E05, E07–E15); E06 là mẫu âm và là `paste` nên chỉ đo ở mức model
+> (§0.1 Q7, §11.2). Không dùng E06 để tính chỉ số “tài liệu dương bị bỏ sót”.
 
 > Quy tắc chốt: nếu chỉ số đầu tiên > 0, nâng `skipConfidence`/`minSentencesToSkip` hoặc hạ mặc định
 > về `report` **trước khi** phát hành. Không tuyên bố "đã sàng lọc" khi chưa có số từ §11.3.
@@ -460,6 +487,84 @@ khi chạy `screen`** để so với baseline không lọc. Đây là nguồn s�
 ---
 
 ## 12. Chia slice & tiêu chí nghiệm thu
+
+### 12.1. Chia phiên thực hiện (P0–P12)
+
+Mỗi phiên là một đơn vị giao việc độc lập: một mục tiêu, danh sách file đóng, gate xanh và báo cáo
+ngắn. P0–P12 ánh xạ vào các slice F0–F3 bên dưới; **tổng công không đổi**, chỉ tăng số điểm kiểm tra.
+
+| Phiên | Slice | Phạm vi chính | File chính | DoD tham chiếu | Phụ thuộc | Công |
+|---|---|---|---|---|---|---|
+| **P0** | Chuẩn bị | Chạy `uvicorn`, xác nhận `/health` + `/analyze`; không sửa mã nguồn/tài liệu | — | §14 | — | 0,25 |
+| **P1** | F0a | Port, `filter-types`, `FilterSettingsSchema`, mở rộng job + message | `src/core/ports/content-filter.ts`, `src/core/extraction/filter-types.ts`, `src/shared/{contracts,messages,constants}.ts` | §5; contract test | — | 0,5 |
+| **P2** | F0b | Chia cửa sổ, gộp quyết định, mock filter | `src/core/extraction/{prefilter,mock-filter}.ts` | §6; §11.1 (core) | P1 | 0,5 |
+| **P3** | F1a | HTTP client PhoBERT + test mock `fetch` | `src/platform/inference/phobert-filter.ts` | §11.1 (client) | P1 | 0,5 |
+| **P4** | F1b | Lưu cài đặt, card UI, health, manifest/CSP | `src/platform/storage/filter-settings.ts`, `src/ui/{store.ts,views/settings.ts,actions/settings.ts,actions/index.ts,sidepanel.ts}`, `manifest.config.ts` | §9.1, §10 | P3 | 0,75 |
+| **P5** | F2a | Nối sàng lọc vào job, background, notification | `src/platform/offscreen/**`, `src/platform/background/**` | §8; §11.1 (job) | P1, P2, P3 | 0,75 |
+| **P6** | F2b | Checkbox, dòng kết luận, nút “Trích xuất toàn bộ” | `src/ui/actions/extract.ts`, `src/ui/views/capture.ts`, `src/ui/{store.ts,sidepanel.ts}`, `tests/ui/smoke.test.ts` | §9.2 | P4, P5 | 0,5 |
+| **P7** | F2c | Nghiệm thu tay 5 kịch bản + huỷ giữa bước sàng lọc | `docs/kiem-tra-slice-f.md`, `docs/kiem-thu-demo.md` §9 | §12.2 | P6, P0 | 0,25 |
+| **P8** | F3a | Mẫu âm + eval tất định | `tests/fixtures/filter/**`, `tests/eval/filter.eval.test.ts` | §11.2 | P2, P5 | 0,5 |
+| **P9** | F3b | Đo thật, chốt ngưỡng, ghi kết quả | `tests/eval/filter.live.eval.test.ts`, `docs/ket-qua-bo-loc.md` | §11.3–§11.4 | P7, P8, P0 | 0,75 |
+| **P10** | F4a | Đồng bộ tài liệu kiến trúc | `AGENTS.md` §3–§5, `docs/DEVIATIONS.md`, `proposed_technical.md`, `ke_hoach_phat_trien.md` | §13 | P6 | 0,25 |
+| **P11** | F4b | Đồng bộ tài liệu hành vi | `script.md` KS-05, `README.md`, `extension/README.md`, `ke_hoach_thiet_ke_frontend.md` | §13 | P6, P7 | 0,25 |
+| **P12** | Đóng slice | Trạng thái cuối, số đo, gate cuối | `AGENTS.md` §11, `docs/ke-hoach-bo-loc-noi-dung.md`, `docs/ket-qua-bo-loc.md` | §12 + AGENTS §11 | P9, P10, P11 | 0,25 |
+
+**Thứ tự & chạy song song**
+
+- Đường bắt buộc: `P1 → P2 → P5 → P6 → P7 → P9 → P12`.
+- Nhánh client: `P1 → P3 → P4`; P4 có thể chạy song song P5.
+- Nhánh đo: `P2 → P8`; P8 có thể chạy song song P4/P6.
+- Tài liệu: `P6 → P10` và `P6 → P11`; P10/P11 có thể chạy song song P9 nhưng số liệu cuối chỉ
+  điền ở P12.
+- **Không chạy song song:** P4 với P6 (cùng `src/ui/store.ts`, `src/ui/sidepanel.ts`); P7 với P9
+  (P9 cần kết quả nghiệm thu tay).
+- P0 phải xong trước P4 (kiểm tra health thật), P7 và P9.
+- P9 cần thêm `llama-server` cho baseline không lọc; nếu chỉ đo bước sàng lọc thì không cần.
+- P0 có thể dùng venv ngoài `ml_hasevent_filter/` để giữ thư mục bàn giao sạch (xem §14).
+- Nếu chạy nhiều agent: mỗi phiên một branch/worktree; P1 merge trước tất cả.
+
+### 12.2. Phiên nghiệm thu tay P7
+
+Chạy trong Chrome với `uvicorn` (và `llama-server` cho các ca cần LLM):
+
+- (a) `off` → hành vi giống hệt hiện tại.
+- (b) `report` → có dòng kết luận, số sự kiện không đổi so với baseline.
+- (c) `screen` + tài liệu dương → sự kiện y hệt baseline không lọc.
+- (d) `screen` + tài liệu âm → 0 sự kiện, có nút “Trích xuất toàn bộ”; bấm lại thì chạy LLM.
+- (e) tắt Python giữa chừng → job vẫn xong với toàn văn + cảnh báo vàng.
+- Huỷ giữa bước sàng lọc → `Đã huỷ`, không lưu nháp.
+
+Ghi kết quả từng ca vào `docs/kiem-tra-slice-f.md`. Ca lỗi tách thành phiên sửa riêng, không gộp
+vào P8/P9.
+
+### 12.3. Quy tắc chung cho mọi phiên
+
+- Mỗi phiên kết thúc bằng `npm run typecheck && npm run lint && npm test && npm run build` xanh;
+  không để nợ kiểm tra sang phiên sau.
+- Không sửa `ml_hasevent_filter/**`, `src/core/extraction/{pipeline,chunk,prompt,normalize,schema,dedup,profile-match}.ts`,
+  `src/platform/inference/llama-cpp.ts` (trừ phiên được nêu rõ).
+- `src/core/**` vẫn thuần: không `chrome.*`, không import `platform/**`/`ui/**`.
+- File mới dưới ~320 dòng (ESLint `max-lines`), một trách nhiệm.
+- Không thêm host remote, không `<all_urls>`, không remote code.
+- Không tuyên bố “đã sàng lọc” trên tài liệu trước khi P9 có số thật; nếu có dương bị bỏ sót thì
+  đổi mặc định về `report` hoặc nâng ngưỡng trước khi phát hành.
+
+Mẫu giao phiên:
+
+```text
+Bối cảnh: repo Chrome Extension MV3 trong extension/.
+Đọc trước: AGENTS.md, docs/ke-hoach-bo-loc-noi-dung.md, docs/DEVIATIONS.md.
+
+Phiên: P5 — F2a (nối sàng lọc vào job).
+Phạm vi được sửa: <danh sách file ở bảng §12.1>.
+Không sửa: ml_hasevent_filter/**, các file core/pipeline và llama-cpp.ts.
+
+Việc cần làm: <mục Phạm vi chính + các bước §8>.
+Test bắt buộc: <các ca §11.1 tương ứng>.
+Gate: cd extension && npm run typecheck && npm run lint && npm test && npm run build.
+
+Báo cáo: file đã sửa, test đã thêm, kết quả gate, điểm lệch so với kế hoạch.
+```
 
 ### Slice F0 — Hợp đồng + lõi thuần (1–1,5 ngày)
 - Port, types, `prefilter.ts`, `mock-filter.ts`, `FilterSettingsSchema`.
@@ -479,11 +584,32 @@ khi chạy `screen`** để so với baseline không lọc. Đây là nguồn s�
   cảnh báo. Huỷ giữa bước sàng lọc ⇒ `Đã huỷ`, không lưu nháp.
 
 ### Slice F3 — Đo & chốt (1–1,5 ngày)
-- Mẫu âm, `filter.eval.test.ts`, `filter.live.eval.test.ts`; đo 15 mẫu + mẫu âm + 10 trang thật.
+- Mẫu âm, `filter.eval.test.ts`, `filter.live.eval.test.ts`; đo 14 mẫu dương + E06 + mẫu âm +
+  10 trang thật.
 - **DoD:** bảng §11.4 có số từ lần chạy thật; ghi vào `docs/ket-qua-bo-loc.md`; xác nhận mặc định
   `screen` hoặc hạ về `report` kèm lý do; cập nhật `docs/DEVIATIONS.md` + `AGENTS.md` §11.
 
 Tổng: **5–6,5 ngày công**, không phụ thuộc S7.
+
+### 12.4. Nhật ký tiến độ (P0–P12)
+
+Chỉ ghi một phiên là "xong" khi gate ở §12.3 đã xanh. "Xong" ở cấp phiên **không** có nghĩa tính
+năng đã chạy: bước sàng lọc chỉ hoạt động sau P5–P6 và chỉ được tuyên bố "đã sàng lọc" sau P9.
+
+| Phiên | Trạng thái | Ngày | Bằng chứng / ghi chú |
+|---|---|---|---|
+| P0 | Chưa chạy | — | Cần `uvicorn` + `/health` + `/analyze`; là điều kiện vào P4, P7, P9. |
+| P1 | **Xong** | 2026-10-26 | `content-filter.ts`, `filter-types.ts`; `FilterSettingsSchema` + 7 trường job; `filterRunMode` hai chiều; +4 contract test. |
+| P2 | **Xong** | 2026-10-26 | `prefilter.ts`, `mock-filter.ts`; +27 test (21 prefilter + 6 mock). |
+| P3 | Chưa bắt đầu | — | Phiên tiếp theo; chỉ phụ thuộc P1 (đã xong). |
+| P4–P12 | Chưa làm | — | Giữ nguyên thứ tự và phụ thuộc ở §12.1. |
+
+Gate F0 (2026-10-26): `typecheck` / `lint` / `test` / `build` xanh; **295 passed, 17 skipped (30 file)**.
+
+**Điểm lệch F0:** `src/platform/offscreen/run-job.ts` (file của P5) đã phải thêm 7 trường lọc trung
+tính vào `ExtractionJobResult` để `JOB_DONE` biên dịch với schema mới. Không đổi hành vi; P5 thay
+giá trị trung tính bằng kết quả thật. Ngoài ra chưa có thay đổi nào ở UI, cài đặt, manifest hay
+luồng chạy job.
 
 ---
 
@@ -503,6 +629,10 @@ Tổng: **5–6,5 ngày công**, không phụ thuộc S7.
 | `README.md` | Mục tính năng + cách chạy 2 dịch vụ cục bộ |
 | `docs/kiem-thu-demo.md` | Mục 9 mới: "Sàng lọc nội dung (PhoBERT)" với checklist tay |
 | `ke_hoach_thiet_ke_frontend.md` | B7 đã có 6 bước — ghi chú bước "phân loại" nay có thật |
+
+> Bảng này được viết trước khi `AGENTS.md` §3–§5 được đồng bộ một phần (2026-10-26). Khi làm P10,
+> chỉ chuyển trạng thái "planned" → "đã triển khai" và bổ sung nhánh runtime; không lặp lại nội dung
+> đã có. `AGENTS.md` §11 chỉ đổi sau khi P9 có số thật (P12).
 
 ---
 
@@ -528,6 +658,8 @@ curl -s -X POST http://127.0.0.1:8000/analyze \
 
 Lưu ý vận hành (không phải thay đổi code):
 - `MODEL_DIR` là bắt buộc vì `app.py` mặc định tìm `handover_api_code/models/phobert_task_classifier_final`.
+- Có thể đặt venv ngoài `ml_hasevent_filter/` (ví dụ `/tmp/opencode/phobert-venv`) nếu muốn thư mục
+  bàn giao không có thêm file; khi đó trỏ `MODEL_DIR` bằng đường dẫn tuyệt đối.
 - `pyvi` là gói cũ; nếu cài trên Python 3.13 thất bại, dùng venv Python 3.11/3.12.
 - `requirements.txt` cho `transformers<6.0` nhưng trọng số ghi `transformers_version 5.20.2`; nếu
   load lỗi tokenizer, ghim `transformers==5.20.2`.
@@ -552,7 +684,7 @@ Lưu ý vận hành (không phải thay đổi code):
 
 ## 16. Trạng thái quyết định
 
-**Không còn câu hỏi mở.** Toàn bộ hành vi đã chốt ở §0; hai điểm phạm vi cuối đã được trả lời:
+**Không còn câu hỏi mở.** Toàn bộ hành vi đã chốt ở §0 và §0.1; hai điểm phạm vi cuối đã được trả lời:
 
 1. **Giữ `report`** — làm ngay trong F1/F2 (~0,5 ngày); đây là đường đo và đường lùi nếu F3 phát
    hiện bỏ sót.
@@ -561,6 +693,8 @@ Lưu ý vận hành (không phải thay đổi code):
 Điều kiện sẵn sàng code (Definition of Ready):
 
 - [x] Chốt 6 quyết định ở §0 (2026-10-26).
+- [x] Chốt 3 điểm bổ sung khi rà soát code ở §0.1 (2026-10-26).
+- [x] Chia phiên triển khai P0–P12 (§12.1, 2026-10-26).
 - [ ] Máy dev chạy được `uvicorn` cục bộ (CPU là đủ; không cần GPU) để nghiệm thu F1.
 - [ ] Đồng ý thay đổi `manifest.config.ts`: thêm `http://127.0.0.1:8000/*` và `http://localhost:8000/*`.
 - [ ] Không có thay đổi nào trong `ml_hasevent_filter/` (ràng buộc của yêu cầu).

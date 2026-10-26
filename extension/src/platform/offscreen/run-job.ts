@@ -1,4 +1,4 @@
-import type { Event, LlmSettings, NormalizedDocument, Profile } from '../../shared/contracts';
+import type { Event, FilterDecision, LlmSettings, NormalizedDocument, Profile } from '../../shared/contracts';
 import { eventDedupInput } from '../../core/extraction/dedup';
 import { candidateToEvent } from '../../core/extraction/normalize';
 import { extractEvents } from '../../core/extraction/pipeline';
@@ -21,7 +21,26 @@ export interface ExtractionJobResult {
   duplicateCount: number;
   chunkCount: number;
   truncated: boolean;
+  /** Kết quả bước sàng lọc; F0 để trung tính, P5 điền giá trị thật. */
+  filterApplied: boolean;
+  filterDecision: FilterDecision | null;
+  filterEvidenceCount: number;
+  filterTotalSentences: number;
+  filterConfidence: number | null;
+  filterLatencyMs: number;
+  filterNote: string | null;
 }
+
+/** Giá trị trung tính khi chưa chạy (hoặc không chạy) bước sàng lọc. */
+const EMPTY_FILTER_RESULT = {
+  filterApplied: false,
+  filterDecision: null,
+  filterEvidenceCount: 0,
+  filterTotalSentences: 0,
+  filterConfidence: null,
+  filterLatencyMs: 0,
+  filterNote: null,
+} as const;
 
 /**
  * Chạy một job trích xuất trong offscreen document. Không phụ thuộc trực tiếp
@@ -88,5 +107,6 @@ export async function runExtractionJob(
     duplicateCount: outcome.duplicates.length,
     chunkCount: outcome.chunkCount,
     truncated: outcome.truncated,
+    ...EMPTY_FILTER_RESULT,
   };
 }

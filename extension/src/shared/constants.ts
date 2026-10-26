@@ -1,4 +1,12 @@
-import type { EventOrigin, EventStatus, ExtractionMethod, Label, SourceKind } from './contracts';
+import type {
+  EventOrigin,
+  EventStatus,
+  ExtractionMethod,
+  FilterDecision,
+  FilterMode,
+  Label,
+  SourceKind,
+} from './contracts';
 
 export const APP_NAME = 'Lịch trình cá nhân';
 
@@ -94,3 +102,26 @@ export const SELECTION_MENU_ID = 'scan-selection';
 /** ID menu chuột phải cấp trang (YC-02). */
 export const PAGE_MENU_ID = 'scan-page';
 export const ACTION_TITLE = 'Lịch trình cá nhân';
+
+/* ----------------------- bước sàng lọc nội dung (Slice F) ----------------- */
+
+/** Khoá cài đặt sàng lọc trong object store `settings`. */
+export const FILTER_SETTINGS_KEY = 'contentFilter';
+
+export const FILTER_MODE_TEXT: Record<FilterMode, string> = {
+  off: 'Tắt',
+  report: 'Chỉ báo cáo',
+  screen: 'Sàng lọc trước khi trích xuất',
+};
+
+export const FILTER_DECISION_TEXT: Record<FilterDecision, string> = {
+  has_event: 'Có nội dung đáng trích',
+  no_event: 'Không thấy nội dung công việc',
+  uncertain: 'Chưa đủ chắc để bỏ qua',
+};
+
+/** Ghi chú fail-open: dịch vụ lọc lỗi/timeout nhưng job vẫn chạy tiếp với toàn văn. */
+export const FILTER_FAIL_OPEN_NOTE = 'Sàng lọc không phản hồi — đã trích xuất toàn bộ';
+
+/** Kết luận khi tài liệu rỗng hoặc quá ngắn để kết luận. */
+export const FILTER_EMPTY_NOTE = 'Sàng lọc không thấy nội dung công việc nào. Bạn có thể trích xuất toàn bộ.';

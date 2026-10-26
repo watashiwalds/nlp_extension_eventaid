@@ -171,6 +171,39 @@ export const EventCandidateSchema = z.object({
 });
 export type EventCandidate = z.infer<typeof EventCandidateSchema>;
 
+/* ----------------------- lớp sàng lọc nội dung (Slice F) ------------------ */
+
+/** Ba chế độ sàng lọc cấp tài liệu trước khi gọi LLM (kế hoạch §5.2). */
+export const FILTER_MODES = ['off', 'report', 'screen'] as const;
+export const FilterModeSchema = z.enum(FILTER_MODES);
+export type FilterMode = z.infer<typeof FilterModeSchema>;
+
+/**
+ * Chế độ do lần chạy cụ thể yêu cầu, tách khỏi cài đặt đã lưu:
+ * `auto` theo cài đặt, `force` chạy `screen`, `off` bỏ qua sàng lọc.
+ */
+export const FILTER_RUN_MODES = ['auto', 'force', 'off'] as const;
+export const FilterRunModeSchema = z.enum(FILTER_RUN_MODES);
+export type FilterRunMode = z.infer<typeof FilterRunModeSchema>;
+
+/** Kết luận cấp tài liệu của bước sàng lọc. */
+export const FILTER_DECISIONS = ['has_event', 'no_event', 'uncertain'] as const;
+export const FilterDecisionSchema = z.enum(FILTER_DECISIONS);
+export type FilterDecision = z.infer<typeof FilterDecisionSchema>;
+
+/** Cấu hình bước sàng lọc PhoBERT cục bộ — đọc lên phải validate bằng Zod. */
+export const FilterSettingsSchema = z.object({
+  mode: FilterModeSchema.default('screen'),
+  endpoint: z.string().url().default('http://127.0.0.1:8000'),
+  timeoutMs: z.number().int().positive().max(60_000).default(15_000),
+  /** < 5000 của server; 4000 để chừa biên. */
+  windowChars: z.number().int().min(200).max(4_800).default(4_000),
+  /** Ngưỡng "chắc chắn không có việc" để được phép bỏ qua tài liệu. */
+  skipConfidence: z.number().min(0.5).max(1).default(0.85),
+  minSentencesToSkip: z.number().int().min(1).max(20).default(3),
+});
+export type FilterSettings = z.infer<typeof FilterSettingsSchema>;
+
 export const ExtractionJobStatusSchema = z.enum([
   'queued',
   'running',
@@ -197,6 +230,17 @@ export const ExtractionJobSchema = z.object({
   duplicateCount: z.number().int().nonnegative().default(0),
   /** Tài liệu dài hơn giới hạn nên chỉ xử lý phần đầu. */
   truncated: z.boolean().default(false),
+  /** Bước sàng lọc đã chạy và có kết quả dùng được cho toàn tài liệu. */
+  filterApplied: z.boolean().default(false),
+  filterDecision: FilterDecisionSchema.nullable().default(null),
+  /** Số câu được model đánh dấu là "câu giao việc" (TASK). */
+  filterEvidenceCount: z.number().int().nonnegative().default(0),
+  filterTotalSentences: z.number().int().nonnegative().default(0),
+  /** Xác suất của quyết định (TASK nếu `has_event`, NON_TASK nếu `no_event`). */
+  filterConfidence: z.number().min(0).max(1).nullable().default(null),
+  filterLatencyMs: z.number().int().nonnegative().default(0),
+  /** Ghi chú fail-open, ví dụ "Sàng lọc không phản hồi — đã trích xuất toàn bộ". */
+  filterNote: z.string().nullable().default(null),
   error: z.string().nullable(),
   startedAt: z.string(),
   updatedAt: z.string(),
