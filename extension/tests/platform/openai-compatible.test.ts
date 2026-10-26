@@ -175,6 +175,40 @@ describe('OpenAiCompatibleProvider.run', () => {
     await expect(provider().run(request)).rejects.toMatchObject({ kind: 'invalid-response' });
   });
 
+  it('map finishReason viết hoa của Gemini (MAX_TOKENS/SAFETY/RECITATION)', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(completion('', 'MAX_TOKENS')));
+    await expect(provider().run(request)).rejects.toMatchObject({
+      message: expect.stringContaining('hết token'),
+    });
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(completion('', 'SAFETY')));
+    await expect(provider().run(request)).rejects.toMatchObject({
+      message: expect.stringContaining('bộ lọc an toàn'),
+    });
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(completion('', 'RECITATION')));
+    await expect(provider().run(request)).rejects.toMatchObject({
+      message: expect.stringContaining('trích dẫn/bản quyền'),
+    });
+  });
+
+  it('báo promptFeedback.blockReason thay vì "output rỗng"', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          choices: [],
+          promptFeedback: { blockReason: 'SAFETY' },
+        }),
+      ),
+    );
+
+    await expect(provider().run(request)).rejects.toMatchObject({
+      kind: 'invalid-response',
+      message: expect.stringContaining('bộ lọc an toàn'),
+    });
+  });
+
   it('huỷ theo AbortSignal của người dùng', async () => {
     vi.stubGlobal(
       'fetch',

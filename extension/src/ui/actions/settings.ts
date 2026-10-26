@@ -188,8 +188,8 @@ async function checkHealth(settings: LlmSettings): Promise<HealthOutcome> {
     return {
       ok: true,
       message: health.model
-        ? `Kết nối thành công. Model: ${displayModelName(health.model)}.`
-        : 'Kết nối thành công. Model đã sẵn sàng.',
+        ? `Kết nối thành công tới ${settings.endpoint}. Model: ${displayModelName(health.model)}.`
+        : `Kết nối thành công tới ${settings.endpoint}. Model đã sẵn sàng.`,
     };
   } catch (error) {
     return { ok: false, message: messageOf(error) };

@@ -40,14 +40,47 @@ interface ChatCompletionBody {
     finish_reason?: unknown;
     message?: { content?: unknown };
   }>;
+  /** Gemini native dùng camelCase; một số proxy đổi sang snake_case. */
+  promptFeedback?: { blockReason?: unknown };
+  prompt_feedback?: { block_reason?: unknown };
+}
+
+function blockReasonError(reason: unknown): string | null {
+  if (typeof reason !== 'string' || !reason.trim()) return null;
+  const normalized = reason.trim().toUpperCase();
+  if (
+    normalized === 'SAFETY' ||
+    normalized === 'BLOCKLIST' ||
+    normalized === 'PROHIBITED_CONTENT' ||
+    normalized === 'SPII'
+  ) {
+    return 'Model từ chối nội dung do bộ lọc an toàn của nhà cung cấp.';
+  }
+  if (normalized === 'RECITATION') {
+    return 'Model từ chối nội dung vì lý do trích dẫn/bản quyền của nhà cung cấp.';
+  }
+  return `Nhà cung cấp chặn nội dung trước khi model trả lời (${reason}).`;
 }
 
 function finishReasonError(reason: unknown): string {
-  if (reason === 'length') {
+  const normalized = typeof reason === 'string' ? reason.trim().toUpperCase() : '';
+  if (normalized === 'LENGTH' || normalized === 'MAX_TOKENS') {
     return 'Model dùng hết token trước khi trả JSON. Hãy tăng “Token tối đa” hoặc giảm “Ký tự mỗi đoạn”.';
   }
-  if (reason === 'content_filter' || reason === 'safety' || reason === 'recitation') {
+  if (
+    normalized === 'CONTENT_FILTER' ||
+    normalized === 'SAFETY' ||
+    normalized === 'BLOCKLIST' ||
+    normalized === 'PROHIBITED_CONTENT' ||
+    normalized === 'SPII'
+  ) {
     return 'Model từ chối nội dung do bộ lọc an toàn của nhà cung cấp.';
+  }
+  if (normalized === 'RECITATION') {
+    return 'Model từ chối nội dung vì lý do trích dẫn/bản quyền của nhà cung cấp.';
+  }
+  if (normalized === 'LANGUAGE') {
+    return 'Model không hỗ trợ ngôn ngữ của nội dung này.';
   }
   return 'Endpoint trả về nội dung rỗng hoặc sai cấu trúc.';
 }
@@ -74,7 +107,11 @@ export class OpenAiCompatibleProvider implements InferenceProvider {
 
   async health(): Promise<InferenceHealth> {
     try {
-      const response = await this.request(`${this.endpoint}/models`, { method: 'GET' }, REMOTE_HEALTH_TIMEOUT_MS);
+      const response = await this.request(
+        `${this.endpoint}/models`,
+        { method: 'GET' },
+        REMOTE_HEALTH_TIMEOUT_MS,
+      );
       if (!response.ok) {
         return { ok: false, reason: httpErrorReason(response.status, response.headers) };
       }
@@ -115,7 +152,13 @@ export class OpenAiCompatibleProvider implements InferenceProvider {
     const choice = data?.choices?.[0];
     const raw = choice?.message?.content;
     if (typeof raw !== 'string' || !raw.trim()) {
-      throw new InferenceError('invalid-response', finishReasonError(choice?.finish_reason));
+      const blocked = blockReasonError(
+        data?.promptFeedback?.blockReason ?? data?.prompt_feedback?.block_reason,
+      );
+      throw new InferenceError(
+        'invalid-response',
+        blocked ?? finishReasonError(choice?.finish_reason),
+      );
     }
 
     return {
