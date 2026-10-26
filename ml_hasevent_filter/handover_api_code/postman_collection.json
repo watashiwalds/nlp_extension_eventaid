@@ -1,0 +1,54 @@
+{
+  "info": {
+    "_postman_id": "task-non-task-phobert-api-v1",
+    "name": "Vietnamese TASK NON_TASK API",
+    "description": "Collection kiểm thử API PhoBERT phân loại TASK/NON_TASK.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Analyze Selected Text",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"Cuộc họp tổng kết quý sẽ diễn ra lúc 9 giờ sáng thứ Hai. Hải gửi báo cáo tiến độ dự án trước 17 giờ hôm nay. Cảm ơn mọi người.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze",
+          "host": ["{{base_url}}"],
+          "path": ["analyze"]
+        }
+      }
+    }
+  ]
+}
