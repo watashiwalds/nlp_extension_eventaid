@@ -48,7 +48,45 @@ describe('OpenAiCompatibleProvider.health', () => {
     expect((init as RequestInit).headers).toMatchObject({ Authorization: 'Bearer secret' });
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ models: [{ model: 'qwen3-8b' }] }));
-    expect(await provider().health()).toEqual({ ok: true, model: 'qwen3-8b' });
+    expect(await provider({ model: '' }).health()).toEqual({ ok: true, model: 'qwen3-8b' });
+  });
+
+  it('giữ model đã cấu hình dù /models trả ID khác (Gemini trả tiền tố models/)', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: [{ id: 'models/gemini-embedding-001' }, { id: 'models/gemini-3.8-flash' }],
+        }),
+      )
+      .mockResolvedValueOnce(completion('{"events":[]}'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const instance = provider({ model: 'models/gemini-2.5-flash' });
+    expect(await instance.health()).toEqual({ ok: true, model: 'gemini-2.5-flash' });
+
+    await instance.run(request);
+    const body = JSON.parse(String((fetchMock.mock.calls[1]?.[1] as RequestInit).body));
+    expect(body.model).toBe('gemini-2.5-flash');
+  });
+
+  it('để trống model thì chọn model chat đầu tiên, bỏ embedding và tiền tố models/', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          data: [
+            { id: 'models/gemini-embedding-001' },
+            { id: 'models/gemini-3.8-flash' },
+            { id: 'models/gemini-3.8-pro' },
+          ],
+        }),
+      ),
+    );
+    expect(await provider({ model: '' }).health()).toEqual({
+      ok: true,
+      model: 'gemini-3.8-flash',
+    });
   });
 
   it('không có danh sách model thì vẫn OK và giữ tên đã cấu hình', async () => {
@@ -132,6 +170,26 @@ describe('OpenAiCompatibleProvider.run', () => {
     const result = await provider().run(request);
     expect(result.raw).toBe('{"events":[]}');
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('404 giữ chi tiết model bị từ chối và che key', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          '{"error":{"code":404,"message":"models/gemini-embedding-001 is not found (key secret-key)"}}',
+          { status: 404 },
+        ),
+      ),
+    );
+
+    const error = await provider({ apiKey: 'secret-key' })
+      .run(request)
+      .catch((reason: unknown) => reason);
+    expect(error).toMatchObject({ kind: 'http', status: 404 });
+    expect((error as Error).message).toContain('Không thấy model/endpoint');
+    expect((error as Error).message).toContain('models/gemini-embedding-001 is not found');
+    expect((error as Error).message).not.toContain('secret-key');
   });
 
   it('400 do schema không retry và giữ chi tiết để kiểm tra provider', async () => {

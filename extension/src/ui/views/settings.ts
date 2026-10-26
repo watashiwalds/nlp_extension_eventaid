@@ -101,8 +101,10 @@ function providerChoices(llm: LlmSettings): string {
         ${field({
           id: 'llm-model',
           label: 'Tên model (không bắt buộc)',
-          control: textInput('llm-model', 'model', llm.model, { placeholder: 'Để trống = tự dò từ /models' }),
-          hint: 'Để trống để extension tự dò model đầu tiên; chỉ nhập khi muốn ghi đè.',
+          control: textInput('llm-model', 'model', llm.model, {
+            placeholder: 'Để trống = tự dò model chat từ /models',
+          }),
+          hint: 'Để trống để extension tự dò model chat đầu tiên (bỏ qua model embedding); chỉ nhập khi muốn ghi đè. Với Gemini, nhập tên như gemini-3.8-flash (có thể kèm tiền tố models/).',
         })}
         <div class="field">
           <label class="field__label" for="llm-api-key">API key (nếu endpoint yêu cầu)</label>

@@ -9,8 +9,9 @@ import type {
 import {
   authHeaders,
   fetchWithTimeout,
-  firstModelId,
+  firstChatModelId,
   httpErrorReason,
+  normalizeModelId,
   retryAfterMs,
   shortBody,
   trimEndpoint,
@@ -100,7 +101,7 @@ export class OpenAiCompatibleProvider implements InferenceProvider {
   constructor(options: OpenAiCompatibleOptions) {
     this.endpoint = trimEndpoint(options.endpoint);
     if (!this.endpoint) throw new Error('Chưa nhập địa chỉ endpoint.');
-    this.model = options.model?.trim() ?? '';
+    this.model = normalizeModelId(options.model ?? '');
     this.apiKey = options.apiKey ?? '';
     this.timeoutMs = options.timeoutMs ?? 120_000;
   }
@@ -117,10 +118,12 @@ export class OpenAiCompatibleProvider implements InferenceProvider {
       }
 
       const data = (await response.json().catch(() => null)) as ModelsBody | null;
-      const detected = firstModelId(data);
+      // Model người dùng nhập luôn thắng danh sách `/models`: Gemini trả ID có
+      // tiền tố `models/` (không dùng được ở `/chat/completions`) và có thể xếp
+      // model embedding trước model chat. Chỉ tự dò khi ô model để trống.
+      const detected = this.model ? null : firstChatModelId(data);
       if (detected) this.model = detected;
-      const model = detected ?? (this.model || undefined);
-      return model ? { ok: true, model } : { ok: true };
+      return this.model ? { ok: true, model: this.model } : { ok: true };
     } catch (error) {
       return { ok: false, reason: messageOf(error) };
     }
@@ -139,8 +142,12 @@ export class OpenAiCompatibleProvider implements InferenceProvider {
 
     if (!response.ok) {
       const body = await response.text().catch(() => '');
+      // 404 thường do sai tên model; giữ phần thân (đã che key) để người dùng
+      // thấy chính xác model nào bị từ chối thay vì chỉ một thông điệp chung.
       const detail =
-        response.status === 400 || response.status === 422 ? shortBody(body, this.apiKey) : '';
+        response.status === 400 || response.status === 404 || response.status === 422
+          ? shortBody(body, this.apiKey)
+          : '';
       throw new InferenceError(
         'http',
         `${httpErrorReason(response.status, response.headers)}${detail ? ` (${detail})` : ''}`,

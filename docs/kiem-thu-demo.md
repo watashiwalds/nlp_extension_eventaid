@@ -103,22 +103,29 @@ Lịch sử hai phiên trước: [`docs/archive/phien-lam-viec-tiep-theo.md`](./
 
 ## 8. Chọn nơi chạy suy luận (KS-14) — đã có code, chờ chạy Chrome
 
-> **Trạng thái (2026-10-26):** code + unit test đã xong. Checklist dưới đây **chưa chạy** vì môi
+> **Trạng thái (2026-10-26):** code + unit test đã xong. Checklist dưới đây **chưa chạy đủ** vì môi
 > trường phát triển không có Chrome, API key hay `llama-server`; **để trống cho tới khi chạy thật**.
 > Không đánh dấu `[x]` chỉ vì đã có code. Kế hoạch và ghi chú triển khai:
 > [`ke-hoach-da-provider.md`](./ke-hoach-da-provider.md) §8.
+>
+> **2026-10-26 — sau báo lỗi Gemini:** health `/models` từng ghi đè model đã nhập bằng ID dạng
+> `models/…`, khiến trích xuất trả 404 dù **Kiểm tra kết nối** báo OK. Đã sửa (giữ model đã nhập,
+> chuẩn hoá tiền tố, chỉ tự dò khi ô model trống — xem kế hoạch §8.3); cần chạy lại mục 8.2.
 
 ### 8.1. Localhost (mặc định)
 
-- [ ] Cài đặt → **Nơi chạy suy luận** hiện **Máy này** đang chọn, endpoint `http://127.0.0.1:8080`.
-- [ ] **Kiểm tra kết nối** báo OK + tên model đang nạp; không hỏi consent.
-- [ ] Trích 1 trang mẫu → kết quả không đổi schema, vẫn lưu `nhap`.
+- [x] Cài đặt → **Nơi chạy suy luận** hiện **Máy này** đang chọn, endpoint `http://127.0.0.1:8080`.
+- [x] **Kiểm tra kết nối** báo OK + tên model đang nạp; không hỏi consent.
+- [x] Trích 1 trang mẫu → kết quả không đổi schema, vẫn lưu `nhap`.
 
 ### 8.2. Dịch vụ ngoài (Gemini hoặc OpenAI-compatible)
 
-- [ ] Chọn **Endpoint khác**, nhập base URL HTTPS + API key + model → **Kiểm tra kết nối**.
-- [ ] Lần đầu: modal consent hiện đúng origin; **Huỷ** → không lưu, không gửi request, giữ provider cũ.
+- [x] Chọn **Endpoint khác**, nhập base URL HTTPS + API key + model → **Kiểm tra kết nối**.
+- [x] Lần đầu: modal consent hiện đúng origin; **Huỷ** → không lưu, không gửi request, giữ provider cũ.
 - [ ] **Đồng ý** → lưu, health OK, trích 1 trang mẫu; JSON hợp lệ, không bịa ngày.
+- [ ] Nhập model Gemini (`gemini-…`, thử cả `models/gemini-…`) hoặc để trống → **Kiểm tra kết nối**
+      **và** trích 1 trang đều dùng đúng model chat, không trả 404 *(đã sửa lỗi health ghi đè model
+      ngày 2026-10-26; cần xác nhận lại trên Chrome)*.
 - [ ] Health lỗi → **không lưu** endpoint/key mới; consent vừa đồng ý vẫn được giữ để thử lại.
 - [ ] Sai key → 401/403 rõ ràng; sai model/URL → 404; quota → 429; dịch vụ lỗi → 5xx.
 - [ ] **Thu hồi đồng ý** → lần chạy sau bị chặn tới khi đồng ý lại.

@@ -73,7 +73,7 @@ npm run build
 | `npm run build` | `tsc --noEmit` + `vite build` → `dist/` |
 | `npm run typecheck` | TypeScript strict, 0 lỗi |
 | `npm run lint` | ESLint (flat config) |
-| `npm test` | Vitest: 351 test / 36 file (core, parse, page snapshot, extraction/LLM, provider remote/factory/permissions, form Cài đặt, duyệt nháp, job, Slice E eval, smoke test UI bằng jsdom); 17 test live skip nếu không có `LLAMA_EVAL=1` |
+| `npm test` | Vitest: 354 test / 36 file (core, parse, page snapshot, extraction/LLM, provider remote/factory/permissions, form Cài đặt, duyệt nháp, job, Slice E eval, smoke test UI bằng jsdom); 17 test live skip nếu không có `LLAMA_EVAL=1` |
 | `npm run icons` | Sinh lại icon PNG |
 
 ---

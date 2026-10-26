@@ -34,13 +34,48 @@ export interface ModelsBody {
   models?: Array<{ name?: unknown; model?: unknown }>;
 }
 
+/**
+ * Gemini liệt kê model dạng `models/gemini-…` nhưng `/chat/completions` chỉ nhận
+ * `gemini-…`. Chuẩn hoá để tên lấy từ `/models` dùng lại được, và để người dùng
+ * dán nguyên tên có tiền tố cũng không bị 404.
+ */
+export function normalizeModelId(id: string): string {
+  return id.trim().replace(/^models\//i, '').trim();
+}
+
+const NON_CHAT_MODEL = /(embedding|embed|imagen|veo|tts|whisper|aqa|image)/i;
+
+function modelCandidates(data: ModelsBody | null): string[] {
+  const candidates: string[] = [];
+  for (const item of data?.data ?? []) {
+    if (typeof item.id === 'string') candidates.push(item.id);
+  }
+  for (const item of data?.models ?? []) {
+    for (const value of [item.model, item.name]) {
+      if (typeof value === 'string') candidates.push(value);
+    }
+  }
+  return candidates;
+}
+
 /** Chấp nhận cả `{data:[{id}]}` (OpenAI) và `{models:[{name|model}]}` (một số server). */
 export function firstModelId(data: ModelsBody | null): string | null {
-  const fromData = data?.data?.[0]?.id;
-  if (typeof fromData === 'string' && fromData.trim()) return fromData.trim();
-  const first = data?.models?.[0];
-  for (const value of [first?.model, first?.name]) {
-    if (typeof value === 'string' && value.trim()) return value.trim();
+  for (const candidate of modelCandidates(data)) {
+    const id = candidate.trim();
+    if (id) return id;
+  }
+  return null;
+}
+
+/**
+ * Model chat đầu tiên trong `/models`: bỏ model embedding/ảnh/âm thanh và bỏ
+ * tiền tố `models/`. Gemini trả lẫn nhiều loại model nên lấy phần tử đầu tiên
+ * một cách mù quáng có thể chọn nhầm `gemini-embedding-*`.
+ */
+export function firstChatModelId(data: ModelsBody | null): string | null {
+  for (const candidate of modelCandidates(data)) {
+    const id = normalizeModelId(candidate);
+    if (id && !NON_CHAT_MODEL.test(id)) return id;
   }
   return null;
 }

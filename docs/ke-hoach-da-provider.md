@@ -323,8 +323,8 @@ Gemini (F6) **không triển khai**.
 
 | File | Nội dung |
 |---|---|
-| `extension/src/platform/inference/openai-compatible.ts` | Provider remote: `/models`, `/chat/completions`, Bearer key, retry 429/5xx, map lỗi và `finishReason`/`promptFeedback` |
-| `extension/src/platform/inference/http.ts` | Helper dùng chung: timeout/abort, header auth, parse model, map lỗi HTTP, che key trong body lỗi |
+| `extension/src/platform/inference/openai-compatible.ts` | Provider remote: `/models`, `/chat/completions`, Bearer key, retry 429/5xx, map lỗi và `finishReason`/`promptFeedback`; **giữ model người dùng nhập**, chỉ tự dò khi ô model trống |
+| `extension/src/platform/inference/http.ts` | Helper dùng chung: timeout/abort, header auth, parse model, **chuẩn hoá tiền tố `models/` của Gemini + chọn model chat đầu tiên**, map lỗi HTTP, che key trong body lỗi |
 | `extension/src/core/inference/provider-choice.ts` | Hàm thuần: chuẩn hoá/validate endpoint, local vs remote, consent, endpoint hiệu lực khi chọn local |
 | `extension/src/platform/inference/factory.ts` | `createInferenceProvider(settings)` |
 | `extension/src/platform/permissions.ts` | `ensureHostPermission`, `removeHostPermission`, `needsHostPermission` |
@@ -350,7 +350,23 @@ Gemini (F6) **không triển khai**.
 - **Không có adapter native Gemini.** Chỉ dùng OpenAI-compatible; F6 để mở nếu kiểm chứng thật thất bại.
 - **`clearAllData` xoá cả consent + cache**, không chỉ dữ liệu sự kiện.
 
-### 8.3. Việc còn lại
+### 8.3. Sửa lỗi Gemini 404 sau khi health OK (2026-10-26)
+
+- **Hiện tượng:** **Kiểm tra kết nối** báo thành công nhưng lúc trích xuất lại báo
+  “Không thấy model/endpoint” (HTTP 404).
+- **Nguyên nhân:** `health()` lấy model đầu tiên từ `/models` rồi **ghi đè model người dùng đã nhập**.
+  Gemini trả ID dạng `models/gemini-…` trong khi `/chat/completions` cần `gemini-…`; danh sách cũng
+  có thể bắt đầu bằng model embedding. Vì `runExtractionJob()` gọi health trước khi trích, model bị
+  đổi sang ID không dùng được → Gemini trả 404.
+- **Cách sửa:** model nhập tay luôn thắng danh sách; chỉ tự dò khi ô model trống; bỏ tiền tố
+  `models/`; bỏ qua model embedding/ảnh/âm thanh khi tự dò; lỗi 404 giữ thêm phần thân phản hồi
+  (đã che key) để biết chính xác model nào bị từ chối.
+- **Test:** `tests/platform/openai-compatible.test.ts` — model cấu hình thắng `/models`, tự dò bỏ
+  embedding + tiền tố, và 404 giữ chi tiết.
+- **Còn lại:** chạy lại checklist §8.2 với Gemini thật để xác nhận; nếu vẫn lỗi thì xem tiếp
+  `response_format`/thinking (rủi ro 1–2) trước khi mở F6.
+
+### 8.4. Việc còn lại
 
 - [ ] Chạy `docs/kiem-thu-demo.md` §8 trong Chrome với `llama-server`, Gemini/OpenAI-compatible
       và Cloudflared thật.
