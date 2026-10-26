@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { clearAll, setSetting } from '../../src/platform/storage/db';
+import { clearAll, exportAll, setSetting } from '../../src/platform/storage/db';
 import {
   DEFAULT_LLM_SETTINGS,
   LLM_SETTINGS_KEY,
@@ -71,6 +71,19 @@ describe('cài đặt máy chủ mô hình', () => {
 
     expect(saved.model).toBe('qwen-test');
     expect(await loadLlmSettings()).toEqual(saved);
+  });
+
+  it('bản xuất dữ liệu không chứa API key hay consent', async () => {
+    await saveLlmSettings({
+      provider: 'openai-compatible',
+      endpoint: 'https://example.test/v1',
+      apiKey: 'super-secret-key',
+      consentByOrigin: { 'https://example.test': '2026-10-26T00:00:00.000Z' },
+    });
+
+    const exported = JSON.stringify(await exportAll());
+    expect(exported).not.toContain('super-secret-key');
+    expect(exported).not.toContain('consentByOrigin');
   });
 
   it('bản ghi hỏng bị thay bằng mặc định thay vì làm sập UI', async () => {
