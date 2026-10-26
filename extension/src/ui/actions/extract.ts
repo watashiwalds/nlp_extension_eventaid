@@ -26,7 +26,7 @@ function activeJob(job: ExtractionJob | null): boolean {
 function doneMessage(job: ExtractionJob): string {
   const parts =
     job.savedCount > 0
-      ? [`Đã lưu ${job.savedCount} sự kiện nháp từ máy.`]
+      ? [`Đã lưu ${job.savedCount} sự kiện nháp.`]
       : ['Không có sự kiện mới để lưu.'];
   if (job.duplicateCount > 0) parts.push(`Bỏ qua ${job.duplicateCount} sự kiện trùng.`);
   if (job.truncated) parts.push('Tài liệu dài nên chỉ xử lý phần đầu.');
