@@ -1,14 +1,16 @@
 # extension — mã nguồn demo
 
 Chrome Extension MV3, TypeScript + Vite (CRXJS), **không UI framework**; có lớp trích xuất
-sự kiện bằng **LLM cục bộ** (llama.cpp) chạy trong offscreen document.
+sự kiện bằng **LLM** (mặc định llama.cpp cục bộ, hoặc endpoint OpenAI-compatible do người dùng chọn)
+chạy trong offscreen document.
 Tổng quan tính năng và cách chạy: xem [`../README.md`](../README.md).
 
-> **Chưa có trong code:** chọn provider remote. Demo chỉ tạo `LlamaCppProvider` và chỉ gọi
-> `127.0.0.1:8080`. Kế hoạch S7 (`../docs/ke-hoach-da-provider.md`, `../script.md` KS-14) sẽ thêm
-> `platform/inference/factory.ts` + `openai-compatible.ts`; chưa triển khai.
+> **Đã có:** chọn nơi chạy suy luận (KS-14) — `LlamaCppProvider` cho localhost mặc định và
+> `OpenAiCompatibleProvider` cho endpoint remote, chọn qua `platform/inference/factory.ts`.
+> Consent theo origin, quyền host cấp lúc chạy và nút xoá key nằm trong Cài đặt.
+> Checklist thủ công với Gemini/Cloudflared vẫn chờ chạy (`../docs/kiem-thu-demo.md` §8).
 >
-> **Cũng chưa có:** bước **sàng lọc PhoBERT** trước LLM (Slice F). Kế hoạch
+> **Chưa có:** bước **sàng lọc PhoBERT** trước LLM (Slice F). Kế hoạch
 > `../docs/ke-hoach-bo-loc-noi-dung.md` sẽ nối dịch vụ FastAPI cục bộ tại `127.0.0.1:8000` vào
 > `offscreen/run-job.ts`; hiện job gọi LLM trực tiếp như trước.
 
@@ -62,13 +64,18 @@ MODEL_DIR=../phobert_task_classifier_final \
 | `src/core/forms.ts` | Validate form bằng Zod, map lỗi về từng trường |
 | `src/core/text.ts` | Chuẩn hoá, hash, tách tóm tắt/danh sách/nhãn tuỳ chỉnh |
 | `src/core/extraction/*` | Chunk, prompt, schema, normalize, dedup, profile-match, pipeline (thuần, test bằng Node) |
-| `src/core/ports/inference.ts` | Interface `InferenceProvider` |
+| `src/core/ports/inference.ts` | Interface `InferenceProvider` (`llama.cpp`, `openai-compatible`, `mock`) |
+| `src/core/inference/provider-choice.ts` | Quy tắc thuần: chuẩn hoá/validate endpoint, local vs remote, consent, endpoint hiệu lực |
 | *(Slice F, chưa có)* `src/core/ports/content-filter.ts` | Interface `ContentFilter` + type quyết định sàng lọc cấp tài liệu |
 | *(Slice F, chưa có)* `src/core/filter/*` | Chia cửa sổ, gộp quyết định, `MockFilter` (thuần, test bằng Node) |
 | *(Slice F, chưa có)* `src/platform/inference/phobert-filter.ts` | Client gọi dịch vụ PhoBERT `127.0.0.1:8000` (health, `/analyze`, timeout, fail-open) |
-| `src/platform/inference/llama-cpp.ts` | Provider gọi `llama-server` cục bộ (health, models, timeout, abort) — **provider duy nhất hiện có** |
-| *(S7, chưa có)* `src/platform/inference/factory.ts` | Chọn provider theo `LlmSettings.provider` (kế hoạch `../docs/ke-hoach-da-provider.md`) |
-| *(S7, chưa có)* `src/platform/inference/openai-compatible.ts` | Provider remote (`/models`, `/chat/completions`, Bearer key, lỗi 401/403/404/429/5xx) |
+| `src/platform/inference/llama-cpp.ts` | Provider local: `llama-server` (health, models, timeout, abort) |
+| `src/platform/inference/openai-compatible.ts` | Provider remote: `/models`, `/chat/completions`, Bearer key, retry 429/5xx, lỗi 401/403/404/429/5xx |
+| `src/platform/inference/http.ts` | Helper HTTP dùng chung: timeout/abort, header, parse model, map lỗi, che key |
+| `src/platform/inference/factory.ts` | Chọn provider theo `LlmSettings.provider` (local mặc định) |
+| `src/platform/permissions.ts` | Xin/thu hồi quyền host động cho đúng origin |
+| `src/ui/consent-dialog.ts` | Modal consent theo origin (không dùng `window.confirm`) |
+| `src/ui/provider-panels.ts` | Ẩn/hiện panel local/remote khi đổi radio |
 | `src/platform/offscreen/*` | Offscreen document chạy job trích xuất, lưu nháp, gửi tiến trình |
 | `src/platform/background/jobs.ts` | Trạng thái job trong `chrome.storage.session`, validate bằng Zod |
 | `src/platform/capture/page-snapshot.ts` | Hàm tự chứa inject vào tab: chọn landmark, lọc menu/khung ẩn, cờ trang động/cắt bớt |
@@ -87,9 +94,9 @@ MODEL_DIR=../phobert_task_classifier_final \
 
 - `core/**` **không** import `chrome.*`, `platform/**`, `ui/**` (ESLint chặn).
 - Mọi dữ liệu vào `innerHTML` phải qua `escapeHtml` (`src/ui/components.ts`).
-- Không thêm host permission tĩnh ngoài `http://127.0.0.1:8080/*`; không gọi mạng ra ngoài máy, không remote code.
-  Khi làm S7, endpoint remote dùng `optional_host_permissions` + `chrome.permissions.request` cho đúng
-  origin và chỉ chạy sau consent; không thêm `https://*/*` vào `host_permissions` tĩnh.
+- Không thêm host permission tĩnh ngoài `http://127.0.0.1:8080/*`; không remote code.
+  Endpoint remote dùng `optional_host_permissions` + `chrome.permissions.request` cho đúng origin và
+  chỉ chạy sau consent; không thêm `https://*/*` vào `host_permissions` tĩnh. Mặc định vẫn là local.
   Khi làm Slice F, thêm đúng hai host loopback `http://127.0.0.1:8000/*` và `http://localhost:8000/*`
   cho dịch vụ sàng lọc; đó vẫn là máy người dùng, không phải backend từ xa.
 - Kết quả trích xuất luôn lưu ở `status = 'nhap'`; người dùng duyệt mới chuyển trạng thái.

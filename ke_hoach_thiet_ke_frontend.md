@@ -8,9 +8,9 @@
 > - **Chỉ light mode** trước (giữ token dạng ngữ nghĩa để thêm dark sau).
 > - **Notification: 2 nút + bấm thân mở side panel** (thay cho 3 nút trong kịch bản, do giới hạn Chrome Notification API).
 >
-> **Bổ sung 2026-10-26 (P1, chưa triển khai):** board **B26–B28** cho **KS-14 — Chọn nơi chạy
-> suy luận**. Đây là thiết kế đi kèm kế hoạch `docs/ke-hoach-da-provider.md`; demo hiện tại
-> **chưa có** màn hình này và vẫn chỉ chạy localhost.
+> **Bổ sung 2026-10-26 (P1, UI code đã triển khai):** board **B26–B28** cho **KS-14 — Chọn nơi chạy
+> suy luận**. UI code đã có trong `extension/`; **board Penpot vẫn chưa vẽ**. Xem
+> `docs/ke-hoach-da-provider.md` §8.
 
 ---
 
@@ -89,7 +89,7 @@ Mỗi dòng là **1 Penpot component + variants**.
 | 19 | `Toast/Banner` — tone=info/success/warning/error | KS-11 |
 | 20 | `NotificationMock` — 2 nút + vùng thân bấm được | KS-10 (spec) |
 
-**P1 — bổ sung cho KS-14 (vẽ cùng library, chỉ khi làm S7):**
+**P1 — bổ sung cho KS-14 (UI code đã có, board Penpot chưa vẽ):**
 
 | # | Component (variants) | Dùng ở (KS) |
 |---|---|---|
@@ -149,10 +149,11 @@ Mỗi dòng là **1 Penpot component + variants**.
 | B16 | Cài đặt | 400 | mốc **1 tuần / 1 ngày / ngày diễn ra**; bật/tắt Small UI |
 | B17 | Notification mock (spec) | 380 × 150 | **2 nút** (Đã xem · Không nhắc lại) + **thân thông báo bấm mở side panel** (thay nút "Huỷ sự kiện" thứ 3) |
 
-### 4.7. Chọn nơi chạy suy luận — KS-14 (P1, chưa triển khai)
+### 4.7. Chọn nơi chạy suy luận — KS-14 (P1; UI code đã có, board Penpot chưa vẽ)
 
-> Vẽ khi làm **S7**. Mặc định vẫn là **Máy này**; không có board nào được phép ngụ ý remote là
-> lựa chọn sẵn. Toàn bộ nằm trong tab **Cài đặt**, cùng cột 400px.
+> UI code đã triển khai trong tab **Cài đặt**; các board dưới đây vẫn cần vẽ lại trong Penpot để
+> đối chiếu. Mặc định vẫn là **Máy này**; không có board nào được phép ngụ ý remote là lựa chọn sẵn.
+> Toàn bộ nằm trong tab **Cài đặt**, cùng cột 400px.
 
 | # | Board | Size | Nội dung | KS |
 |---|---|---|---|---|
@@ -172,7 +173,7 @@ Mỗi dòng là **1 Penpot component + variants**.
 | CRUD | Sự kiện list → Detail → Sửa → Modal xoá |
 | Thông báo | Notification mock → 2 nhánh (Đã xem / Không nhắc lại) |
 | Điều hướng | Dashboard → tab Sự kiện |
-| **Chọn nơi chạy suy luận (P1)** | Cài đặt → B26 → B27 → B28 (consent) → quay lại **Máy này** |
+| **Chọn nơi chạy suy luận (P1 — UI code đã có)** | Cài đặt → B26 → B27 → B28 (consent) → quay lại **Máy này** |
 
 > Penpot làm được: overlay (Small UI, modal, toast). Không mô phỏng được: đếm ngược tự đóng, animation tiến trình → biểu diễn bằng nhiều board trạng thái thay vì 1 board động.
 
@@ -205,7 +206,7 @@ Mỗi dòng là **1 Penpot component + variants**.
 | KS-11 | B12 + component Toast/Banner/Badge |
 | KS-12 | *(backlog P1)* |
 | KS-13 | *(backlog P4)* |
-| KS-14 | B26, B27, B28 *(P1 — chưa triển khai)* |
+| KS-14 | B26, B27, B28 *(P1 — UI code đã có; board Penpot chưa vẽ)* |
 
 ---
 
@@ -233,7 +234,7 @@ Mỗi dòng là **1 Penpot component + variants**.
 5. B6–B8 (Giai đoạn 2: Gmail) + B16–B17.
 6. Nối prototype → rà soát liền mạch.
 7. Mở rộng P1/P4 từ backlog (chỉ dùng lại library).
-8. **(S7)** B26–B28 + flow **Chọn nơi chạy suy luận**; kiểm tra lại ở 320/360/400px.
+8. **(S7 — UI code đã có)** Vẽ B26–B28 + flow **Chọn nơi chạy suy luận**; kiểm tra lại ở 320/360/400px.
 
 ---
 
@@ -242,8 +243,11 @@ Mỗi dòng là **1 Penpot component + variants**.
 - **Notification 2 nút:** hành động "Huỷ sự kiện" (nút thứ 3 trong KS-10) chuyển vào side panel khi bấm thân thông báo → thể hiện rõ ở B17 + spec sheet. Cần kiểm chứng lại giới hạn nút của Chrome Notification API trước khi chốt.
 - **Light-only:** token giữ dạng ngữ nghĩa để nhánh dark chỉ tốn 1 lần chỉnh, không phải vẽ lại board.
 - **Phạm vi P0:** ~17 board + 20 component + 1 token set + 6 flow. Toàn bộ P1/P4 chỉ mở rộng trên library đã có.
-- **Provider choice (KS-14, P1):** thêm 3 board + 4 component, không đổi token hay shell. Nguyên tắc thiết kế: **Máy này** luôn là mặc định và đứng trước; remote chỉ mở form sau khi người dùng chọn; consent là modal chặn, không phải toast; API key không bao giờ hiện đầy đủ trong ảnh chụp màn hình demo. Xem `docs/ke-hoach-da-provider.md`.
+- **Provider choice (KS-14, P1):** thêm 3 board + 4 component, không đổi token hay shell. UI code đã
+  triển khai; board Penpot vẫn chờ vẽ. Nguyên tắc thiết kế: **Máy này** luôn là mặc định và đứng trước;
+  remote chỉ mở form sau khi người dùng chọn; consent là modal chặn, không phải toast; API key không
+  bao giờ hiện đầy đủ trong ảnh chụp màn hình demo. Xem `docs/ke-hoach-da-provider.md`.
 
 ---
 
-*Tài liệu này rút ra từ `script.md` (14 kịch bản KS-01…KS-14), chốt danh sách thiết kế tối thiểu P0 cho frontend trên Penpot; B26–B28 là phần P1 cho KS-14, chưa triển khai.*
+*Tài liệu này rút ra từ `script.md` (14 kịch bản KS-01…KS-14), chốt danh sách thiết kế tối thiểu P0 cho frontend trên Penpot; B26–B28 là phần P1 cho KS-14 — UI code đã có, board Penpot chưa vẽ.*

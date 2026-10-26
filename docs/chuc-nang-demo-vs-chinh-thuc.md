@@ -8,10 +8,11 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 - **Mốc demo:** sau Slice B (LLM cục bộ) + Slice C (offscreen job + notification) + Slice D (duyệt nháp, chống trùng); Slice E đã đo ngày 2026-10-24
 - **Nguồn tham chiếu chéo:** [`DEVIATIONS.md`](./DEVIATIONS.md), [`kiem-thu-demo.md`](./kiem-thu-demo.md)
 
-> **Cập nhật 2026-10-26:** KS-14 (chọn nơi chạy suy luận) đã được chốt nhưng **chưa triển khai**.
-> Cùng ngày, **Slice F — sàng lọc nội dung PhoBERT** cũng đã chốt nhưng **chưa triển khai**.
-> Bảng và số liệu bên dưới vẫn phản ánh demo ngày 2026-10-24 (local-only, không sàng lọc); xem thêm
-> mục **H**, [`ke-hoach-da-provider.md`](./ke-hoach-da-provider.md) và
+> **Cập nhật 2026-10-26:** KS-14 (chọn nơi chạy suy luận) **đã triển khai F1–F5** — code + test tự
+> động; checklist thủ công với Gemini/Cloudflared còn chờ. Cùng ngày, **Slice F — sàng lọc nội dung
+> PhoBERT** đã chốt nhưng **chưa triển khai**. Bảng A–G giữ đánh giá demo ngày 2026-10-24; riêng các
+> dòng về test/provider (A6, G1, G8) đã cập nhật theo code ngày 2026-10-26, các mục UI vẫn cần chạy
+> lại trên Chrome. Xem thêm mục **H**, [`ke-hoach-da-provider.md`](./ke-hoach-da-provider.md) và
 > [`ke-hoach-bo-loc-noi-dung.md`](./ke-hoach-bo-loc-noi-dung.md).
 
 ## Chú giải
@@ -45,14 +46,16 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 
 - **Phần lõi của một ứng dụng quản lý lịch trình đã chạy được:** đọc trang, quản lý hồ sơ,
   tạo/sửa/xoá sự kiện đủ 7 trường, máy trạng thái, nguồn trích, xuất–nhập JSON.
-- **Phần LLM cục bộ đã có:** `InferenceProvider` cho llama.cpp, prompt + JSON schema, validate
-  bằng Zod, normalize, dedup, khớp hồ sơ, chunking; job chạy trong offscreen và lưu nháp.
-  **Sàng lọc PhoBERT (Slice F) vẫn chưa có**, nên job gọi LLM trực tiếp, không có bước lọc trước.
+- **Phần LLM đã có:** `InferenceProvider` cho llama.cpp cục bộ (mặc định) và endpoint
+  OpenAI-compatible (opt-in), prompt + JSON schema, validate bằng Zod, normalize, dedup, khớp hồ sơ,
+  chunking; job chạy trong offscreen và lưu nháp. **Sàng lọc PhoBERT (Slice F) vẫn chưa có**, nên job
+  gọi LLM trực tiếp, không có bước lọc trước.
 - **Các kênh dữ liệu ngoài trang web chưa có:** Gmail API, PDF/DOCX/OCR, ICS. Trang Gmail chỉ được đọc **best-effort** như một trang web.
 - **Nhắc việc sự kiện chưa có:** trường dữ liệu tồn tại nhưng luôn rỗng; `notifications` mới
   dùng cho job trích xuất, chưa có `chrome.alarms`/engine KS-10.
 - **Nền tảng kỹ thuật đúng kế hoạch:** TypeScript strict, Vite + CRXJS, hợp đồng Zod duy nhất,
-  phân lớp core/platform/ui, mạng chỉ tới `127.0.0.1:8080`, CSP `script-src 'self'`.
+  phân lớp core/platform/ui, mặc định mạng chỉ tới `127.0.0.1:8080`, remote opt-in qua HTTPS + consent,
+  CSP `script-src 'self'`.
 
 ---
 
@@ -65,7 +68,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | A3 | `shared/contracts.ts` là nguồn hợp đồng duy nhất, Zod validate ở biên IndexedDB | ✅ | Đủ `Document`, `Profile`, `Event`, `Settings`; có test parse |
 | A4 | Phân lớp `core/` → `platform/` → `ui/`, không import ngược | ✅ | ESLint `no-restricted-imports` + `no-restricted-globals` |
 | A5 | IndexedDB + wrapper typed (~150 dòng), không Dexie | ✅ | `platform/storage/db.ts`; 4 object store |
-| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 264 test Vitest / 27 file (+17 live skip) |
+| A6 | CI: typecheck + lint + test + build | ✅ | `.github/workflows/ci.yml`; 351 test Vitest / 36 file (+17 live skip) |
 | A7 | Content script inject Readability theo yêu cầu | 🟡 | `scripting.executeScript` chạy page snapshot (lọc `main`/landmark, bỏ menu/khung ẩn), **Readability chạy trong side panel**; chưa có content script thường trú |
 | A8 | Job queue bền, tiến trình, resume sau service worker restart | 🟡 | Có **một** job active trong `chrome.storage.session`, tiến trình + huỷ; SW restart vẫn thấy job/offscreen; **không resume sau khi tắt trình duyệt** |
 | A9 | Offscreen document chạy sàng lọc + LLM | ✅ | Offscreen chỉ cho LLM; **sàng lọc chưa có** (Slice F). Tạo theo nhu cầu, đóng sau khi xong |
@@ -95,7 +98,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 |---|---|---|---|
 | C1 | Sàng lọc PhoBERT TASK/NON_TASK cấp tài liệu (dịch vụ cục bộ, Slice F) | ❌ | Chưa có; job gọi LLM trực tiếp. Kế hoạch đã chốt 2026-10-26, 5–6,5 ngày công |
 | C2 | `ContentFilter` port + `phobert-filter.ts` + `FilterSettings` | ❌ | Chưa có; xem `ke-hoach-bo-loc-noi-dung.md` |
-| C3 | LLM cục bộ llama.cpp qua `fetch` (`127.0.0.1:8080`) | ✅ | `platform/inference/llama-cpp.ts` + `InferenceProvider`; `host_permissions` và CSP chỉ mở `127.0.0.1:8080` |
+| C3 | LLM cục bộ llama.cpp qua `fetch` (`127.0.0.1:8080`) | ✅ | `platform/inference/llama-cpp.ts` + `InferenceProvider`; host tĩnh chỉ `127.0.0.1:8080`. Endpoint ngoài dùng optional host + consent (H1–H5) |
 | C4 | `MockProvider` để làm UI trước khi có model | ✅ | `core/extraction/mock-provider.ts`; dùng trong test pipeline/offscreen |
 | C5 | Prompt + JSON schema + `LlmEvent` validate bằng Zod | ✅ | `prompt.ts`, `schema.ts`, `contracts.ts`; retry 1 lần khi JSON sai |
 | C6 | Chuẩn hoá ngày giờ tiếng Việt ("8h tối mai", "thứ 3 tuần sau") | 🟡 | Hỗ trợ `d/m/yyyy`, `d-m-yyyy`, `yyyy-mm-dd`, "ngày d tháng m năm yyyy"; thiếu năm/giờ → `uncertain`, không bịa. Chưa phủ hết "8h tối mai" |
@@ -145,31 +148,32 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 
 | Mã | Chức năng theo kế hoạch | Trạng thái | Demo hiện tại / ghi chú |
 |---|---|---|---|
-| G1 | Toàn bộ xử lý cục bộ, không gửi nội dung ra ngoài | ✅ | Mạng chỉ tới `127.0.0.1:8080` (llama-server); không backend từ xa |
+| G1 | Toàn bộ xử lý cục bộ, không gửi nội dung ra ngoài | 🟡 | Mặc định chỉ tới `127.0.0.1:8080`; remote là opt-in, chỉ chạy sau khi chọn endpoint + cấp quyền host + đồng ý theo origin (KS-14). Chưa chạy checklist với Gemini/Cloudflared thật |
 | G2 | Bộ quyền tối thiểu | 🟡 | Đã có `activeTab`, `scripting`, `storage`, `offscreen`, `notifications`, `sidePanel`, `contextMenus`; còn thiếu `alarms`/`unlimitedStorage` cho phần chưa làm |
 | G3 | CSP `script-src 'self'`, không remote code, không WASM | ✅ | Giữ đúng |
 | G4 | Escape HTML trước khi render | ✅ | Toàn bộ nội dung động đi qua `escapeHtml`/`escapeAttr` |
 | G5 | Không thực thi script/macro trong tài liệu đầu vào | ✅ | Chỉ đọc text/HTML tĩnh, không eval |
 | G6 | Accessibility: bàn phím, focus ring, nhãn ARIA | 🟡 | Đã bỏ `autofocus`, thêm `:focus-visible`, Esc đóng form, focus ô lỗi đầu tiên; cần kiểm thủ công lại |
 | G7 | Side panel 320/360/400px không tràn ngang | 🟡 | Đã tách ô ngày/giờ + grid `minmax(0, 1fr)`, stack khi hẹp; **chưa xác nhận lại trên Chrome thật** |
-| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 264 test Vitest / 27 file (core, parse, page snapshot, extraction/LLM, job, offscreen runner, Slice E eval, smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
+| G8 | Test tự động + coverage ≥ 70% + Playwright | 🟡 | 351 test Vitest / 36 file (core, parse, page snapshot, extraction/LLM, provider remote/factory/permissions, form Cài đặt, job, offscreen runner, Slice E eval, smoke jsdom); **không có Playwright, không đặt ngưỡng coverage** |
 | G9 | Golden set 150 mẫu + `run_eval.ts` + F1/p95 | 🟡 | Slice E có **15 mẫu** + metric + harness `llama-server`; chưa đủ 150 mẫu, chưa có F1/coverage đầy đủ |
 | G10 | **KS-11** Luồng lỗi: token hết hạn, quota, model chết, trang không inject được | 🟡 | Có xử lý `chrome://`, nội dung rỗng, JSON rác, trang SPA chưa render, model chết, huỷ/job lỗi; thiếu lỗi OAuth/quota |
 | G11 | Đóng gói CRX + privacy policy + báo cáo eval | ❌ | Mới ở mức load unpacked `dist/` |
 
-## H. Kế hoạch đã chốt nhưng chưa triển khai
+## H. Kế hoạch đã chốt — trạng thái triển khai
 
 | Mã | Chức năng theo kế hoạch | Trạng thái | Demo hiện tại / ghi chú |
 |---|---|---|---|
-| H1 | **KS-14** Chọn nơi chạy suy luận: **Máy này** (mặc định) / endpoint OpenAI-compatible (Gemini) / máy trạm Cloudflared | ❌ | Chỉ có `LlamaCppProvider` + `127.0.0.1:8080`; chưa có form chọn provider, consent hay quyền host động |
-| H2 | Consent một lần theo origin remote + thu hồi; đổi origin phải đồng ý lại | ❌ | Chưa có `consentByOrigin` |
-| H3 | API key cục bộ, không xuất JSON/log; nút xoá key | 🟡 | `LlmSettings.apiKey` đã lưu cục bộ và export hiện không chứa settings; **chưa có UI xoá key riêng** |
-| H4 | Health/lỗi remote 401/403/404/429/5xx, timeout, `response_format` | ❌ | `LlamaCppProvider` có health/timeout/abort cho localhost; nhánh remote chưa có |
-| H5 | Quyền host cấp lúc chạy cho đúng origin (`optional_host_permissions`) | ❌ | Manifest hiện chỉ có static `http://127.0.0.1:8080/*` |
+| H1 | **KS-14** Chọn nơi chạy suy luận: **Máy này** (mặc định) / endpoint OpenAI-compatible (Gemini) / máy trạm Cloudflared | ✅ | `LlamaCppProvider` + `OpenAiCompatibleProvider` + factory; form chọn provider, consent và quyền host động. Checklist thật còn chờ |
+| H2 | Consent một lần theo origin remote + thu hồi; đổi origin phải đồng ý lại | ✅ | `consentByOrigin`, modal consent, nút thu hồi; có test |
+| H3 | API key cục bộ, không xuất JSON/log; nút xoá key | ✅ | `LlmSettings.apiKey` lưu cục bộ, export không chứa settings, có nút **Xoá key đã lưu** |
+| H4 | Health/lỗi remote 401/403/404/429/5xx, timeout, `response_format` | ✅ | `OpenAiCompatibleProvider` map lỗi, retry có giới hạn, `finishReason`/`promptFeedback`; test mock |
+| H5 | Quyền host cấp lúc chạy cho đúng origin (`optional_host_permissions`) | ✅ | Manifest có optional host cho HTTPS + local alias; xin quyền trong user gesture |
 | H6 | **Slice F** Sàng lọc nội dung bằng PhoBERT cục bộ (`127.0.0.1:8000`) trước khi gọi LLM | ❌ | Không có; demo gọi LLM trực tiếp. Không cắt câu, chỉ bỏ lần gọi LLM trên tài liệu âm |
 
-> H1–H5 thuộc **S7**, ước lượng 7–11 ngày công. **H6** thuộc **Slice F**, ước lượng 5–6,5 ngày
-> công và **độc lập S7**. Không tính vào tổng 66 mục của bảng A–G.
+> H1–H5 thuộc **S7**, đã có code + test tự động; việc chạy checklist với Gemini/Cloudflared thật vẫn
+> còn. **H6** thuộc **Slice F**, ước lượng 5–6,5 ngày công và **độc lập S7**. Không tính vào tổng 66
+> mục của bảng A–G.
 > Chi tiết, tiêu chí nghiệm thu và rủi ro: [`ke-hoach-da-provider.md`](./ke-hoach-da-provider.md),
 > [`ke-hoach-bo-loc-noi-dung.md`](./ke-hoach-bo-loc-noi-dung.md).
 
@@ -186,7 +190,7 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
 | **S4** | Notifications + KS-12 | 🟡 Notification kết quả trích xuất ✅; nhắc việc sự kiện + KS-12 ❌ |
 | **S5** | Gmail + attachment | ❌ Chưa có |
 | **S6** | Hardening + release | 🟡 Có test/build/CI; chưa có eval, CRX, privacy policy |
-| **S7** (hậu demo) | Chọn nơi chạy suy luận (KS-14) | ❌ Chưa triển khai; kế hoạch đã chốt 2026-10-26 |
+| **S7** (hậu demo) | Chọn nơi chạy suy luận (KS-14) | ✅ Phần code + test F1–F5; checklist thật Gemini/Cloudflared còn chờ |
 
 ## Ghi chú khi dùng cho báo cáo
 
@@ -198,7 +202,8 @@ Tài liệu này liệt kê các chức năng theo **kế hoạch chính thức*
    (suy luận cục bộ, quyền tối thiểu).
 3. **Điểm cần nói rõ là giả lập/thay thế:** dán văn bản thay Gmail/PDF; chưa có sàng lọc
    PhoBERT; hoàn thành sự kiện thủ công thay tự động theo giờ; nhắc việc sự kiện chưa có;
-   **chọn provider remote (KS-14) mới là kế hoạch, demo vẫn local-only**.
+   **provider remote (KS-14) đã có code nhưng chưa chạy kiểm thử với Gemini/Cloudflared thật**;
+   mặc định vẫn là local.
 4. **Trước khi báo cáo:** chạy lại `npm run typecheck && npm run lint && npm test && npm run build`
    và hoàn tất các ô còn trống trong `docs/kiem-thu-demo.md`.
 

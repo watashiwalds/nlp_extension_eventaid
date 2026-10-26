@@ -4,7 +4,7 @@
 >
 > **Sản phẩm:** Chrome Extension (Manifest V3). Giai đoạn hiện tại: **Gmail API** (kênh chính) + **Browser Page Parser** (kênh bổ sung, lọc nội dung chính bằng **Mozilla Readability** trước khi đưa vào NLP pipeline), dùng chung Document Processing Layer và NLP Pipeline.
 >
-> **Nơi chạy suy luận:** mặc định là **máy này** (`llama-server` tại `127.0.0.1:8080`); người dùng có thể chọn một endpoint **OpenAI-compatible** khác (dịch vụ ngoài hoặc máy trạm của mình) theo **KS-14**. Đây là kế hoạch đã chốt ngày 2026-10-26, **chưa triển khai** trong demo hiện tại.
+> **Nơi chạy suy luận:** mặc định là **máy này** (`llama-server` tại `127.0.0.1:8080`); người dùng có thể chọn một endpoint **OpenAI-compatible** khác (dịch vụ ngoài hoặc máy trạm của mình) theo **KS-14**. Đã triển khai F1–F5 ngày 2026-10-26; kiểm thử thủ công với Gemini/Cloudflared còn chờ chạy.
 
 ---
 
@@ -74,7 +74,7 @@ Cài đặt → Thiết lập hồ sơ → (Liên kết Gmail) → Quét (trang 
 | **E — Nhắc việc** | KS-10 | Thông báo sự kiện sắp tới | SVG (Trước khi sự kiện hoàn thành) |
 | **F — Ngoại lệ** | KS-11 | Các luồng lỗi và ngoại lệ | `proposed_technical.md` §9 |
 | **G — Mở rộng (Giai đoạn 4)** | KS-13 | Xung đột lịch & xuất ICS/tích hợp calendar | `proposed_technical.md` §10 (Giai đoạn 4) |
-| **H — Cấu hình suy luận** | KS-14 | Chọn nơi chạy suy luận (local / dịch vụ ngoài) | Kế hoạch đa provider 2026-10-26 |
+| **H — Cấu hình suy luận** | KS-14 | Chọn nơi chạy suy luận (local / dịch vụ ngoài) | Đã triển khai F1–F5 (2026-10-26) |
 
 ---
 
@@ -390,24 +390,26 @@ Theo nguyên tắc §9 của `proposed_technical.md`: chỉ đọc khi người 
 
 **Mục tiêu:** Người dùng kiểm soát suy luận chạy ở đâu — máy mình (mặc định), một dịch vụ
 OpenAI-compatible, hay máy trạm riêng — mà không đổi pipeline trích xuất.
-**Trạng thái:** đã chốt ngày 2026-10-26, **chưa triển khai** trong demo hiện tại.
+**Trạng thái:** đã triển khai F1–F5 ngày 2026-10-26; checklist thủ công với endpoint thật còn chờ.
 **Tiền điều kiện:** đã có nội dung cần trích (KS-04/05/06/07); extension đang dùng provider mặc định.
 
 | # | Người dùng | Hệ thống |
 |---|---|---|
 | 1 | Mở **Cài đặt → Nơi chạy suy luận**. | Hiển thị hai lựa chọn: **Máy này** (đang chọn, `127.0.0.1:8080`) và **Endpoint khác**. |
-| 2 | Chọn **Endpoint khác**, nhập base URL, API key (nếu cần) và tên model. | Chuẩn hoá URL; từ chối HTTP ngoài localhost (mọi host khác phải dùng HTTPS); yêu cầu quyền host cho đúng origin nếu chưa có. |
-| 3 | Bấm **Kiểm tra kết nối**. | Nếu origin chưa được đồng ý: hiện cảnh báo một lần — *"Nội dung trang sẽ được gửi tới `<host>`. Dữ liệu rời trình duyệt và có thể đi qua nhà cung cấp. API key chỉ lưu trên máy này."* — kèm **Đồng ý** / **Huỷ**. |
-| 4 | Chọn **Đồng ý**. | Gọi health; thành công thì lưu `provider`, `endpoint`, `apiKey`, `model` + mốc đồng ý theo origin; hiện model/endpoint. |
-| 5 | Quay lại **Quét nội dung** và bấm **Trích sự kiện**. | Job dùng provider đã chọn; pipeline, prompt, schema, dedup, lưu `nhap` không đổi; tiến trình ghi rõ provider/model. |
-| 6 | (Tuỳ chọn) Chọn **Máy này** rồi trích lại. | Dùng lại `llama-server` cục bộ; không hỏi consent; endpoint/key remote vẫn được giữ để đổi lại. |
-| 7 | (Tuỳ chọn) Bấm **Thu hồi đồng ý** hoặc **Xoá key**. | Xoá mốc đồng ý/key tương ứng; lần chạy remote sau bị chặn cho tới khi đồng ý lại. |
+| 2 | Chọn **Endpoint khác**, nhập base URL, API key (nếu cần) và tên model. | Hiện form remote; chưa gửi request. Chuẩn hoá URL; từ chối HTTP ngoài localhost (mọi host khác phải dùng HTTPS); bỏ đuôi `/chat/completions` nếu người dùng dán cả URL. |
+| 3 | Bấm **Kiểm tra kết nối**. | Xin quyền host cho đúng origin nếu chưa có. Nếu origin chưa được đồng ý: hiện cảnh báo một lần — *"Nội dung trang sẽ được gửi tới `<host>`. Dữ liệu rời trình duyệt và có thể đi qua nhà cung cấp. API key chỉ lưu trên máy này."* — kèm **Đồng ý** / **Huỷ**. |
+| 4 | Chọn **Đồng ý**. | Gọi health; thành công thì hiện endpoint + model, ghi mốc đồng ý theo origin. Chưa lưu endpoint/key mới. |
+| 5 | Bấm **Lưu cài đặt**. | Kiểm tra health lại; thành công mới lưu `provider`, `endpoint`, `apiKey`, `model` + mốc đồng ý. Health lỗi → không lưu endpoint/key mới. |
+| 6 | Quay lại **Quét nội dung** và bấm **Trích sự kiện**. | Job dùng provider đã chọn; pipeline, prompt, schema, dedup, lưu `nhap` không đổi; tiến trình ghi rõ provider/model. |
+| 7 | (Tuỳ chọn) Chọn **Máy này** rồi trích lại. | Dùng lại `llama-server` cục bộ; không hỏi consent; endpoint/key remote vẫn được giữ để đổi lại nhưng bị bỏ qua khi chạy local. |
+| 8 | (Tuỳ chọn) Bấm **Thu hồi đồng ý** hoặc **Xoá key đã lưu**. | Xoá mốc đồng ý (kèm quyền host nếu Chrome cho phép)/key tương ứng; lần chạy remote sau bị chặn cho tới khi đồng ý lại. |
 
 **Luồng thay thế / lỗi:**
 
 | Tình huống | Phản hồi |
 |---|---|
-| Người dùng **Huỷ** ở bước đồng ý | Không lưu endpoint, không gửi request; giữ provider cũ. |
+| Người dùng **Huỷ** ở bước đồng ý | Không lưu endpoint, không gửi request health; giữ provider cũ. |
+| Health lỗi khi **Lưu** | Không lưu endpoint/key mới; consent vừa đồng ý vẫn được giữ để thử lại. |
 | Origin đã đổi (ví dụ Cloudflared cấp URL mới) | Yêu cầu đồng ý lại cho origin mới; endpoint cũ không tự chạy. |
 | 401/403 | "API key không đúng hoặc chưa được cấp quyền"; không lưu trạng thái "đã kết nối". |
 | 404 | "Không thấy model/endpoint"; gợi ý kiểm tra base URL và tên model. |
@@ -468,7 +470,7 @@ interface NormalizedDocument {
   extractionMethod: "readability" | "raw_dom" | "selection" | "parser";
 }
 
-// Cấu hình nơi chạy suy luận (KS-14; kế hoạch, chưa triển khai)
+// Cấu hình nơi chạy suy luận (KS-14; đã triển khai; contracts.ts là nguồn chuẩn)
 // Mở rộng `LlmSettings` hiện có trong src/shared/contracts.ts
 interface LlmSettings {
   provider: "local" | "openai-compatible";   // mặc định: "local"
@@ -554,8 +556,8 @@ interface SourceRef {
 | 2 — Kết hợp Gmail API | KS-03, KS-05, KS-06, dedup cơ bản |
 | 3 — Cải thiện chất lượng trích xuất | KS-07, heuristic bảo toàn bảng khi lọc nhiễu Readability, xử lý trang động/nội dung dài, PDF/DOCX/OCR đầy đủ |
 | 4 — Hoàn thiện quản lý lịch | KS-09 (đầy đủ CRUD + hoàn thành), KS-10, KS-12 (trùng lặp/thay đổi lịch), KS-13 (xung đột lịch, xuất ICS/tích hợp calendar) |
-| Bổ sung sau Giai đoạn 4 (đã chốt 2026-10-26) | KS-14 (chọn nơi chạy suy luận: local / dịch vụ ngoài / máy trạm) |
+| Bổ sung sau Giai đoạn 4 (đã triển khai F1–F5 ngày 2026-10-26) | KS-14 (chọn nơi chạy suy luận: local / dịch vụ ngoài / máy trạm) |
 
 ---
 
-*Tài liệu này hoàn thiện kịch bản trong `unfinished_script.svg` — bổ sung: lọc nhiễu Readability (KS-04), trích vùng chọn (KS-07), tệp đính kèm (KS-06), cập nhật lịch từ nguồn (KS-12), placeholder Giai đoạn 4 (KS-13), chọn nơi chạy suy luận (KS-14, chốt 2026-10-26, chưa triển khai), hậu điều kiện đồng bộ cho mọi kịch bản, phân rã thành phần hệ thống, mô hình dữ liệu và ma trận phủ yêu cầu — sẵn sàng dùng làm kịch bản demo/báo cáo tiến độ.*
+*Tài liệu này hoàn thiện kịch bản trong `unfinished_script.svg` — bổ sung: lọc nhiễu Readability (KS-04), trích vùng chọn (KS-07), tệp đính kèm (KS-06), cập nhật lịch từ nguồn (KS-12), placeholder Giai đoạn 4 (KS-13), chọn nơi chạy suy luận (KS-14, đã triển khai F1–F5 ngày 2026-10-26; checklist thật còn chờ), hậu điều kiện đồng bộ cho mọi kịch bản, phân rã thành phần hệ thống, mô hình dữ liệu và ma trận phủ yêu cầu — sẵn sàng dùng làm kịch bản demo/báo cáo tiến độ.*

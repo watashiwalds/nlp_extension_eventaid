@@ -172,14 +172,14 @@ Không nên tự suy diễn các trường không có trong nguồn. Ví dụ, n
 - Xử lý các trường hợp trang không thể inject script, nội dung chưa tải xong, tệp không hỗ trợ và parser thất bại.
 - Không thực thi script hoặc macro từ tài liệu đầu vào.
 
-### 9.1. Lựa chọn nơi chạy suy luận (đã chốt 2026-10-26, chưa triển khai)
+### 9.1. Lựa chọn nơi chạy suy luận (đã triển khai F1–F5 ngày 2026-10-26)
 
 Mặc định suy luận chạy **trên máy người dùng** qua `llama-server` tại `127.0.0.1:8080`.
 Người dùng có thể chọn một endpoint **OpenAI-compatible** khác (dịch vụ ngoài như Gemini, hoặc
 máy trạm của chính mình qua Cloudflared) theo kế hoạch `docs/ke-hoach-da-provider.md` và kịch bản
 `script.md` KS-14.
 
-Các ràng buộc bắt buộc khi triển khai:
+Các ràng buộc đang áp dụng:
 
 - **Opt-in, không mặc định:** không có dữ liệu rời máy nếu người dùng chưa chọn endpoint remote.
 - **Consent theo origin:** cảnh báo một lần cho mỗi origin không phải localhost, lưu mốc đồng ý,
@@ -191,6 +191,10 @@ Các ràng buộc bắt buộc khi triển khai:
 - **Lỗi:** phân loại 401/403/404/429/5xx, timeout, mất mạng; retry có giới hạn; không lưu sự kiện
   rác khi output không qua schema.
 - **Không đổi pipeline:** prompt, JSON schema, normalize, dedup và trạng thái `nhap` giữ nguyên.
+
+**Trạng thái code:** `OpenAiCompatibleProvider`, factory, quy tắc `provider-choice`, form Cài đặt,
+consent theo origin, quyền host động và nút xoá key đã có trong `extension/`. Kiểm thử thật với
+Gemini/Cloudflared vẫn chờ chạy (`docs/kiem-thu-demo.md` §8); chưa có adapter native Gemini.
 
 ### 9.2. Sàng lọc nội dung trước LLM (Slice F — đã chốt 2026-10-26, chưa triển khai)
 
@@ -234,7 +238,7 @@ máy người dùng; không gửi nội dung ra ngoài.
 - Phát hiện trùng lặp và xung đột lịch.
 - Xem xét tích hợp calendar hoặc xuất dữ liệu.
 
-### Giai đoạn 5 — Chọn nơi chạy suy luận (đã chốt 2026-10-26)
+### Giai đoạn 5 — Chọn nơi chạy suy luận (đã triển khai F1–F5 2026-10-26)
 
 - Giữ localhost là mặc định.
 - Thêm provider OpenAI-compatible (Gemini, máy trạm qua Cloudflared) + factory chọn provider.
@@ -242,7 +246,8 @@ máy người dùng; không gửi nội dung ra ngoài.
 - Kiểm thử 3 nơi chạy + lỗi 401/403/404/429/5xx; không chạy lại toàn bộ golden set.
 - Chi tiết và tiêu chí nghiệm thu: `docs/ke-hoach-da-provider.md`, `script.md` KS-14.
 
-> Giai đoạn 5 nằm **sau** phạm vi demo hiện tại; bản demo vẫn chỉ chạy local cho tới khi triển khai.
+> Giai đoạn 5 đã có code + test tự động. Checklist thủ công với Gemini/Cloudflared vẫn là việc tiếp
+> theo; không mô tả các endpoint đó là đã kiểm chứng.
 
 ## Kết luận
 

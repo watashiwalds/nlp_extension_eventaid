@@ -1,9 +1,12 @@
 # Kế hoạch đa provider — chọn nơi chạy suy luận
 
-> **Trạng thái:** đã chốt phạm vi ngày **2026-10-26**; **chưa triển khai** trong `extension/`.
-> Bản demo hiện tại vẫn chỉ gọi `llama-server` tại `127.0.0.1:8080`.
-> Tài liệu này là nguồn hiện hành cho thay đổi "chọn nơi chạy suy luận"; khi code xong phải
-> cập nhật lại `docs/DEVIATIONS.md`, `docs/kiem-thu-demo.md` và §11 của `AGENTS.md`.
+> **Trạng thái:** đã chốt phạm vi ngày **2026-10-26**; **đã triển khai F1–F5** trong `extension/`
+> cùng ngày. Đã kiểm bằng `typecheck`, ESLint, Vitest và `vite build`; **chưa chạy kiểm thử thủ công
+> với Gemini/Cloudflared** vì môi trường phát triển không có Chrome, API key hay `llama-server`.
+> Mặc định vẫn là `llama-server` tại `127.0.0.1:8080`; remote chỉ chạy sau khi người dùng chọn
+> endpoint, cấp quyền host và đồng ý theo origin.
+> Tài liệu này là nguồn hiện hành cho thay đổi "chọn nơi chạy suy luận"; trạng thái chi tiết nằm ở
+> §8 và `docs/DEVIATIONS.md`, checklist chạy tay ở `docs/kiem-thu-demo.md` §8.
 
 ---
 
@@ -39,15 +42,19 @@ Người dùng chọn được nơi chạy suy luận ngay trong **Cài đặt**
 
 ### 1.2. Tiêu chí nghiệm thu
 
-- [ ] Đổi provider trong Cài đặt → **Kiểm tra kết nối** báo đúng model/endpoint.
+> **Cách đọc:** `[x]` = đã có code + test tự động; `[ ]` = còn phải chạy tay trong Chrome với
+> endpoint thật. Không đánh dấu `[x]` cho phần chưa đo thật.
+
+- [x] Đổi provider trong Cài đặt → **Kiểm tra kết nối** báo đúng model/endpoint (unit test;
+      chưa chạy Chrome).
 - [ ] Trích đúng trên **1–2 trang mẫu** với cả ba nơi: localhost, Gemini (hoặc dịch vụ
-      OpenAI-compatible khác), máy trạm qua Cloudflared.
-- [ ] Lần đầu dùng một origin remote: hiện cảnh báo rõ, chỉ chạy sau khi người dùng đồng ý;
+      OpenAI-compatible khác), máy trạm qua Cloudflared. **Chưa chạy** — thiếu API key/Chrome.
+- [x] Lần đầu dùng một origin remote: hiện cảnh báo rõ, chỉ chạy sau khi người dùng đồng ý;
       từ chối thì không gửi request và giữ provider cũ.
-- [ ] Thu hồi consent → lần chạy sau bị chặn cho tới khi đồng ý lại.
-- [ ] API key không xuất hiện trong file JSON xuất dữ liệu, log console hay thông báo lỗi.
-- [ ] Quay về **Máy này** hoạt động lại bình thường, không cần đăng nhập/xoá key.
-- [ ] Tài liệu + checklist được cập nhật; không cần chạy lại toàn bộ 15 fixtures.
+- [x] Thu hồi consent → lần chạy sau bị chặn cho tới khi đồng ý lại.
+- [x] API key không xuất hiện trong file JSON xuất dữ liệu, log console hay thông báo lỗi.
+- [x] Quay về **Máy này** hoạt động lại bình thường, không cần đăng nhập/xoá key.
+- [x] Tài liệu + checklist được cập nhật; không cần chạy lại toàn bộ 15 fixtures.
 
 ### 1.3. Không làm trong phạm vi này
 
@@ -86,10 +93,18 @@ src/platform/inference/factory.ts
   - `AbortSignal`, timeout, phân loại lỗi dùng lại `InferenceError`.
 - Factory chọn provider theo `settings.provider` và host; không để UI tự `new` provider.
 - Quy ước base URL: người dùng nhập phần trước `/chat/completions` (thường kết thúc bằng `/v1`);
-  extension chuẩn hoá bỏ `/` cuối, không tự thêm `/v1` nếu người dùng đã nhập.
+  extension chuẩn hoá bỏ `/` cuối, không tự thêm `/v1` nếu người dùng đã nhập. Nếu người dùng dán
+  cả URL hoàn chỉnh, phần đuôi `/chat/completions`, `/models` hoặc `/health` cũng được bỏ.
 - Nếu endpoint remote là Gemini và `/v1beta/openai/` không ép được schema/không tắt được
   thinking → mở **nhánh native tối thiểu** `GeminiProvider` (xem §6.1). Đây là quyết định
-  tăng phạm vi, chỉ làm sau khi có kết quả kiểm chứng.
+  tăng phạm vi, chỉ làm sau khi có kết quả kiểm chứng. **F6 chưa triển khai** vì chưa có bằng
+  chứng thật; code hiện chỉ dùng giao thức OpenAI-compatible.
+
+**Đã triển khai (F1–F2):**
+`src/platform/inference/openai-compatible.ts` (provider + map lỗi + `finishReason`/`promptFeedback`),
+`src/platform/inference/http.ts` (helper HTTP dùng chung), `src/platform/inference/factory.ts`
+(chọn provider), `src/core/inference/provider-choice.ts` (quy tắc thuần cho endpoint/consent) và
+`src/platform/offscreen/run-job.ts` (chặn chạy khi thiếu consent).
 
 ### 2.2. Hợp đồng dữ liệu dự kiến
 
@@ -122,6 +137,11 @@ consentByOrigin: Record<string, string>   // origin -> ISO thời điểm đồn
   của extension page, không thay thế host permission.
 - Ghi rõ trong UI: quyền chỉ dùng để gọi đúng endpoint người dùng nhập.
 
+**Đã triển khai:** `manifest.config.ts` có `optional_host_permissions: ["https://*/*",
+"http://localhost:8080/*", "http://[::1]:8080/*"]` và `connect-src` tương ứng;
+`src/platform/permissions.ts` gọi `chrome.permissions.request()` ngay trong handler để giữ user
+gesture, và `removeHostPermission()` khi thu hồi consent.
+
 > **Hệ quả cần chấp nhận:** quyền host động có thể hiện cảnh báo rộng khi cấp lần đầu.
 > Với bản demo load unpacked, đây là đánh đổi hợp lý; nếu phát hành store phải thiết kế lại
 > luồng quyền và privacy disclosure.
@@ -138,6 +158,11 @@ consentByOrigin: Record<string, string>   // origin -> ISO thời điểm đồn
 - Thu hồi → xoá entry; lần chạy sau chặn và hiện lại modal.
 - Từ chối → giữ provider cũ, không gửi request, không ghi đè endpoint.
 
+**Đã triển khai:** modal `src/ui/consent-dialog.ts` (không dùng `window.confirm`), lưu consent ngay
+khi đồng ý kể cả khi health sau đó lỗi; endpoint/key chỉ được ghi khi health thành công. Consent
+vừa đồng ý trong phiên được giữ ở bộ nhớ tạm để “Kiểm tra kết nối” rồi “Lưu” không hỏi lại; cache
+này bị xoá khi lưu thành công, thu hồi hoặc xoá toàn bộ dữ liệu.
+
 ### 2.5. API key
 
 - Lưu trong `LlmSettings` (IndexedDB) như hiện tại; đây là plaintext trên máy — phải ghi rõ
@@ -146,6 +171,10 @@ consentByOrigin: Record<string, string>   // origin -> ISO thời điểm đồn
 - Nút **Xoá key** trong Cài đặt; **Xoá toàn bộ dữ liệu** xoá luôn settings.
 - Không dùng `chrome.storage.session` vì người thử sẽ phải nhập lại mỗi phiên; ghi nhận đây là
   đánh đổi của phạm vi demo.
+
+**Đã triển khai:** form Cài đặt có nút **Xoá key đã lưu**; `ExportPayload` không chứa settings;
+`clearAllData` xoá settings/key/consent. Key không được đưa vào query string hay thông báo lỗi;
+phần body 400/422 được rút gọn và che key trước khi hiển thị.
 
 ### 2.6. Health và lỗi
 
@@ -164,6 +193,12 @@ consentByOrigin: Record<string, string>   // origin -> ISO thời điểm đồn
   phải qua `parseRawExtraction` và retry 1 lần như hiện tại.
 - Với Gemini: kiểm tra `finishReason` (`MAX_TOKENS`, `SAFETY`, `RECITATION`) và
   `promptFeedback.blockReason`; map sang thông báo tiếng Việt thay vì "output rỗng".
+
+**Đã triển khai:** map case-insensitive cho `LENGTH`/`MAX_TOKENS`, `SAFETY`, `BLOCKLIST`,
+`PROHIBITED_CONTENT`, `SPII`, `RECITATION`, `LANGUAGE` và `promptFeedback.blockReason` /
+`prompt_feedback.block_reason`. Retry đúng một lần cho 429/5xx, tôn trọng `Retry-After` nhưng
+chặn trần 2 giây; 400/422 không retry. Health remote dùng timeout 10 giây; lỗi health hiển thị
+endpoint/model khi thành công.
 
 ---
 
@@ -199,21 +234,30 @@ Luồng lỗi chi tiết nằm ở `script.md` KS-11 và KS-14.
 Thứ tự khuyến nghị: **spike F4 trước** (một curl/script nhỏ) để biết có cần F6 không, rồi
 làm F1 → F2 → F3 → F5.
 
+**Trạng thái triển khai (2026-10-26):** F1–F5 đã xong phần code + test tự động. F6 **không làm**
+vì chưa có kết quả kiểm chứng Gemini thật; nếu spike sau này thất bại mới mở F6. Ước lượng 7–11
+ngày công vẫn giữ cho phần chạy thật và xử lý lỗi endpoint, chưa gồm thời gian chạy checklist thủ công.
+
 ---
 
 ## 5. Kiểm thử
 
-### 5.1. Tự động (Vitest)
+### 5.1. Tự động (Vitest) — đã có
 
 - `tests/platform/openai-compatible.test.ts`: dựng URL/header/body, parse `models`/`choices`,
-  map 401/403/404/429/5xx, abort/timeout, `finishReason`.
+  map 401/403/404/429/5xx, abort/timeout, `finishReason`/`promptFeedback`.
 - `tests/platform/provider-factory.test.ts`: chọn provider theo settings/host; default local.
-- `tests/shared/contracts.test.ts`: settings cũ (không có `provider`/`consentByOrigin`) vẫn đọc
-  được; `ExtractionMeta.provider` nhận giá trị mới.
-- `tests/ui/...`: form Cài đặt hiện/ẩn field, consent chặn lưu, thu hồi chặn chạy.
+- `tests/core/provider-choice.test.ts`: chuẩn hoá/validate endpoint, local vs remote, consent,
+  giữ endpoint/key remote khi quay về local.
+- `tests/platform/permissions.test.ts`: xin/thu hồi quyền host, nhận diện origin tĩnh.
+- `tests/platform/settings.test.ts` + `tests/shared/contracts.test.ts`: settings cũ (không có
+  `provider`/`consentByOrigin`) vẫn đọc được; `ExtractionMeta.provider` nhận giá trị mới; bản xuất
+  dữ liệu không chứa API key hay consent.
+- `tests/ui/settings.test.ts`: form hiện/ẩn field, consent chặn lưu, thu hồi, xoá key.
+- `tests/ui/extract-guard.test.ts`: chưa consent/chưa có quyền host thì không gửi job.
 - Không đưa key thật vào test/CI; dùng `fetch` mock.
 
-### 5.2. Thủ công (Chrome)
+### 5.2. Thủ công (Chrome) — còn chờ
 
 - Localhost: health + trích 1 trang như hiện tại.
 - Gemini (hoặc endpoint OpenAI-compatible khác): health, trích 1 trang, kiểm tra JSON hợp lệ.
@@ -222,7 +266,8 @@ làm F1 → F2 → F3 → F5.
 - Key: kiểm tra không có trong file xuất, không hiện trong toast/log.
 - Quay về localhost sau khi dùng remote.
 
-Chi tiết checkbox: `docs/kiem-thu-demo.md` §8 (đã có checklist, chờ S7 để chạy).
+Chi tiết checkbox: `docs/kiem-thu-demo.md` §8. Code đã xong nhưng **các mục thật vẫn để trống**
+cho tới khi có Chrome + endpoint; không đánh dấu đã kiểm thử thủ công.
 
 ---
 
@@ -230,11 +275,13 @@ Chi tiết checkbox: `docs/kiem-thu-demo.md` §8 (đã có checklist, chờ S7 �
 
 1. **Gemini OpenAI-compatible có thật sự ép `response_format` schema không?** Nếu không,
    phải dùng native `generateContent` + `responseSchema` (dịch `nullable`, bỏ
-   `additionalProperties`). Đây là câu hỏi phải trả lời bằng spike trước F1.
+   `additionalProperties`). Đây là câu hỏi **vẫn mở**; F1–F5 đã làm theo giả định
+   OpenAI-compatible, chưa có bằng chứng từ Gemini thật.
 2. **Thinking của Gemini** có thể ăn hết `maxTokens`; cần tắt/hạ mức (`thinkingBudget` với 2.5,
-   `thinkingLevel` với 3) và kiểm tra model cụ thể.
+   `thinkingLevel` với 3) và kiểm tra model cụ thể. **Chưa đo** — provider remote không gửi
+   `chat_template_kwargs`.
 3. **Cloudflared free** có timeout proxy ~100 giây; trang dài hoặc model chậm có thể lỗi 524
-   trước timeout 120 giây của extension. Giảm chunk hoặc chấp nhận lỗi trong demo.
+   trước timeout 120 giây của extension. Giảm chunk hoặc chấp nhận lỗi trong demo. **Chưa đo.**
 4. **Quyền host động** hiện cảnh báo rộng; nếu chuyển sang phát hành store phải thiết kế lại.
 5. **Key plaintext** trong IndexedDB là rủi ro đã biết; chấp nhận cho demo, phải ghi rõ.
 6. **Model remote thay đổi/deprecate**; không hard-code tên, cho phép để trống để dò hoặc nhập
@@ -251,6 +298,11 @@ Chi tiết checkbox: `docs/kiem-thu-demo.md` §8 (đã có checklist, chờ S7 �
     Cloudflared. Khuyến nghị model ≤ 9B cho demo remote, hoặc giảm chunk và đặt timeout thấp hơn
     để báo lỗi sớm thay vì treo.
 
+**Trạng thái rủi ro (2026-10-26):** các rủi ro 1–3 và 9–10 vẫn **mở** vì chưa có API key, Chrome
+hay `llama-server` để đo thật. Code đã xử lý `finishReason`/`promptFeedback`, retry có giới hạn và
+hiển thị lỗi theo host/status, nhưng chưa chứng minh trên Gemini/Cloudflared thật. Adapter native
+Gemini (F6) **không triển khai**.
+
 ---
 
 ## 7. Truy vết tài liệu
@@ -265,5 +317,48 @@ Chi tiết checkbox: `docs/kiem-thu-demo.md` §8 (đã có checklist, chờ S7 �
 
 ---
 
-*Tài liệu này chỉ mô tả kế hoạch; không thay đổi mã nguồn. Khi triển khai xong, cập nhật
-"Trạng thái" ở đầu tài liệu và đánh dấu các mục nghiệm thu.*
+## 8. Ghi chú triển khai (2026-10-26)
+
+### 8.1. File đã thêm/sửa
+
+| File | Nội dung |
+|---|---|
+| `extension/src/platform/inference/openai-compatible.ts` | Provider remote: `/models`, `/chat/completions`, Bearer key, retry 429/5xx, map lỗi và `finishReason`/`promptFeedback` |
+| `extension/src/platform/inference/http.ts` | Helper dùng chung: timeout/abort, header auth, parse model, map lỗi HTTP, che key trong body lỗi |
+| `extension/src/core/inference/provider-choice.ts` | Hàm thuần: chuẩn hoá/validate endpoint, local vs remote, consent, endpoint hiệu lực khi chọn local |
+| `extension/src/platform/inference/factory.ts` | `createInferenceProvider(settings)` |
+| `extension/src/platform/permissions.ts` | `ensureHostPermission`, `removeHostPermission`, `needsHostPermission` |
+| `extension/src/ui/consent-dialog.ts` | Modal consent thân thiện, thay `window.confirm` |
+| `extension/src/ui/views/settings.ts` + `ui/provider-panels.ts` | Form chọn provider, panel local/remote, danh sách consent, nút thu hồi/xoá key |
+| `extension/src/ui/actions/settings.ts` | Đọc form, xin quyền/consent, health, lưu, thu hồi, xoá key |
+| `extension/manifest.config.ts` | `optional_host_permissions` + `connect-src` cho HTTPS/local alias |
+| `extension/src/shared/contracts.ts` | `provider`, `consentByOrigin`, `ExtractionMeta.provider = 'openai-compatible'` |
+
+### 8.2. Quyết định triển khai
+
+- **Lưu remote cần health thành công.** Consent được ghi ngay khi đồng ý (kể cả health sau đó
+  lỗi), nhưng `provider`/`endpoint`/`apiKey`/`model` chỉ được lưu khi `/models` trả OK.
+- **Giữ cấu hình remote khi quay về local.** Nếu `endpoint` đang là remote, provider local bỏ qua
+  endpoint/key/model đó và dùng `http://127.0.0.1:8080`; local alias (`localhost`, `[::1]`) vẫn
+  được dùng nếu người dùng nhập.
+- **Health không đi qua store.** Kết quả hiển thị trực tiếp trong `#llm-health` để không render
+  lại form và mất giá trị đang nhập; `llmHealth` không còn trong `AppState`.
+- **Consent trong phiên.** Cache module-level cho phép “Kiểm tra kết nối” rồi “Lưu” mà không hỏi
+  lại; cache bị xoá sau khi lưu thành công, thu hồi hoặc xoá toàn bộ dữ liệu.
+- **Chặn hai lớp.** UI chặn trước khi gửi job; `runExtractionJob()` kiểm tra lại
+  `providerAccessProblem(settings)` để không gửi nếu settings bị sửa trong lúc chờ.
+- **Không có adapter native Gemini.** Chỉ dùng OpenAI-compatible; F6 để mở nếu kiểm chứng thật thất bại.
+- **`clearAllData` xoá cả consent + cache**, không chỉ dữ liệu sự kiện.
+
+### 8.3. Việc còn lại
+
+- [ ] Chạy `docs/kiem-thu-demo.md` §8 trong Chrome với `llama-server`, Gemini/OpenAI-compatible
+      và Cloudflared thật.
+- [ ] Kiểm tra Gemini có tôn trọng `response_format` + tắt thinking được không; nếu không, mở F6.
+- [ ] Đo lại giới hạn proxy ~100 giây của Cloudflared với trang dài.
+- [ ] Kiểm tra Chrome chấp nhận optional host `http://[::1]:8080/*` và CSP tương ứng.
+
+---
+
+*Tài liệu này mô tả kế hoạch và ghi chú triển khai; mã nguồn chuẩn nằm trong `extension/`.
+Cập nhật mục "Trạng thái" và §8 khi chạy xong checklist thủ công.*

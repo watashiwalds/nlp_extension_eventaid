@@ -16,7 +16,7 @@
 | 4 | **Lưu nháp + người dùng duyệt** | "Lưu trữ" = ghi IndexedDB với `status = nhap`, không ghi thẳng vào lịch |
 | 5 | **TypeScript + Vite, không UI framework** | Compiler bắt lỗi hợp đồng giữa 4 context; vẫn giữ HTML/CSS thuần |
 | 6 | **Kỷ luật quản trị code** | `shared/contracts.ts` duy nhất; phân lớp `core/platform/ui`; CI tối thiểu |
-| 7 | **Chọn nơi chạy suy luận (S7, chốt 2026-10-26)** | Localhost mặc định; endpoint OpenAI-compatible (Gemini, máy trạm Cloudflared) là opt-in, consent theo origin, key cục bộ. Chi tiết: `docs/ke-hoach-da-provider.md` |
+| 7 | **Chọn nơi chạy suy luận (S7, đã triển khai F1–F5 2026-10-26)** | Localhost mặc định; endpoint OpenAI-compatible (Gemini, máy trạm Cloudflared) là opt-in, consent theo origin, key cục bộ. Chi tiết: `docs/ke-hoach-da-provider.md` |
 | 8 | **Sàng lọc nội dung bằng PhoBERT (Slice F, chốt 2026-10-26)** | Dịch vụ Python cục bộ `127.0.0.1:8000` quyết định tài liệu có liên quan trước khi gọi LLM; **không cắt câu**, chỉ bỏ hẳn lần gọi LLM trên tài liệu không liên quan. Chi tiết: `docs/ke-hoach-bo-loc-noi-dung.md` |
 
 ---
@@ -35,7 +35,7 @@
 | Validation | **Zod** | Validate output LLM và message ở biên; type suy ra từ schema |
 | Trích nội dung web | **`@mozilla/readability`** | Cài qua npm, Vite bundle |
 | Sàng lọc nội dung | **PhoBERT TASK/NON_TASK microservice** cục bộ (FastAPI, `127.0.0.1:8000`) | Model bàn giao trong `ml_hasevent_filter/`; **Slice F, chưa triển khai**. Không ONNX/WASM trong extension |
-| LLM | **llama.cpp server** gọi bằng `fetch` (mặc định); **endpoint OpenAI-compatible** tuỳ chọn (S7) | Không SDK; cùng một `InferenceProvider`, chỉ đổi base URL/key/model |
+| LLM | **llama.cpp server** gọi bằng `fetch` (mặc định); **endpoint OpenAI-compatible** tuỳ chọn (đã triển khai) | Không SDK; cùng một `InferenceProvider`, chỉ đổi base URL/key/model |
 | Đánh giá | **Python + pandas** | Model PhoBERT bàn giao trong `ml_hasevent_filter/`; repo này không huấn luyện lại |
 | Test | **Vitest** | Chạy TS trực tiếp, dùng chung Vite config |
 | CI | GitHub Actions | `tsc --noEmit` + ESLint + Vitest + `vite build` |
@@ -98,7 +98,7 @@ Offscreen document (nơi chạy tác vụ dài)
   │     (chỉ quyết định có gọi LLM; KHÔNG cắt câu)
   └─ InferenceProvider
        ├─ LlamaCppProvider ──HTTP──► llama-server 127.0.0.1:8080 (mặc định)
-       └─ OpenAiCompatibleProvider ──HTTPS──► endpoint người dùng chọn (S7, chưa có)
+       └─ OpenAiCompatibleProvider ──HTTPS──► endpoint người dùng chọn (đã có; consent + quyền host)
                         │
                         ▼
 IndexedDB (status = nhap)  ◄────►  Side panel (HTML/CSS/TS)
@@ -149,7 +149,7 @@ extension/
 │  │  ├─ inference/phobert-filter.ts # (Slice F, chưa có) client dịch vụ sàng lọc
 │  │  ├─ inference/factory.ts   # chọn provider theo settings
 │  │  ├─ inference/llama-cpp.ts # local (mặc định)
-│  │  ├─ inference/openai-compatible.ts # remote (S7, chưa có)
+│  │  ├─ inference/openai-compatible.ts # remote (đã có)
 │  │  └─ storage/db.ts         # IndexedDB wrapper
 │  ├─ ui/
 │  │  ├─ sidepanel.html
@@ -258,12 +258,12 @@ export default defineConfig({
 
 > CRXJS tự viết lại đường dẫn source trong manifest khi build; các path ở trên là path trong `src/`, không phải path trong `dist/`.
 >
-> `optional_host_permissions` + `connect-src https://*` chỉ dùng cho provider remote (S7). Hai mẫu
+> `optional_host_permissions` + `connect-src https://*` dùng cho provider remote (đã triển khai). Hai mẫu
 > `http://localhost:8080/*` và `http://[::1]:8080/*` chỉ để hỗ trợ các dạng localhost khác, vẫn xin
 > quyền lúc chạy và **không hỏi consent**. Quyền remote vẫn phải xin lúc chạy
 > (`chrome.permissions.request`) cho **đúng origin** người dùng nhập; không thêm
-> `https://*/*` vào `host_permissions` tĩnh. Khi chưa triển khai S7, manifest thực tế chỉ có
-> `127.0.0.1` — xem `docs/DEVIATIONS.md`.
+> `https://*/*` vào `host_permissions` tĩnh. Manifest thực tế giữ `127.0.0.1` làm host tĩnh duy nhất —
+> xem `docs/DEVIATIONS.md`.
 >
 > Không cần `"wasm-unsafe-eval"` vì không dùng WASM. Đây là điểm cộng khi nộp Chrome Web Store.
 
@@ -311,7 +311,7 @@ export const LlmExtractionSchema = z.object({
 
 export type LlmExtraction = z.infer<typeof LlmExtractionSchema>;
 
-// Cấu hình nơi chạy suy luận (S7 — xem docs/ke-hoach-da-provider.md)
+// Cấu hình nơi chạy suy luận (đã triển khai; xem docs/ke-hoach-da-provider.md)
 export interface LlmSettings {
   provider: 'local' | 'openai-compatible'; // default: 'local'
   endpoint: string;                        // default: http://127.0.0.1:8080
@@ -440,7 +440,8 @@ theo câu (`trim`) được ghi nhận ở §17 của kế hoạch sàng lọc v
 ## 7. LLM: cục bộ mặc định, endpoint ngoài tuỳ chọn
 
 > Phần 7.1–7.4 mô tả **provider mặc định** (`llama-server` tại `127.0.0.1:8080`) — đây là cấu
-> hình đang chạy trong demo. Mục 7.5 mô tả provider remote **đã chốt nhưng chưa triển khai** (S7).
+> hình đang chạy trong demo. Mục 7.5 mô tả provider remote **đã triển khai F1–F5**; kiểm thử thật
+> với Gemini/Cloudflared còn chờ.
 
 ### 7.1. Khởi động server
 
@@ -494,7 +495,7 @@ User:
 | Output JSON | ~600 |
 | **Tổng** | **~6.100 / 8.192** |
 
-### 7.5. Endpoint OpenAI-compatible (S7 — chưa triển khai)
+### 7.5. Endpoint OpenAI-compatible (đã triển khai F1–F5)
 
 Một giao thức chung thay cho SDK từng hãng: `GET {base}/models` để health + lấy tên model,
 `POST {base}/chat/completions` với `response_format` JSON schema như local. Provider được chọn
@@ -511,11 +512,14 @@ output **không đổi**.
 | Lỗi | 401/403 (key/quyền), 404 (model/URL), 429 (quota), 5xx (dịch vụ); retry có giới hạn; output vẫn qua Zod |
 | Gemini | Dùng endpoint OpenAI-compatible trước; chỉ thêm adapter native nếu `response_format`/thinking không đáp ứng |
 
-- Ước lượng: **7–11 ngày công**, lát cắt F1–F5 (F6 native Gemini tuỳ chọn).
+- Ước lượng: **7–11 ngày công**, lát cắt F1–F5 (F6 native Gemini tuỳ chọn). F1–F5 đã xong phần code
+  + test tự động; thời gian còn lại dành cho kiểm thử endpoint thật.
 - Kế hoạch chi tiết, tiêu chí nghiệm thu và rủi ro: `docs/ke-hoach-da-provider.md`; luồng người
   dùng: `script.md` KS-14.
-- **Chưa có trong code hiện tại:** factory vẫn nằm inline trong offscreen, chỉ tạo
-  `LlamaCppProvider`; `LlmSettings` chưa có `provider`/`consentByOrigin`.
+- **Đã có trong code:** `factory.ts` chọn provider, `OpenAiCompatibleProvider`, `provider-choice.ts`,
+  form Cài đặt + consent/thu hồi/xoá key, `optional_host_permissions`. `LlmSettings` có
+  `provider`/`consentByOrigin`; bản ghi cũ mặc định local. **Chưa có adapter native Gemini (F6)** và
+  chưa chạy checklist §8 với endpoint thật.
 
 ---
 
@@ -562,7 +566,7 @@ captured → extracted → screened ─┬─ (mode=screen, has_task=false, conf
 | **S4** | 9–10 | Thông báo + KS-12 | KS-10, KS-12; bù thông báo trễ; 0 lỗi prompt injection |
 | **S5** | 11–12 | Gmail + attachment | KS-03, KS-05, KS-06 |
 | **S6** | 13–14 | Hardening + release | CRX cài trên Chrome sạch; báo cáo eval; demo 6 flow |
-| **S7** | sau demo | Chọn nơi chạy suy luận (KS-14) | 3 endpoint (localhost/Gemini/Cloudflared) trích được; consent + key đúng |
+| **S7** | sau demo | Chọn nơi chạy suy luận (KS-14) | F1–F5 đã có code + test; 3 endpoint (localhost/Gemini/Cloudflared) **chờ chạy thật**; consent + key đã có test |
 | **F** | sau demo (độc lập S7) | Sàng lọc nội dung PhoBERT (Slice F) | Tài liệu âm không gọi LLM; **0 tài liệu dương bị bỏ sót**; p95 ≤ 8 s |
 
 ### S0 — Foundation & de-risk
@@ -618,23 +622,26 @@ captured → extracted → screened ─┬─ (mode=screen, has_task=false, conf
 - Eval cuối + báo cáo.
 - Đóng gói CRX, privacy policy, kịch bản demo.
 
-### S7 — Chọn nơi chạy suy luận (hậu demo, chốt 2026-10-26)
+### S7 — Chọn nơi chạy suy luận (hậu demo, đã triển khai F1–F5 2026-10-26)
 
 - **F1:** `OpenAiCompatibleProvider` (`/models`, `/chat/completions`, `Authorization`, abort,
   phân loại lỗi) + `platform/inference/factory.ts`; mở rộng `InferenceProvider.id` và
-  `ExtractionMeta.provider`.
+  `ExtractionMeta.provider`. **Đã xong + test.**
 - **F2:** mở rộng `LlmSettings` (`provider`, `consentByOrigin`) với default local; form Cài đặt
-  có điều kiện.
+  có điều kiện. **Đã xong + test.**
 - **F3:** `optional_host_permissions` + `chrome.permissions.request` + luồng consent/thu hồi.
-- **F4:** health/lỗi 401/403/404/429/5xx, timeout, `response_format`; **spike Gemini
-  OpenAI-compatible trước** để quyết định có cần adapter native (F6) không.
-- **F5:** test unit + checklist 3 endpoint + cập nhật `DEVIATIONS.md`/`kiem-thu-demo.md`.
+  **Đã xong + test jsdom; xác nhận trên Chrome thật còn chờ.**
+- **F4:** health/lỗi 401/403/404/429/5xx, timeout, `response_format`; map
+  `finishReason`/`promptFeedback`. **Đã xong + test mock; spike Gemini thật còn chờ** để quyết định
+  có cần adapter native (F6) không.
+- **F5:** test unit + checklist 3 endpoint + cập nhật `DEVIATIONS.md`/`kiem-thu-demo.md`. **Test +
+  docs xong; checklist 3 endpoint chưa chạy.**
 - **Không làm:** OAuth, streaming, đếm chi phí, adapter riêng cho từng hãng, chạy lại toàn bộ
   15 fixtures.
 - Chi tiết + tiêu chí nghiệm thu: `docs/ke-hoach-da-provider.md`.
 
-> S7 nằm **sau** phạm vi demo hiện tại. Trong lúc chưa triển khai, demo vẫn chỉ chạy localhost
-> và mọi tài liệu phải ghi rõ "chưa triển khai", không được mô tả như tính năng đã có.
+> S7 đã có code trong demo. Mặc định vẫn là localhost; **không tuyên bố Gemini/Cloudflared đã được
+> kiểm chứng** cho tới khi chạy `docs/kiem-thu-demo.md` §8. Adapter native Gemini (F6) chưa làm.
 
 ### Slice F — Sàng lọc nội dung bằng PhoBERT (chốt 2026-10-26, chưa triển khai)
 
@@ -670,9 +677,9 @@ captured → extracted → screened ─┬─ (mode=screen, has_task=false, conf
 | **Extraction eval** | Event-level P/R/F1 + chấm summary | F1 ≥ 0.80 |
 | Adversarial | 20 mẫu prompt injection | 0 hành vi ngoài schema |
 | Perf | Đo từng bước | p95 ≤ 35s (1.5B) / ≤ 60s (3B) |
-| **Provider (S7)** | Mock `fetch`: dựng URL/header/body, parse `models`/`choices`, map 401/403/404/429/5xx, abort/timeout; factory chọn theo settings/host | 100% nhánh lỗi có test |
-| **Consent (S7)** | Form Cài đặt: consent chặn lưu/chạy, thu hồi chặn chạy, đổi origin phải đồng ý lại | Không request khi chưa đồng ý |
-| **Key (S7)** | Kiểm tra `ExportPayload` và log | Key không xuất hiện |
+| **Provider (S7 — đã có test)** | Mock `fetch`: dựng URL/header/body, parse `models`/`choices`, map 401/403/404/429/5xx, abort/timeout, `finishReason`; factory chọn theo settings/host | 100% nhánh lỗi có test |
+| **Consent (S7 — đã có test)** | Form Cài đặt: consent chặn lưu/chạy, thu hồi chặn chạy, đổi origin phải đồng ý lại | Không request khi chưa đồng ý |
+| **Key (S7 — đã có test)** | Kiểm tra `ExportPayload` và log | Key không xuất hiện |
 
 **Regression gate:** không merge nếu eval giảm > 2 điểm, typecheck/lint/test đỏ, hoặc `vite build` thất bại.
 
@@ -703,7 +710,7 @@ captured → extracted → screened ─┬─ (mode=screen, has_task=false, conf
 | Cấu hình Vite/CRXJS phức tạp | Trung bình | Lock version; spike ở S0; fallback Vite multi-entry |
 | Prompt injection từ trang web | Trung bình | Phân tách dữ liệu/chỉ thị; không tool-call; validate schema |
 | Model license khi phát hành | Thấp | Dùng Qwen2.5 (Apache-2.0) |
-| **Gemini OpenAI-compatible không ép `response_format`** | Trung bình (S7) | Spike trước F1; nếu thất bại mới làm adapter native `generateContent` + `responseSchema` (F6) |
+| **Gemini OpenAI-compatible không ép `response_format`** | Trung bình (S7) | F1–F5 đã có code; **spike thật với Gemini còn chờ** (`docs/kiem-thu-demo.md` §8); nếu thất bại mới làm adapter native `generateContent` + `responseSchema` (F6) |
 | **Thinking token ăn hết `maxTokens`** | Trung bình (S7) | Tắt/hạ `thinkingBudget` (2.5) hoặc `thinkingLevel` (3); kiểm `finishReason` |
 | **Cloudflared free timeout ~100s** | Trung bình (S7) | Giảm chunk cho trang dài; báo lỗi 524 rõ; không retry vô hạn |
 | **Quyền host động hiện cảnh báo rộng** | Thấp (demo) | Ghi rõ trong UI; nếu phát hành store phải thiết kế lại luồng quyền |
@@ -722,8 +729,8 @@ captured → extracted → screened ─┬─ (mode=screen, has_task=false, conf
 - [ ] KS-04, 08, 09, 10, 11, 12 chạy trọn; KS-03/05/06 chạy ở mức demo.
 - [ ] 0 lỗi JSON không parse được; 0 hành vi vượt schema khi test prompt injection.
 - [ ] Có báo cáo eval + video demo.
-- [ ] **(S7)** Đổi provider trong Cài đặt → health OK; trích 1–2 trang mẫu với localhost, Gemini/OpenAI-compatible và máy trạm Cloudflared.
-- [ ] **(S7)** Consent theo origin, thu hồi, đổi origin phải đồng ý lại; API key không có trong file xuất/log.
+- [ ] **(S7 — code đã xong, chờ chạy)** Đổi provider trong Cài đặt → health OK; trích 1–2 trang mẫu với localhost, Gemini/OpenAI-compatible và máy trạm Cloudflared.
+- [ ] **(S7 — code đã xong, chờ chạy)** Consent theo origin, thu hồi, đổi origin phải đồng ý lại; API key không có trong file xuất/log.
 
 ---
 
@@ -745,11 +752,11 @@ captured → extracted → screened ─┬─ (mode=screen, has_task=false, conf
 | `script.md` | Ánh xạ 6 bước pipeline KS-04 với thành phần chạy tương ứng; KS-14 cho provider |
 | `AGENTS.md` | §3 Tech stack (TS + Vite, sàng lọc PhoBERT microservice), quy ước layer, CI, chính sách remote |
 | `ke_hoach_thiet_ke_frontend.md` | Trạng thái "server chưa chạy" / "model đang tải"; board B26–B28 cho KS-14 |
-| `docs/ke-hoach-da-provider.md` | Nguồn hiện hành cho S7; cập nhật trạng thái khi triển khai |
+| `docs/ke-hoach-da-provider.md` | Nguồn hiện hành cho S7; trạng thái + ghi chú triển khai §8 |
 | `docs/ke-hoach-bo-loc-noi-dung.md` | Nguồn hiện hành cho Slice F; cập nhật trạng thái khi triển khai |
-| `docs/DEVIATIONS.md` | Ghi rõ provider choice và sàng lọc chưa có trong demo |
-| `docs/kiem-thu-demo.md` | §8 checklist 3 endpoint + §9 checklist sàng lọc (khi triển khai) |
-| `README.md`, `extension/README.md` | Tách rõ "demo hiện tại local-only" và "kế hoạch S7/Slice F" |
+| `docs/DEVIATIONS.md` | Ghi rõ provider choice đã có code (checklist thật còn chờ) và sàng lọc chưa có |
+| `docs/kiem-thu-demo.md` | §8 checklist 3 endpoint (đã có code, chờ chạy) + §9 checklist sàng lọc (khi triển khai) |
+| `README.md`, `extension/README.md` | Ghi rõ local là mặc định, endpoint OpenAI-compatible đã có code (checklist thật còn chờ) và Slice F vẫn là kế hoạch |
 
 ---
 
