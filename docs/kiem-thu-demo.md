@@ -151,41 +151,55 @@ Lịch sử hai phiên trước: [`docs/archive/phien-lam-viec-tiep-theo.md`](./
 - [ ] **Xoá key** → health remote báo thiếu key; **Xoá toàn bộ dữ liệu** xoá cả settings + consent.
 - [ ] Quay về **Máy này** → trích lại bình thường, không cần nhập lại key.
 
-## 9. Sàng lọc nội dung (PhoBERT) — chờ triển khai Slice F
+## 9. Sàng lọc nội dung (PhoBERT) — F2 đã nối, chờ nghiệm thu tay (P7)
 
-> **Chưa chạy được:** checklist dùng khi Slice F xong. Hiện job gọi LLM trực tiếp, không có bước
-> sàng lọc. Kế hoạch: [`ke-hoach-bo-loc-noi-dung.md`](./ke-hoach-bo-loc-noi-dung.md).
+> **Đã chạy được:** F2 nối bước sàng lọc vào job và UI. Checklist này là P7 của
+> [`ke-hoach-bo-loc-noi-dung.md`](./ke-hoach-bo-loc-noi-dung.md) §12.2. Mặc định hiện là **`report`**
+> nên muốn thử đường bỏ qua phải chọn `screen` trong Cài đặt.
 
-Chuẩn bị: chạy dịch vụ PhoBERT cục bộ (xem `extension/README.md`), mở Cài đặt → **Sàng lọc nội dung**.
+Chuẩn bị: chạy dịch vụ PhoBERT cục bộ (xem `extension/README.md`), mở Cài đặt → **Sàng lọc nội dung**,
+bấm **Kiểm tra kết nối** (phải hiện model + `device`). Với các ca cần LLM, chạy cả `llama-server`.
 
 ### 9.1. Chế độ `off`
 
-- [ ] Chọn `off` → trích một trang như trước; không có request tới cổng 8000; kết quả giống baseline.
+- [ ] Chọn `off` → tab Quét nội dung **không** có checkbox sàng lọc; trích một trang như trước, không
+      có request tới cổng `8081`/`8000`; kết quả giống baseline.
 
-### 9.2. Chế độ `report`
+### 9.2. Chế độ `report` (mặc định)
 
-- [ ] Chọn `report` → trích tài liệu âm (menu/quảng cáo) → vẫn gọi LLM, số sự kiện không đổi; có dòng kết luận sàng lọc + độ chắc chắn.
+- [ ] Chọn `report` → có checkbox (đang bật) + gợi ý "Chế độ chỉ báo cáo…"; trích tài liệu âm
+      (menu/quảng cáo) → **vẫn gọi LLM**, số sự kiện không đổi, dòng kết luận có độ chắc chắn và ghi
+      chú "Chế độ chỉ báo cáo nên vẫn trích xuất toàn bộ."
+- [ ] Bỏ tick checkbox rồi trích → **không** có dòng kết luận sàng lọc (bước này bị tắt cho lần chạy).
 
 ### 9.3. Chế độ `screen`
 
-- [ ] Tài liệu dương (thông báo họp có ngày giờ) → sự kiện y hệt baseline; LLM nhận toàn văn.
-- [ ] Tài liệu âm rõ ràng → **0 sự kiện**, job xong với lý do; có nút **Trích xuất toàn bộ**.
+- [ ] Tài liệu dương (thông báo họp có ngày giờ) → sự kiện y hệt baseline; LLM nhận toàn văn; dòng kết
+      luận dạng `có nội dung đáng trích (x/y câu giao việc)`.
+- [ ] Tài liệu âm rõ ràng (≥ 3 câu, model chắc chắn) → **0 sự kiện**, job xong với lý do, panel **ở lại**
+      tab Quét nội dung, có nút **Trích xuất toàn bộ**; thông báo hệ thống nói "Không có nội dung công việc".
 - [ ] Bấm **Trích xuất toàn bộ** → chạy LLM trên toàn văn, lưu nháp như bình thường.
-- [ ] Tài liệu ngắn < 3 câu hoặc confidence < 0.85 → **không** tự bỏ qua (fail-open).
+- [ ] Tài liệu ngắn < 3 câu hoặc confidence < 0.85 → **không** tự bỏ qua (hiện "Chưa đủ chắc để bỏ qua").
+- [ ] Đóng rồi mở lại side panel → dòng kết luận của tài liệu đó **vẫn còn**.
 
 ### 9.4. Vùng chọn / dán tay
 
-- [ ] Bôi đen hoặc dán văn bản → **không** gọi dịch vụ sàng lọc; đi thẳng vào LLM.
+- [ ] Bôi đen hoặc dán văn bản → **không** có checkbox sàng lọc, **không** gọi dịch vụ sàng lọc; đi
+      thẳng vào LLM.
 
 ### 9.5. Lỗi và huỷ
 
-- [ ] Tắt dịch vụ Python giữa chừng → job vẫn xong với toàn văn + cảnh báo rõ; không mất kết quả.
-- [ ] Huỷ job trong bước sàng lọc → trạng thái `Đã huỷ`, không lưu nháp.
-- [ ] Đổi endpoint sai/không tồn tại → **Kiểm tra kết nối** báo lỗi, panel không crash.
+- [ ] Tắt dịch vụ Python giữa chừng → job vẫn xong với toàn văn + alert vàng "Sàng lọc không phản hồi…";
+      không mất kết quả, không báo lỗi đỏ.
+- [ ] Huỷ job trong bước sàng lọc (nút Huỷ khi tiến trình đang ở "Đang sàng lọc nội dung…") → trạng thái
+      `Đã huỷ`, không lưu nháp, không gọi LLM.
+- [ ] Đổi endpoint sai/không tồn tại → **Kiểm tra kết nối** báo lỗi rõ, panel không crash; job vẫn
+      fail-open nếu đang chạy.
 
 ### 9.6. Quyền và dữ liệu
 
-- [ ] DevTools → Network: chỉ thấy request tới loopback `8000` khi chạy sàng lọc; không có host remote.
+- [ ] DevTools → Network: chỉ thấy request tới loopback `8081` (hoặc `8000` nếu đổi cổng) khi chạy sàng
+      lọc; không có host remote.
 - [ ] Tắt dịch vụ → không có request nền lặp lại.
 
 ---

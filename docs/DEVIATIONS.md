@@ -3,13 +3,14 @@
 Bản demo hiện **đã có lớp trích xuất bằng LLM** (llama.cpp cục bộ mặc định, hoặc endpoint
 OpenAI-compatible do người dùng chọn). Mọi lệch hướng dưới đây đều nhằm giữ demo chạy được, nhưng
 vẫn giữ đúng hợp đồng dữ liệu và phân lớp của kế hoạch. Nhắc việc sự kiện (KS-10), Gmail API vẫn chưa
-có; **sàng lọc nội dung (Slice F)** mới có **F0 + F1** (hợp đồng, lõi thuần, client HTTP, card cài
-đặt) và **chưa nối vào job**; **chọn nơi chạy suy luận (KS-14) đã có trong code** nhưng chưa chạy
-checklist thủ công với endpoint thật.
+có; **sàng lọc nội dung (Slice F)** đã có **F0 + F1 + F2** (hợp đồng, lõi thuần, client HTTP, card cài
+đặt, **nối vào job + UI kết luận**) nhưng **mặc định để `report`** cho tới khi F3 có số đo;
+**chọn nơi chạy suy luận (KS-14) đã có trong code** nhưng chưa chạy checklist thủ công với endpoint
+thật.
 
 | Hạng mục | Kế hoạch (`ke_hoach_phat_trien.md`) | Demo hiện tại | Vì sao / khi nào bổ sung |
 |---|---|---|---|
-| Trích xuất sự kiện | Sàng lọc tài liệu + LLM llama.cpp | **LLM** qua offscreen + nhập tay; mặc định llama.cpp cục bộ, có thể chọn endpoint OpenAI-compatible; **chưa có bước sàng lọc trong job** | Slice F mới có F0 + F1 (client + card cài đặt); F2 mới nối sàng lọc vào job. Demo hiện gọi LLM trực tiếp |
+| Trích xuất sự kiện | Sàng lọc tài liệu + LLM llama.cpp | **Sàng lọc (chế độ `report`) → LLM** trong offscreen + nhập tay; mặc định llama.cpp cục bộ, có thể chọn endpoint OpenAI-compatible | Slice F đã nối sàng lọc vào job (F2) nhưng mặc định `report` nên **chưa bỏ qua lần gọi LLM nào** cho tới khi F3 đo xong |
 | `Event.origin` | `extractionMeta {filterVersion?, llmModel, promptVersion}` | `origin: 'manual' \| 'llm'`; `extractionMeta {runId, documentId, provider, model, promptVersion, chunkIndex, chunkCount, confidence, latencyMs}` | Giữ hợp đồng cũ bằng `.default('manual')`; metadata dùng tên trường hiện tại thay vì `filterVersion`/`llmModel` |
 | `versionHistory` | Có (KS-12 cập nhật nguồn) | **Chưa có** | Cần so sánh nguồn cũ/mới — ngoài phạm vi demo |
 | Tóm tắt sự kiện | LLM trả 1–5 ý | **Nhập tay tối đa 50 ý**; candidate từ LLM vẫn truyền `maxItems = 5` | Giữ đúng yêu cầu UX: người dùng không bị chặn ở 5 ý. Cap 50 chỉ để tránh dữ liệu rác |
@@ -28,13 +29,14 @@ checklist thủ công với endpoint thật.
 | Gộp nguồn paraphrase (D4b) | Gộp tự động khi phát hiện trùng | **Không tự gộp**; chỉ gợi ý **Có thể trùng**, người dùng chọn Giữ cả hai / Mở bản kia / Xoá bản này | Giữ quyết định cho người dùng; gộp nguồn thủ công bằng sửa/xoá |
 | Gmail / PDF / DOCX | Sprint S5 | Không có Gmail API; Gmail chỉ đọc **best-effort** qua trang web đang mở, PDF/DOCX dùng **Dán văn bản** | Cần OAuth + parser riêng |
 | Content script | `src/platform/content` inject Readability | `scripting.executeScript` chạy `page-snapshot.ts` (lọc landmark/nhiễu), **Readability chạy trong side panel** | Tránh phải bundle thư viện vào content script; vẫn chỉ dùng `activeTab`. Khi cần bắt vùng chọn phức tạp/SPA, chuyển sang content script |
-| Offscreen document | Chạy bước sàng lọc + LLM | Có, **hiện chỉ cho LLM**; tạo theo nhu cầu, tối đa 1, dùng `reasons: ['WORKERS']` | Service worker bị kill sau ~30s nên job dài phải chạy ngoài SW. F2 sẽ thêm lời gọi sàng lọc tại đây trước LLM |
+| Offscreen document | Chạy bước sàng lọc + LLM | Có, chạy **cả bước sàng lọc lẫn LLM**; tạo theo nhu cầu, tối đa 1, dùng `reasons: ['WORKERS']` | Service worker bị kill sau ~30s nên job dài phải chạy ngoài SW. F2 đã chèn lời gọi sàng lọc trước LLM |
 | Job queue / pipeline | `Job`, state machine, resume sau SW restart | Có **một** job active trong `chrome.storage.session`; không resume sau khi tắt trình duyệt | Đúng phạm vi đã chốt: đóng panel vẫn chạy, tắt trình duyệt thì huỷ |
 | `Settings` store | `settings` | Dùng cho `LlmSettings` và `FilterSettings` (khoá `contentFilter`); cờ quét và job dùng `chrome.storage.session` | Tách dữ liệu bền (IndexedDB) khỏi trạng thái phiên |
-| Sàng lọc nội dung (Slice F) | Dịch vụ PhoBERT cục bộ chạy trước LLM | **F0 + F1 có, chưa nối vào job**: client `phobert-filter.ts`, lưu cài đặt, card Cài đặt + kiểm tra kết nối, quyền host loopback; job vẫn gọi LLM trực tiếp | Kế hoạch `docs/ke-hoach-bo-loc-noi-dung.md`; F2 nối vào offscreen. Chỉ bỏ lần gọi LLM trên tài liệu âm, không cắt câu |
+| Sàng lọc nội dung (Slice F) | Dịch vụ PhoBERT cục bộ chạy trước LLM | **F0 + F1 + F2 xong**: client `phobert-filter.ts`, lưu cài đặt, card Cài đặt + kiểm tra kết nối, quyền host loopback, và **job đã chạy sàng lọc → quyết định → LLM**, UI có checkbox + dòng kết luận + nút "Trích xuất toàn bộ" | Kế hoạch `docs/ke-hoach-bo-loc-noi-dung.md`. Chỉ bỏ lần gọi LLM trên tài liệu âm, không cắt câu. Nghiệm thu tay P7 và số đo F3 còn chờ |
+| Mặc định chế độ sàng lọc | `screen` (Q1/D3) | **`report`** (`DEFAULT_FILTER_MODE`) — bước sàng lọc vẫn chạy và hiện kết luận, nhưng **không bỏ qua** lần gọi LLM | Chưa có số đo F3; dò tay với dịch vụ thật cho thấy model còn dương tính giả trên văn bản nhiễu, nên bật `screen` mặc định là hứa hẹn quá sớm. Nâng lại chỉ bằng một hằng số sau khi chứng minh 0 tài liệu dương bị bỏ sót |
 | Cổng dịch vụ sàng lọc | `127.0.0.1:8000` | Mặc định **`127.0.0.1:8081`** (máy dev đang chạy cổng này); `8000` giữ làm alias, cả hai đều có trong `host_permissions`/CSP | Q10 trong kế hoạch; UI chỉ nhận loopback ở cổng 8000/8081 |
 | Model LLM chốt | 3B Q4 + KV q8_0 trong ~3 GB VRAM | **9B IQ4_XS** (16 layer lên GPU, ~5,5 GB) sau Slice E; 4B Q5_K_S bị loại vì recall 72,7%/75,0%; 27B ternary bị loại vì p95 127,3 s | 4B nhanh hơn ~3,4 lần nhưng dưới ngưỡng recall 80%; 27B recall 90,9% nhưng chậm hơn 9B ~2,7 lần. Giữ nguyên ngưỡng, ghi rõ đánh đổi. Có thể cải thiện prompt cho 4B rồi đo lại |
-| Test | Vitest + checklist KS | Vitest **385 test / 40 file** (core, parse Readability/forceRaw, page snapshot, tags, extraction/LLM, duyệt nháp/confidence/similar, job, offscreen runner, provider remote/factory/permissions, form Cài đặt, sàng lọc client/cài đặt/UI, smoke UI bằng jsdom, Slice E eval) + **17 test live skip** khi không có `LLAMA_EVAL=1` + checklist | Không có Playwright như kế hoạch |
+| Test | Vitest + checklist KS | Vitest **405 test / 42 file** (core, parse Readability/forceRaw, page snapshot, tags, extraction/LLM, duyệt nháp/confidence/similar, job + job có sàng lọc, offscreen runner, provider remote/factory/permissions, form Cài đặt, sàng lọc client/cài đặt/UI + checkbox/kết luận, smoke UI bằng jsdom, Slice E eval) + **17 test live skip** khi không có `LLAMA_EVAL=1` + checklist | Không có Playwright như kế hoạch |
 | Thông báo UI | 2 nút theo giới hạn Chrome | Notification kết quả trích xuất dùng **1 nút**; chưa có notification nhắc việc | Giữ dưới giới hạn 2 nút của Chrome |
 | **Chọn nơi chạy suy luận (KS-14)** | `LlmSettings.provider`: `local` \| `openai-compatible`; factory chọn provider; consent theo origin; quyền host cấp lúc chạy | **Đã có phần code + test**: `OpenAiCompatibleProvider`, `factory.ts`, `provider-choice.ts`, form provider, consent/thu hồi/xoá key, `optional_host_permissions`; đã sửa lỗi Gemini 404 do health ghi đè model và gửi schema rút gọn + hạ `json_object` một lần khi 400/422 (2026-10-26) | Chưa chạy checklist §8 với Gemini/Cloudflared thật; **không có adapter native Gemini (F6)**. Code vẫn giữ localhost làm mặc định và chặn remote khi thiếu consent |
 

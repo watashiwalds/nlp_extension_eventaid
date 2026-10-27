@@ -10,13 +10,15 @@ Tổng quan tính năng và cách chạy: xem [`../README.md`](../README.md).
 > Consent theo origin, quyền host cấp lúc chạy và nút xoá key nằm trong Cài đặt.
 > Checklist thủ công với Gemini/Cloudflared vẫn chờ chạy (`../docs/kiem-thu-demo.md` §8).
 >
-> **Đã có (F1):** client HTTP + card cài đặt cho bước **sàng lọc PhoBERT** — `PhobertTaskFilter`
+> **Đã có (F1 + F2):** bước **sàng lọc PhoBERT** — client `PhobertTaskFilter`
 > (`platform/inference/phobert-filter.ts`), lưu cài đặt (`platform/storage/filter-settings.ts`),
-> card "Sàng lọc nội dung (PhoBERT)" trong Cài đặt, kiểm tra kết nối và quyền host loopback.
+> card "Sàng lọc nội dung (PhoBERT)" trong Cài đặt, kiểm tra kết nối và quyền host loopback. Job
+> trích xuất đã chạy **sàng lọc → quyết định → LLM** (`offscreen/run-job.ts`); tab Quét nội dung có
+> checkbox, dòng kết luận (độ chắc chắn, số câu giao việc, thời gian) và nút **"Trích xuất toàn bộ"**.
 >
-> **Chưa có:** bước sàng lọc **chưa được nối vào job** (F2). Kế hoạch
-> `../docs/ke-hoach-bo-loc-noi-dung.md` sẽ nối dịch vụ FastAPI cục bộ vào `offscreen/run-job.ts`;
-> hiện job gọi LLM trực tiếp như trước, không tài liệu nào bị bỏ qua.
+> **Chưa có:** mặc định đang là **`report`** (`DEFAULT_FILTER_MODE`) — bước sàng lọc chạy và báo cáo
+> nhưng **không bỏ qua** lần gọi LLM. Chỉ đổi sang `screen` (hoặc chọn tay trong Cài đặt) sau khi F3
+> đo xong và chứng minh **0 tài liệu dương bị bỏ sót**. Nghiệm thu tay P7 với `uvicorn` thật còn chờ.
 
 ## Lệnh
 
@@ -33,7 +35,7 @@ LLAMA_EVAL=1 npx vitest run tests/eval/extraction.live.eval.test.ts \
 
 Load unpacked từ `dist/`.
 
-## Dịch vụ sàng lọc (Slice F — F1: client + cài đặt)
+## Dịch vụ sàng lọc (Slice F — F1 + F2: cài đặt + nối vào job)
 
 Cách chạy dịch vụ (không sửa `ml_hasevent_filter/`):
 
@@ -51,6 +53,10 @@ MODEL_DIR=../phobert_task_classifier_final \
 - Health: `curl -s http://127.0.0.1:8081/health` → `{"status":"ok","model":…,"device":"cuda"}`.
 - F1 đã chạy `PhobertTaskFilter` với dịch vụ thật ở 8081 (health + `/analyze`, 28 ms); bấm
   "Kiểm tra kết nối" trong Chrome vẫn nằm trong checklist thủ công.
+- F2 đã chạy `runExtractionJob` với dịch vụ thật (`device: cuda`) và `MockProvider`: tài liệu dương
+  → `has_event` (3/3 câu giao việc, 23 ms) và LLM được gọi; 4 tài liệu âm (menu/footer, bách khoa,
+  công thức, bản tin) → không mẫu nào bị bỏ qua (2 `uncertain`, 2 `has_event` do model dương tính
+  giả). Vì vậy mặc định vẫn là `report`.
 - Biến `FILTER_EVAL=1` cho bộ đo thật sẽ được thêm ở F3 cùng `tests/eval/filter.live.eval.test.ts`.
 - Chi tiết hợp đồng, chế độ `off`/`report`/`screen`, ngưỡng 0.85 và tiêu chí nghiệm thu:
   [`../docs/ke-hoach-bo-loc-noi-dung.md`](../docs/ke-hoach-bo-loc-noi-dung.md).
@@ -85,8 +91,8 @@ MODEL_DIR=../phobert_task_classifier_final \
 | `src/platform/permissions.ts` | Xin/thu hồi quyền host động cho đúng origin |
 | `src/ui/consent-dialog.ts` | Modal consent theo origin (không dùng `window.confirm`) |
 | `src/ui/provider-panels.ts` | Ẩn/hiện panel local/remote khi đổi radio |
-| `src/platform/offscreen/*` | Offscreen document chạy job trích xuất, lưu nháp, gửi tiến trình |
-| `src/platform/background/jobs.ts` | Trạng thái job trong `chrome.storage.session`, validate bằng Zod |
+| `src/platform/offscreen/*` | Offscreen document: `run-job.ts` chạy **sàng lọc → quyết định (bỏ qua được) → LLM**, lưu nháp, gửi tiến trình |
+| `src/platform/background/jobs.ts` | Trạng thái job trong `chrome.storage.session`, validate bằng Zod, `donePatch()` gộp kết quả + kết luận sàng lọc |
 | `src/platform/capture/page-snapshot.ts` | Hàm tự chứa inject vào tab: chọn landmark, lọc menu/khung ẩn, cờ trang động/cắt bớt |
 | `src/platform/capture/tab.ts` | `executeScript` chạy page snapshot (HTML đã lọc + vùng chọn) |
 | `src/platform/capture/parse.ts` | Readability + fallback DOM thô + dán tay |

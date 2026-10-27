@@ -45,6 +45,16 @@ phải quyết định lại trong lúc code.
 |---|---|---|
 | Q10 | Máy dev hiện chạy `uvicorn` ở **cổng 8081**, không phải 8000 như Q3/§14 | `DEFAULT_FILTER_ENDPOINT = 'http://127.0.0.1:8081'`. Manifest khai báo **cả hai** cổng trên cả `127.0.0.1` và `localhost` (`8000` và `8081`) để 8000 vẫn là alias hợp lệ; UI chỉ nhận loopback ở đúng hai cổng này (khớp `host_permissions`), từ chối path/query/hash. Đổi cổng sau này chỉ cần sửa hằng số + manifest. |
 
+### 0.3. Bổ sung khi triển khai F2 (2026-10-27)
+
+| # | Vấn đề | Quyết định |
+|---|---|---|
+| Q11 | Q1/D3 chốt mặc định `screen`, nhưng F3 **chưa** đo và lần dò tay với dịch vụ thật cho thấy model còn dương tính giả trên văn bản nhiễu (§12.4, ghi chú F2) | Hạ mặc định về **`report`** bằng hằng số `DEFAULT_FILTER_MODE` trong `src/shared/contracts.ts`. Bật `screen` mặc định là tuyên bố "đã sàng lọc" khi chưa có số của §11.4 — trái §12.3. F3/P9 nâng lại `'screen'` **chỉ khi** chỉ số "tài liệu dương bị bỏ sót" = 0 (chỉ sửa hằng số, không sửa logic). Người dùng vẫn tự chọn `screen` trong Cài đặt; test phủ cả ba chế độ. |
+| Q12 | Chưa nói rõ `filterDecision`/`filterNote` khác nhau thế nào giữa "không chạy", "chạy xong" và "chạy nhưng lỗi" | `filterDecision = null` **chỉ khi** bước sàng lọc không chạy (chế độ `off`, nguồn `selection`/`paste`). Chạy xong: `filterApplied = true`, `filterNote = null` — kể cả `uncertain` (UI dùng `FILTER_DECISION_TEXT`). Hai ca có ghi chú: (a) lỗi/timeout/health lỗi/tài liệu rỗng ⇒ `filterApplied = false` + `failOpenNote()` hoặc `FILTER_EMPTY_NOTE`; (b) `report` + `no_event` ⇒ `filterApplied = true` + `FILTER_REPORT_NOTE` để UI nói rõ vì sao **vẫn** gọi LLM. UI coi "đã bỏ qua" = `no_event && savedCount === 0 && filterNote === null`. |
+| Q13 | Checkbox ở §9.2 gửi `filterRunMode` nào? | Checked = **`auto`** (không gửi trường, theo `settings.mode`); unchecked = gửi `'off'`. Ẩn khi `contentFilter.mode === 'off'` hoặc nguồn `selection`/`paste` (Q2). Nút "Trích xuất toàn bộ" **luôn** gửi `'off'`, kể cả khi checkbox đang bật. |
+| Q14 | Sau khi bị bỏ qua, panel có nhảy sang tab Sự kiện như mọi lần xong không? | **Không.** Giữ tab Quét nội dung để thấy dòng kết luận + nút "Trích xuất toàn bộ". `lastExtraction` được lưu **cả khi** không bật toast, nên đóng/mở lại panel vẫn thấy kết luận của lần trích gần nhất cho đúng tài liệu. |
+| Q15 | `donePatch` và ghi chú trạng thái cần chỗ dùng chung | Thêm `donePatch(message)` vào `platform/background/jobs.ts` và `FILTER_SKIPPED_STAGE` vào `shared/constants.ts` để `background/index.ts` và `sidepanel.ts` không vượt `max-lines`; chuỗi trạng thái "bỏ qua" chỉ định nghĩa một nơi. |
+
 ---
 
 ## 1. Mục tiêu
@@ -327,14 +337,16 @@ Vì LLM nhận **nguyên văn**, `chunkText`, cờ `truncated`, prompt, normaliz
 
 | File | Thay đổi |
 |---|---|
-| `src/shared/contracts.ts` | `FilterSettingsSchema`, mở rộng `ExtractionJobSchema` (§5.3) |
+| `src/shared/contracts.ts` | `FilterSettingsSchema` + `DEFAULT_FILTER_MODE` (`report` ở F2, Q11), mở rộng `ExtractionJobSchema` (§5.3) |
 | `src/shared/messages.ts` | `RUN_EXTRACTION` (cả 2 chiều) thêm `filterRunMode?: 'auto' \| 'force' \| 'off'`; `JOB_DONE` thêm bộ trường lọc |
-| `src/shared/constants.ts` | `FILTER_SETTINGS_KEY`, text hiển thị chế độ/quyết định |
+| `src/shared/constants.ts` | `FILTER_SETTINGS_KEY`, text hiển thị chế độ/quyết định, `FILTER_FAIL_OPEN_NOTE`, `FILTER_EMPTY_NOTE`, `FILTER_REPORT_NOTE`, `FILTER_SKIPPED_STAGE` |
 | `src/platform/offscreen/run-job.ts` | Chèn bước sàng lọc; `deps.loadFilterSettings`, `deps.createFilter`; trả `filterDecision`… |
 | `src/platform/offscreen/main.ts` | Khởi tạo `PhobertTaskFilter`; nhận `filterRunMode`; nhận diện `FilterError('aborted')` |
 | `src/platform/background/index.ts` | Chuyển tiếp `filterRunMode`; map bộ trường lọc vào job |
-| `src/platform/background/jobs.ts` | `makeJob` khởi tạo mặc định mới |
-| `src/ui/store.ts` | `contentFilter: FilterSettings` (đọc trong `loadAll`) |
+| `src/platform/background/jobs.ts` | `makeJob` khởi tạo mặc định mới; `donePatch()` (P5) gộp trạng thái + trường lọc |
+| `src/platform/background/notifications.ts` | Tiêu đề/nội dung thông báo riêng cho ca bị bỏ qua |
+| `src/ui/store.ts` | `contentFilter: FilterSettings` (đọc trong `loadAll`), `filterScreenEnabled`, `lastExtraction` |
+| `src/ui/sidepanel.ts` | Xử lý `extract-events-all` và `toggle-filter-screen` |
 | `src/ui/actions/settings.ts` | Giữ nguyên phần LLM; phần sàng lọc tách sang `actions/filter-settings.ts` |
 | `src/ui/actions/extract.ts` | `extractEventsAction(filterRunMode)`; nút "Trích xuất toàn bộ" |
 | `src/ui/views/settings.ts` | Chèn `filterSettingsCard(state.contentFilter)` vào tab Cài đặt |
@@ -365,6 +377,7 @@ offscreen   runExtractionJob(documentId, deps, onProgress, signal)
   6. decision = aggregateDecision(...)
        'no_event' + mode 'screen' → JOB_DONE (0 sự kiện, filterDecision = 'no_event',
                                     KHÔNG tạo provider/health LLM)
+       'no_event' + mode 'report' → đi tiếp, filterNote = "Chế độ chỉ báo cáo…" (Q12)
        còn lại → extractEvents(document NGUYÊN VĂN)   // không đổi tham số
   7. lưu nháp như hiện tại
   8. JOB_DONE kèm filterApplied / filterDecision / evidenceCount / totalSentences /
@@ -374,6 +387,12 @@ offscreen   runExtractionJob(documentId, deps, onProgress, signal)
 Kết thúc sớm ở bước 6 **không phải lỗi**: `JOB_DONE` với `savedCount = 0`,
 `filterDecision = 'no_event'`, toast *"Sàng lọc không thấy nội dung công việc nào (độ chắc chắn 91%).
 Bạn có thể trích xuất toàn bộ."* + nút hành động.
+
+Hiện thực (P5–P6): bước 2–6 nằm ở `src/platform/offscreen/run-job.ts` (`screenDocument`); deps của job
+nhận thêm `loadFilterSettings()` và `createFilter(settings)`. Bước 8 ghi qua `donePatch()` ở
+`src/platform/background/jobs.ts`. Kiểm tra consent provider vẫn **đứng trước** bước sàng lọc, còn
+việc tạo provider + health LLM **đứng sau** quyết định bỏ qua — nên tài liệu bị bỏ qua không bao giờ
+chạm tới endpoint suy luận.
 
 ---
 
@@ -404,13 +423,18 @@ trong `host_permissions`); path/query/hash bị từ chối ngay trên form (Q10
 ### 9.2. Tab Quét nội dung
 
 - Checkbox **"Sàng lọc nội dung trước khi trích xuất"**, mặc định theo `settings.mode`
-  (ẩn khi `mode === 'off'`; luôn ẩn với nguồn `selection`/`paste`).
-- Sau khi xong, hiện một dòng kết luận:
+  (ẩn khi `mode === 'off'`; luôn ẩn với nguồn `selection`/`paste`). Checked = theo cài đặt
+  (`auto`), unchecked = `filterRunMode: 'off'` cho lần chạy đó (Q13); gợi ý dưới checkbox đổi theo
+  chế độ đang lưu.
+- Sau khi xong, hiện một dòng kết luận (chỉ khi kết quả thuộc **đúng tài liệu đang mở**):
   - `Sàng lọc: có nội dung đáng trích (5/48 câu giao việc) · 1,8 s`
   - `Sàng lọc: không thấy nội dung công việc (chắc chắn 91%) · đã bỏ qua lần gọi LLM`
   - `Sàng lọc không phản hồi — đã trích xuất toàn bộ` (alert vàng, không phải lỗi)
-- Khi `savedCount === 0 && filterDecision === 'no_event'`: nút **"Trích xuất toàn bộ"**
-  (`filterRunMode: 'off'`).
+  - `report` + `no_event`: `… · Chế độ chỉ báo cáo nên vẫn trích xuất toàn bộ.` (Q12)
+- Khi `savedCount === 0 && filterDecision === 'no_event' && filterNote === null`: nút
+  **"Trích xuất toàn bộ"** (`filterRunMode: 'off'`) và panel **ở lại** tab này (Q14).
+- Số liệu hiển thị lấy từ `store.lastExtraction` (tóm tắt job), không đọc lại
+  `chrome.storage.session`; thời gian < 1 s hiện `ms`, từ 1 s hiện `x,y s`.
 
 ### 9.3. Nhãn tiếng Việt
 
@@ -457,7 +481,9 @@ trong `host_permissions`); path/query/hash bị từ chối ngay trên form (Q10
 |---|---|
 | `tests/core/extraction-prefilter.test.ts` | cửa sổ ≤ `windowChars`, phủ kín `effectiveChars`, không cắt giữa từ, tài liệu rỗng/1 cửa sổ, tài liệu dài hơn ngân sách; `aggregateDecision` bảng chân trị (8 ca: có task ở cửa sổ 2, lỗi 1 cửa sổ, tài liệu 2 câu, confidence 0.84/0.85, nhiều cửa sổ lấy min, …); `summarizeFilter` |
 | `tests/platform/phobert-filter.test.ts` | mock `fetch` như `llama-cpp.test.ts`: 200 hợp lệ; 200 thiếu trường ⇒ `invalid-response`; 422 (quá 5000) ⇒ `http` kèm gợi ý; 500; timeout; abort; `/health` 200/503/không kết nối; cắt `/` cuối endpoint |
-| `tests/platform/offscreen-job.test.ts` (mở rộng) | `screen` + `no_event` ⇒ không gọi provider, `savedCount = 0`; `screen` + `has_event` ⇒ provider nhận **nguyên văn**; `report` + `no_event` ⇒ **vẫn** gọi provider; `selection`/`paste` ⇒ không gọi filter; lỗi filter ⇒ toàn văn + `filterNote` + `filterApplied = false`; `filterRunMode: 'off'` ⇒ không gọi filter; huỷ giữa bước sàng lọc ⇒ `aborted`; `filterConfidence`/`filterLatencyMs` khớp kết quả |
+| `tests/platform/offscreen-job.test.ts` (mở rộng) | hành vi cũ của job khi **tắt** sàng lọc (`loadFilterSettings` trả `mode: 'off'`) — giữ nguyên toàn bộ kỳ vọng Slice B/C |
+| `tests/platform/offscreen-filter.test.ts` | (F2) 10 ca hành vi job: `screen` + `no_event` ⇒ **không** tạo provider, `savedCount = 0`, tiến trình có bước sàng lọc; `screen` + `has_event` ⇒ provider nhận **nguyên văn**; `report` + `no_event` ⇒ **vẫn** gọi provider + `FILTER_REPORT_NOTE`; `selection`/`paste` ⇒ không tạo filter (Q2); `filterRunMode: 'off'` ⇒ không lọc dù cài đặt `screen`; `'force'` ⇒ lọc dù cài đặt `off`; lỗi `/analyze` và `health` lỗi ⇒ fail-open + toàn văn + `filterApplied = false`; nhiều cửa sổ ⇒ một cửa sổ có việc là `has_event`; huỷ giữa bước sàng lọc ⇒ `FilterError('aborted')`, không lưu nháp |
+| `tests/ui/filter-capture.test.ts` | (F2) 7 ca render (checkbox hiện/ẩn theo chế độ và theo nguồn, kết luận `no_event` có %/thời gian/nút toàn bộ, `has_event` có `x/y câu giao việc`, fail-open là alert vàng, không lộ kết luận của tài liệu khác) + 3 ca payload (`auto` không gửi trường, checkbox tắt gửi `off`, nút toàn bộ luôn gửi `off`) |
 | `tests/shared/contracts.test.ts` (mở rộng) | job cũ thiếu trường lọc vẫn parse được (mặc định) |
 | `tests/shared/filter-contracts.test.ts` | (F1) phần hợp đồng sàng lọc tách khỏi `contracts.test.ts`: `FilterSettings` mặc định + ngưỡng, job cũ, `JOB_DONE` cũ/mới, `filterRunMode` hai chiều |
 | `tests/platform/filter-settings.test.ts` | (F1) mặc định, lưu/đọc khoá `contentFilter`, bản ghi hỏng/cũ, từ chối giá trị sai |
@@ -501,6 +527,10 @@ khi chạy `screen`** để so với baseline không lọc. Đây là nguồn s�
 
 > Quy tắc chốt: nếu chỉ số đầu tiên > 0, nâng `skipConfidence`/`minSentencesToSkip` hoặc hạ mặc định
 > về `report` **trước khi** phát hành. Không tuyên bố "đã sàng lọc" khi chưa có số từ §11.3.
+
+> **Trạng thái F2 (2026-10-27):** chưa có số từ §11.3, nên mặc định đã hạ về **`report`**
+> (`DEFAULT_FILTER_MODE`, Q11). Hệ quả: bước sàng lọc **chạy** và hiện kết luận, nhưng **không**
+> bỏ qua lần gọi LLM. Chỉ số ở bảng trên vẫn là điều kiện để P9 nâng lại `screen`.
 
 ---
 
@@ -621,7 +651,9 @@ năng đã chạy: bước sàng lọc chỉ hoạt động sau P5–P6 và ch�
 | P2 | **Xong** | 2026-10-26 | `prefilter.ts`, `mock-filter.ts`; +27 test (21 prefilter + 6 mock). |
 | P3 | **Xong** | 2026-10-27 | `src/platform/inference/phobert-filter.ts`: `/health` timeout 2 s (map `device`, 503 = đang tải model), `/analyze` timeout theo cài đặt + `AbortSignal`, Zod validate response, `FilterError` (`network`/`timeout`/`http`/`invalid-response`/`aborted`), gợi ý 5000 ký tự khi 422, `latencyMs` đo phía client. +12 test |
 | P4 | **Xong** | 2026-10-27 | Lưu cài đặt (`filter-settings.ts`, khoá `contentFilter`), card UI + health (`views/filter-settings.ts`, `actions/filter-settings.ts`), `settings-wiring.ts` gộp handler, `store.contentFilter` + `loadAll`, manifest/CSP 4 origin (8081 mặc định + 8000 alias). +18 test (5 storage, 11 UI, 2 contract tách ra) |
-| P5–P12 | Chưa làm | — | Giữ nguyên thứ tự và phụ thuộc ở §12.1. **Bước sàng lọc vẫn chưa chạy khi trích xuất.** |
+| P5 | **Xong** | 2026-10-27 | `run-job.ts`: chọn chế độ bằng `resolveFilterMode`, `health` 2 s, chia cửa sổ theo `filterCharBudget(text, chunkChars, maxChunks)`, `analyze` tuần tự với tiến trình (`Đang kiểm tra bước sàng lọc…`, `Đang sàng lọc nội dung i/n…`), gộp bằng `summarizeFilter`, dừng sớm khi `screen` + `no_event` + `applied` (không tạo provider). Fail-open ghi `filterApplied = false` + `filterNote`; huỷ ⇒ `FilterError('aborted')`. `offscreen/main.ts` truyền `loadFilterSettings`/`PhobertTaskFilter`/`filterRunMode` và map abort sang `JOB_CANCELLED`; `donePatch` ở `background/jobs.ts`; notification có tiêu đề/nội dung riêng cho ca bỏ qua. +10 test |
+| P6 | **Xong** | 2026-10-27 | `store`: `filterScreenEnabled`, `lastExtraction`; `actions/extract.ts`: `extractEventsAction(filterRunMode?)`, `skippedByFilter`, `summaryOf`, không nhảy tab khi bị bỏ qua (Q14); `views/capture.ts`: checkbox + dòng kết luận + nút "Trích xuất toàn bộ"; `sidepanel.ts` xử lý `extract-events-all`/`toggle-filter-screen`; CSS `.screening-toggle`/`.screening-result`. +10 test |
+| P7–P12 | Chưa làm | — | Giữ nguyên thứ tự và phụ thuộc ở §12.1. **Mặc định là `report` (Q11)**: bước sàng lọc đã chạy nhưng chưa bỏ qua lần gọi LLM nào cho tới khi P9 có số. |
 
 Gate F0 (2026-10-26): `typecheck` / `lint` / `test` / `build` xanh; **295 passed, 17 skipped (30 file)**.
 
@@ -651,6 +683,39 @@ luồng chạy job.
   hành vi nào thay đổi**. Trước khi F2 bật mặc định cho người dùng, F3 phải chứng minh **0 tài liệu
   dương bị bỏ sót**; nếu không, hạ mặc định về `report` và ghi lý do.
 
+Gate F2 (2026-10-27, commit `a30bbd5`): `typecheck` / `lint` (**0 warning**) / `test` / `build` xanh;
+**405 passed, 17 skipped (42 file)**. `run-job` đã được chạy với `PhobertTaskFilter` **thật** ở
+`127.0.0.1:8081` (`device: cuda`) và `MockProvider`:
+
+| Mẫu | `decision` | evidence/câu | confidence | latency | LLM có được gọi? |
+|---|---|---|---|---|---|
+| Dương (3 câu giao việc rõ) | `has_event` | 3/3 | 0,64 | 23 ms | có (1 lần) |
+| Âm — menu/footer | `has_event` (dương tính giả) | 3/4 | 0,55 | 1 354 ms | có |
+| Âm — văn bản bách khoa | `uncertain` | 0/4 | — | ~1,3 s | có |
+| Âm — công thức nấu ăn | `has_event` (dương tính giả) | 2/4 | 0,60 | ~0,9 s | có |
+| Âm — bản tin thị trường | `uncertain` | 0/4 | — | ~0,9 s | có |
+
+Kết luận: **chưa có mẫu âm nào bị bỏ qua** — model bàn giao còn dương tính giả trên văn bản nhiễu,
+nên hướng sai lệch hiện tại là *an toàn cho recall* nhưng làm giảm mức tiết kiệm của bước sàng lọc.
+Đây chính là lý do hạ mặc định về `report` (Q11) và là dữ liệu vào cho P9. Đường bỏ qua thật vẫn
+được kiểm bằng `MockContentFilter` (§11.1) — chưa tuyên bố "đã sàng lọc" trên tài liệu thật.
+
+**Điểm lệch F2:**
+- **Mặc định hạ về `report`** (Q11) thay vì `screen` như Q1/D3, vì P9 chưa có số. Sửa một hằng số
+  `DEFAULT_FILTER_MODE` là đủ để nâng lại; phụ đề "Mặc định" trong card Cài đặt đọc từ hằng số này.
+- **`filterNote` được định nghĩa lại** (Q12): không còn dùng ghi chú cho kết luận bình thường; nó chỉ
+  mang fail-open/rỗng/báo cáo. Nhờ vậy UI phân biệt "đã bỏ qua" với "vẫn gọi LLM" bằng ba trường
+  thay vì so chuỗi.
+- **Tách `donePatch` + `FILTER_SKIPPED_STAGE`** (Q15) để giữ `max-lines`: `background/index.ts` và
+  `sidepanel.ts` đều đã ở sát 320 dòng.
+- **`screeningResult` chỉ hiện khi `lastExtraction.documentId` khớp tài liệu đang mở**, và
+  `lastExtraction` được lưu cả khi `notify = false` — nếu không, mở lại panel sẽ mất kết luận.
+- **Tiến trình sàng lọc dùng chính `chunkIndex/chunkCount` của job** (không thêm trường message mới),
+  nên thanh tiến trình hiện "cửa sổ i/n" rồi chuyển sang "đoạn i/n" khi vào LLM.
+
+**Nghiệm thu tay P7 vẫn còn:** 5 ca §12.2 trong Chrome (kể cả "Kiểm tra kết nối" ở Cài đặt và huỷ
+giữa bước sàng lọc) chưa chạy; checklist §9 của `docs/kiem-thu-demo.md` chưa thêm.
+
 ---
 
 ## 13. Đồng bộ tài liệu (bắt buộc trong cùng PR)
@@ -660,7 +725,7 @@ luồng chạy job.
 | `AGENTS.md` §3 | Hàng "Classifier": TF-IDF→JSON→TS **thay bằng** "PhoBERT TASK/NON_TASK microservice (FastAPI, `127.0.0.1:8081`, `8000` alias), dùng để sàng lọc cấp tài liệu" |
 | `AGENTS.md` §4 | Host permission tối thiểu thêm `8081` + `8000` trên `127.0.0.1`/`localhost`; nêu rõ là dịch vụ cục bộ, không phải remote |
 | `AGENTS.md` §5 | Sơ đồ runtime: thêm nhánh `phobert-filter.ts ──HTTP──► 127.0.0.1:8081` trước `llama-cpp.ts` |
-| `AGENTS.md` §11 | Trạng thái: "sàng lọc PhoBERT (Slice F, **chưa triển khai**)" + mặc định `screen` khi ship |
+| `AGENTS.md` §11 | Trạng thái: "sàng lọc PhoBERT (Slice F, **F0 + F1 + F2 xong**, **mặc định `report`**)"; P7 + F3 còn chờ |
 | `ke_hoach_phat_trien.md` §2, §6 | §6 viết lại: classifier là **dịch vụ Python cục bộ**, không còn `classifier.json`; nêu rõ quyết định **không cắt câu** |
 | `docs/DEVIATIONS.md` | Hàng "Classifier" thay bằng "Sàng lọc nội dung (Slice F)" — trạng thái **chưa có**; hàng "Offscreen document" ghi rõ hiện chỉ chạy LLM |
 | `script.md` KS-05 | Ghi chú bước "phân loại" dùng PhoBERT cục bộ + quy tắc fail-open / không lọc vùng chọn / LLM nhận toàn văn |
