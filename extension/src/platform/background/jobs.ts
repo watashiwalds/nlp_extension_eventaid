@@ -1,6 +1,7 @@
 import { ExtractionJobSchema } from '../../shared/contracts';
 import type { ExtractionJob, ExtractionJobStatus } from '../../shared/contracts';
-import { EXTRACTION_JOB_KEY } from '../../shared/constants';
+import type { RuntimeMessage } from '../../shared/messages';
+import { EXTRACTION_JOB_KEY, FILTER_SKIPPED_STAGE } from '../../shared/constants';
 
 /** Job còn sống; cấm tạo job mới khi đang ở một trong các trạng thái này. */
 export const ACTIVE_JOB_STATUSES: ExtractionJobStatus[] = ['queued', 'running', 'persisting'];
@@ -52,6 +53,40 @@ export function patchJob(
 export function parseStoredJob(raw: unknown): ExtractionJob | null {
   const parsed = ExtractionJobSchema.safeParse(raw);
   return parsed.success ? parsed.data : null;
+}
+
+/**
+ * Map `JOB_DONE` → phần cập nhật cuối của job, gồm cả kết luận bước sàng lọc (P5).
+ * Tách khỏi service worker để `background/index.ts` không vượt `max-lines`.
+ */
+export function donePatch(message: Extract<RuntimeMessage, { type: 'JOB_DONE' }>): JobPatch {
+  const skipped =
+    message.filterDecision === 'no_event' &&
+    message.savedCount === 0 &&
+    message.filterNote === null;
+  const stage =
+    message.savedCount > 0
+      ? `Đã lưu ${message.savedCount} sự kiện nháp.`
+      : 'Không có sự kiện mới để lưu.';
+
+  return {
+    status: 'done',
+    stage: skipped ? FILTER_SKIPPED_STAGE : stage,
+    chunkIndex: message.chunkCount,
+    chunkCount: message.chunkCount,
+    candidateCount: message.candidateCount,
+    savedCount: message.savedCount,
+    duplicateCount: message.duplicateCount,
+    truncated: message.truncated,
+    filterApplied: message.filterApplied,
+    filterDecision: message.filterDecision,
+    filterEvidenceCount: message.filterEvidenceCount,
+    filterTotalSentences: message.filterTotalSentences,
+    filterConfidence: message.filterConfidence,
+    filterLatencyMs: message.filterLatencyMs,
+    filterNote: message.filterNote,
+    error: null,
+  };
 }
 
 export async function readJob(): Promise<ExtractionJob | null> {

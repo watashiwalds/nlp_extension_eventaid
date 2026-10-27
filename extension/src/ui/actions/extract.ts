@@ -1,4 +1,4 @@
-import type { ExtractionJob } from '../../shared/contracts';
+import type { ExtractionJob, FilterRunMode } from '../../shared/contracts';
 import type { RuntimeResponse } from '../../shared/messages';
 import {
   activeEndpoint,
@@ -7,6 +7,7 @@ import {
 import { readJob } from '../../platform/background/jobs';
 import { ensureHostPermission, needsHostPermission } from '../../platform/permissions';
 import { activeDocument, loadAll, showToast, store } from '../store';
+import type { ExtractionSummary } from '../store';
 import { messageOf } from './shared';
 
 /**
@@ -23,7 +24,29 @@ function activeJob(job: ExtractionJob | null): boolean {
   return job !== null && ACTIVE_STATUSES.includes(job.status);
 }
 
+/** Bước sàng lọc đã chắc chắn không có việc nên job dừng trước khi gọi LLM. */
+function skippedByFilter(job: ExtractionJob): boolean {
+  return job.filterDecision === 'no_event' && job.savedCount === 0 && job.filterNote === null;
+}
+
+function summaryOf(job: ExtractionJob): ExtractionSummary {
+  return {
+    documentId: job.documentId,
+    savedCount: job.savedCount,
+    filterApplied: job.filterApplied,
+    filterDecision: job.filterDecision,
+    filterEvidenceCount: job.filterEvidenceCount,
+    filterTotalSentences: job.filterTotalSentences,
+    filterConfidence: job.filterConfidence,
+    filterLatencyMs: job.filterLatencyMs,
+    filterNote: job.filterNote,
+  };
+}
+
 function doneMessage(job: ExtractionJob): string {
+  if (skippedByFilter(job)) {
+    return 'Bước sàng lọc cho thấy không có nội dung công việc. Bạn có thể trích xuất toàn bộ nếu cần.';
+  }
   const parts =
     job.savedCount > 0
       ? [`Đã lưu ${job.savedCount} sự kiện nháp.`]
@@ -51,9 +74,17 @@ export function applyJob(job: ExtractionJob, notify = true): void {
   if (handledJobId === job.jobId) return;
   handledJobId = job.jobId;
 
+  // Giữ kết luận sàng lọc để mở lại panel vẫn thấy (kể cả khi không báo toast).
+  if (job.status === 'done') store.set({ lastExtraction: summaryOf(job) });
+
   if (!notify) return;
   if (job.status === 'done') {
     showToast(job.savedCount > 0 ? 'success' : 'info', doneMessage(job));
+    if (skippedByFilter(job)) {
+      // Giữ người dùng ở tab Quét nội dung để thấy kết luận + nút "Trích xuất toàn bộ".
+      void loadAll().then(() => store.set({ tab: 'capture' }));
+      return;
+    }
     void loadAll().then(() =>
       store.set((state) => ({
         ...state,
@@ -66,9 +97,11 @@ export function applyJob(job: ExtractionJob, notify = true): void {
       })),
     );
   } else if (job.status === 'failed') {
+    store.set({ lastExtraction: null });
     showToast('error', job.error ?? 'Trích xuất thất bại.');
     void loadAll();
   } else if (job.status === 'cancelled') {
+    store.set({ lastExtraction: null });
     showToast('info', 'Đã huỷ trích xuất. Sự kiện đã lưu trước đó vẫn còn trong Nháp.');
     void loadAll();
   }
@@ -85,7 +118,7 @@ export async function syncExtractionJob(): Promise<void> {
   }
 }
 
-export async function extractEventsAction(): Promise<void> {
+export async function extractEventsAction(filterRunMode?: FilterRunMode): Promise<void> {
   if (sending || store.get().extraction) return;
 
   const document = activeDocument(store.get());
@@ -123,12 +156,17 @@ export async function extractEventsAction(): Promise<void> {
         chunkIndex: 0,
         chunkCount: 0,
       },
+      lastExtraction: null,
     });
 
+    // Checkbox ở tab Quét nội dung: bật = theo cài đặt (`auto`), tắt = bỏ qua sàng lọc.
+    const runMode: FilterRunMode | undefined =
+      filterRunMode ?? (store.get().filterScreenEnabled ? undefined : 'off');
     const response = (await chrome.runtime.sendMessage({
       to: 'background',
       type: 'RUN_EXTRACTION',
       documentId: document.documentId,
+      ...(runMode ? { filterRunMode: runMode } : {}),
     })) as RuntimeResponse | undefined;
 
     if (!response?.ok) {

@@ -123,5 +123,11 @@ export const FILTER_DECISION_TEXT: Record<FilterDecision, string> = {
 /** Ghi chú fail-open: dịch vụ lọc lỗi/timeout nhưng job vẫn chạy tiếp với toàn văn. */
 export const FILTER_FAIL_OPEN_NOTE = 'Sàng lọc không phản hồi — đã trích xuất toàn bộ';
 
+/** Trạng thái job khi bước sàng lọc kết luận chắc chắn không có nội dung công việc. */
+export const FILTER_SKIPPED_STAGE = 'Bước sàng lọc cho thấy không có nội dung công việc.';
+
+/** Chế độ `report` kết luận `no_event` nhưng vẫn gửi toàn văn cho LLM. */
+export const FILTER_REPORT_NOTE = 'Chế độ chỉ báo cáo nên vẫn trích xuất toàn bộ.';
+
 /** Kết luận khi tài liệu rỗng hoặc quá ngắn để kết luận. */
 export const FILTER_EMPTY_NOTE = 'Sàng lọc không thấy nội dung công việc nào. Bạn có thể trích xuất toàn bộ.';

@@ -1,6 +1,7 @@
 import type {
   Event,
   EventStatus,
+  FilterDecision,
   FilterSettings,
   Label,
   LlmSettings,
@@ -103,6 +104,22 @@ export interface ExtractionState {
   chunkCount: number;
 }
 
+/**
+ * Tóm tắt lần trích đã kết thúc — đủ để hiện dòng kết luận sàng lọc và nút
+ * "Trích xuất toàn bộ" mà không cần đọc lại job từ `chrome.storage.session`.
+ */
+export interface ExtractionSummary {
+  documentId: string;
+  savedCount: number;
+  filterApplied: boolean;
+  filterDecision: FilterDecision | null;
+  filterEvidenceCount: number;
+  filterTotalSentences: number;
+  filterConfidence: number | null;
+  filterLatencyMs: number;
+  filterNote: string | null;
+}
+
 export interface AppState {
   tab: Tab;
   status: 'loading' | 'ready' | 'error';
@@ -130,7 +147,11 @@ export interface AppState {
   llm: LlmSettings;
   /** Cấu hình bước sàng lọc nội dung (Slice F). */
   contentFilter: FilterSettings;
+  /** Người dùng có bật sàng lọc cho lần trích tới hay không (chỉ UI state). */
+  filterScreenEnabled: boolean;
   extraction: ExtractionState | null;
+  /** Kết quả lần trích gần nhất, dùng cho dòng kết luận sàng lọc. */
+  lastExtraction: ExtractionSummary | null;
   toast: Toast | null;
   busy: string | null;
 }
@@ -186,7 +207,9 @@ export const store = createStore<AppState>({
   pasteOpen: false,
   llm: DEFAULT_LLM_SETTINGS,
   contentFilter: DEFAULT_FILTER_SETTINGS,
+  filterScreenEnabled: true,
   extraction: null,
+  lastExtraction: null,
   toast: null,
   busy: null,
 });

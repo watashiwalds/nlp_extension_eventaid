@@ -1,8 +1,12 @@
 import { RuntimeMessageSchema } from '../../shared/messages';
 import type { RuntimeMessage } from '../../shared/messages';
+import type { FilterRunMode, FilterSettings } from '../../shared/contracts';
 import { isAbortedError } from '../../core/ports/inference';
+import { isFilterAborted } from '../../core/ports/content-filter';
 import { createInferenceProvider } from '../inference/factory';
+import { PhobertTaskFilter } from '../inference/phobert-filter';
 import { getDocument, listEvents, listProfiles, saveEvent } from '../storage/db';
+import { loadFilterSettings } from '../storage/filter-settings';
 import { loadLlmSettings } from '../storage/settings';
 import { runExtractionJob } from './run-job';
 
@@ -22,7 +26,7 @@ async function post(message: RuntimeMessage): Promise<void> {
   }
 }
 
-async function start(jobId: string, documentId: string): Promise<void> {
+async function start(jobId: string, documentId: string, filterRunMode?: FilterRunMode): Promise<void> {
   const controller = new AbortController();
   active = { jobId, controller };
 
@@ -44,9 +48,12 @@ async function start(jobId: string, documentId: string): Promise<void> {
         listProfiles,
         listEvents,
         loadLlmSettings,
+        loadFilterSettings,
         saveEvent,
         now: () => new Date(),
         createProvider: createInferenceProvider,
+        createFilter: (settings: FilterSettings) =>
+          new PhobertTaskFilter({ endpoint: settings.endpoint, timeoutMs: settings.timeoutMs }),
       },
       (progress) => {
         void post({
@@ -60,11 +67,12 @@ async function start(jobId: string, documentId: string): Promise<void> {
         });
       },
       controller.signal,
+      filterRunMode,
     );
 
     await post({ to: 'background', type: 'JOB_DONE', jobId, ...result });
   } catch (error) {
-    if (controller.signal.aborted || isAbortedError(error)) {
+    if (controller.signal.aborted || isAbortedError(error) || isFilterAborted(error)) {
       await post({ to: 'background', type: 'JOB_CANCELLED', jobId });
     } else {
       await post({ to: 'background', type: 'JOB_FAILED', jobId, error: errorMessage(error) });
@@ -93,7 +101,7 @@ chrome.runtime.onMessage.addListener((raw: unknown) => {
       }
       return false;
     }
-    void start(message.jobId, message.documentId);
+    void start(message.jobId, message.documentId, message.filterRunMode);
     return false;
   }
 

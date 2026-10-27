@@ -11,7 +11,7 @@ const NOW = new Date(2026, 9, 21, 8, 0, 0);
 describe('hợp đồng bước sàng lọc nội dung', () => {
   it('FilterSettings điền mặc định đã chốt và từ chối giá trị ngoài ngưỡng', () => {
     const settings = FilterSettingsSchema.parse({});
-    expect(settings.mode).toBe('screen');
+    expect(settings.mode).toBe('report');
     expect(settings.endpoint).toBe(DEFAULT_FILTER_ENDPOINT);
     expect(settings.endpoint).toBe('http://127.0.0.1:8081');
     expect(settings.timeoutMs).toBe(15_000);

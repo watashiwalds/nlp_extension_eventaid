@@ -71,10 +71,10 @@ afterEach(() => {
 });
 
 describe('card sàng lọc trong Cài đặt', () => {
-  it('mặc định screen, endpoint 8081 và đủ trường theo kế hoạch', () => {
+  it('mặc định report (an toàn), endpoint 8081 và đủ trường theo kế hoạch', () => {
     const html = renderApp(store.get());
     expect(html).toContain('Sàng lọc nội dung (PhoBERT)');
-    expect(html).toContain('name="filterMode" value="screen" checked');
+    expect(html).toContain('name="filterMode" value="report" checked');
     expect(html).toContain('http://127.0.0.1:8081');
     expect(html).toContain('name="filterSkipConfidence"');
     expect(html).toContain('name="filterMinSentences"');
@@ -82,7 +82,7 @@ describe('card sàng lọc trong Cài đặt', () => {
   });
 
   it('lưu chế độ, endpoint và ngưỡng rồi đọc lại từ IndexedDB', async () => {
-    chooseMode('report');
+    chooseMode('screen');
     setField('filter-endpoint', 'http://127.0.0.1:8081/');
     setField('filter-timeout', '9000');
     setField('filter-skip-confidence', '0.9');
@@ -92,13 +92,13 @@ describe('card sàng lọc trong Cài đặt', () => {
 
     const saved = await loadFilterSettings();
     expect(saved).toMatchObject({
-      mode: 'report',
+      mode: 'screen',
       endpoint: 'http://127.0.0.1:8081',
       timeoutMs: 9_000,
       skipConfidence: 0.9,
       minSentencesToSkip: 4,
     });
-    expect(store.get().contentFilter.mode).toBe('report');
+    expect(store.get().contentFilter.mode).toBe('screen');
     expect(store.get().toast?.message).toContain('Đã lưu cài đặt sàng lọc');
   });
 
@@ -144,7 +144,7 @@ describe('kiểm tra kết nối dịch vụ sàng lọc', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe('http://127.0.0.1:8081/health');
     expect(document.querySelector('#filter-health')?.textContent).toContain('cuda');
-    expect((await loadFilterSettings()).mode).toBe('screen');
+    expect((await loadFilterSettings()).mode).toBe('report');
   });
 
   it('lỗi kết nối hiện thông điệp rõ, không lưu cài đặt', async () => {

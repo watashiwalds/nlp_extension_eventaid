@@ -12,10 +12,11 @@ import {
   PENDING_OPEN_KEY,
   SELECTION_MENU_ID,
 } from '../../shared/constants';
-import type { ExtractionJob } from '../../shared/contracts';
+import type { ExtractionJob, FilterRunMode } from '../../shared/contracts';
 import type { PendingCapture, RuntimeMessage, RuntimeResponse } from '../../shared/messages';
 import { RuntimeMessageSchema } from '../../shared/messages';
 import {
+  donePatch,
   isActiveJob,
   makeJob,
   patchJob,
@@ -129,6 +130,7 @@ function endFinish(): void {
 async function handleRun(message: {
   type: 'RUN_EXTRACTION';
   documentId: string;
+  filterRunMode?: FilterRunMode;
 }): Promise<RuntimeResponse> {
   if (startingJob) {
     return { ok: false, error: 'Đang bắt đầu một lần trích xuất khác.' };
@@ -157,6 +159,7 @@ async function handleRun(message: {
         type: 'RUN_EXTRACTION',
         jobId: job.jobId,
         documentId: message.documentId,
+        ...(message.filterRunMode ? { filterRunMode: message.filterRunMode } : {}),
       });
       if (await wasCancelled()) return { ok: true, jobId: job.jobId };
       return { ok: true, jobId: job.jobId };
@@ -249,21 +252,7 @@ async function handleDone(message: Extract<RuntimeMessage, { type: 'JOB_DONE' }>
     const latest = await readJob();
     if (!latest || latest.jobId !== message.jobId || !isActiveJob(latest)) return;
 
-    const stage =
-      message.savedCount > 0
-        ? `Đã lưu ${message.savedCount} sự kiện nháp.`
-        : 'Không có sự kiện mới để lưu.';
-    const next = patchJob(latest, {
-      status: 'done',
-      stage,
-      chunkIndex: message.chunkCount,
-      chunkCount: message.chunkCount,
-      candidateCount: message.candidateCount,
-      savedCount: message.savedCount,
-      duplicateCount: message.duplicateCount,
-      truncated: message.truncated,
-      error: null,
-    });
+    const next = patchJob(latest, donePatch(message));
     await writeJob(next);
     done = next;
   } finally {

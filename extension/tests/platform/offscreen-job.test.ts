@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { MOCK_EXTRACTION, MockProvider } from '../../src/core/extraction/mock-provider';
+import { MockContentFilter } from '../../src/core/extraction/mock-filter';
 import { makeEvent } from '../../src/core/events';
 import type { ExtractionProgress } from '../../src/core/extraction/pipeline';
 import { runExtractionJob } from '../../src/platform/offscreen/run-job';
+import { DEFAULT_FILTER_SETTINGS } from '../../src/platform/storage/filter-settings';
 import { LlmSettingsSchema } from '../../src/shared/contracts';
 import type { Event, LlmSettings, NormalizedDocument, Profile } from '../../src/shared/contracts';
 
@@ -45,6 +47,9 @@ function deps(overrides: {
     listProfiles: async (): Promise<Profile[]> => [],
     listEvents: async () => overrides.existing ?? [],
     loadLlmSettings: async () => overrides.settings ?? settings,
+    // Các ca ở file này không đo bước sàng lọc: tắt hẳn để giữ hành vi cũ.
+    loadFilterSettings: async () => ({ ...DEFAULT_FILTER_SETTINGS, mode: 'off' }),
+    createFilter: () => new MockContentFilter(),
     createProvider:
       overrides.createProvider ??
       (() =>

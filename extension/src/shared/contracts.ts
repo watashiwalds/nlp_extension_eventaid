@@ -194,9 +194,16 @@ export type FilterDecision = z.infer<typeof FilterDecisionSchema>;
 /** Mặc định dịch vụ PhoBERT cục bộ. Cổng 8000 vẫn được khai báo làm alias. */
 export const DEFAULT_FILTER_ENDPOINT = 'http://127.0.0.1:8081';
 
+/**
+ * Chế độ mặc định. Giữ `report` (an toàn) cho tới khi F3 đo xong và chứng minh
+ * **0 tài liệu dương bị bỏ sót** (kế hoạch §11.4, §12.4); chỉ khi đó mới đổi sang
+ * `screen` để bước sàng lọc thực sự bỏ qua lần gọi LLM.
+ */
+export const DEFAULT_FILTER_MODE: FilterMode = 'report';
+
 /** Cấu hình bước sàng lọc PhoBERT cục bộ — đọc lên phải validate bằng Zod. */
 export const FilterSettingsSchema = z.object({
-  mode: FilterModeSchema.default('screen'),
+  mode: FilterModeSchema.default(DEFAULT_FILTER_MODE),
   endpoint: z.string().url().default(DEFAULT_FILTER_ENDPOINT),
   timeoutMs: z.number().int().positive().max(60_000).default(15_000),
   /** < 5000 của server; 4000 để chừa biên. */

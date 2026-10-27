@@ -1,4 +1,4 @@
-import { FILTER_MODES } from '../../shared/contracts';
+import { DEFAULT_FILTER_MODE, FILTER_MODES } from '../../shared/contracts';
 import type { FilterMode, FilterSettings } from '../../shared/contracts';
 import { FILTER_MODE_TEXT } from '../../shared/constants';
 import {
@@ -24,7 +24,7 @@ function modeOption(mode: FilterMode, current: FilterMode): string {
     }>
     <span class="provider-option__body">
       <span class="provider-option__title">${escapeHtml(FILTER_MODE_TEXT[mode])}${
-        mode === 'screen' ? badge('Mặc định', 'success') : ''
+        mode === DEFAULT_FILTER_MODE ? badge('Mặc định', 'success') : ''
       }</span>
       <span class="muted small">${escapeHtml(MODE_HINT[mode])}</span>
     </span>

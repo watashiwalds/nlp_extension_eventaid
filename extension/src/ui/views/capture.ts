@@ -1,4 +1,5 @@
-import { DOCUMENT_PREVIEW_CHARS, METHOD_TEXT, SOURCE_TEXT } from '../../shared/constants';
+import { DOCUMENT_PREVIEW_CHARS, FILTER_DECISION_TEXT, METHOD_TEXT, SOURCE_TEXT } from '../../shared/constants';
+import type { FilterMode, NormalizedDocument } from '../../shared/contracts';
 import { relativeLabel } from '../../core/dates';
 import { unlinkedDocuments } from '../../core/documents';
 import { endpointOrigin } from '../../core/inference/provider-choice';
@@ -27,6 +28,72 @@ function captureMeta(state: AppState): string {
     <span title="Số ký tự">${escapeHtml(formatCharCount(doc.charCount))}</span>
     ${host ? `<span class="doc-meta__host">${icon('link')}${escapeHtml(host)}</span>` : ''}
   </div>`;
+}
+
+const SCREENING_HINT: Record<Exclude<FilterMode, 'off'>, string> = {
+  report: 'Chế độ chỉ báo cáo: vẫn trích xuất toàn bộ, chỉ ghi nhận kết luận.',
+  screen: 'Bỏ qua lần gọi LLM khi chắc chắn không có nội dung công việc.',
+};
+
+function formatLatency(ms: number): string {
+  if (ms <= 0) return '';
+  return ms < 1_000 ? `${ms} ms` : `${(ms / 1_000).toFixed(1).replace('.', ',')} s`;
+}
+
+/** Checkbox sàng lọc: ẩn khi chế độ `off` hoặc nguồn là vùng chọn/văn bản dán (Q2). */
+function screeningToggle(state: AppState, doc: NormalizedDocument): string {
+  const mode = state.contentFilter.mode;
+  if (mode === 'off') return '';
+  if (doc.source === 'selection' || doc.source === 'paste') return '';
+  return `<label class="check screening-toggle">
+      <input type="checkbox" data-action="toggle-filter-screen" ${
+        state.filterScreenEnabled ? 'checked' : ''
+      }>
+      <span>Sàng lọc nội dung trước khi trích xuất</span>
+    </label>
+    <p class="field__hint">${escapeHtml(SCREENING_HINT[mode])} Bước sàng lọc chạy trên máy bạn; LLM vẫn nhận toàn văn.</p>`;
+}
+
+/** Dòng kết luận của lần trích gần nhất + nút chạy lại toàn bộ khi đã bị bỏ qua. */
+function screeningResult(state: AppState, doc: NormalizedDocument): string {
+  const summary = state.lastExtraction;
+  if (!summary || summary.documentId !== doc.documentId || !summary.filterDecision) return '';
+  const decision = summary.filterDecision;
+  const latency = formatLatency(summary.filterLatencyMs);
+  const skipped = decision === 'no_event' && summary.savedCount === 0 && !summary.filterNote;
+
+  if (!summary.filterApplied && summary.filterNote) {
+    return `<p class="alert alert--warning">${icon('alert')} ${escapeHtml(summary.filterNote)}${
+      latency ? ` · ${escapeHtml(latency)}` : ''
+    }</p>`;
+  }
+
+  const details: string[] = [];
+  if (decision === 'has_event') {
+    details.push(`${summary.filterEvidenceCount}/${summary.filterTotalSentences} câu giao việc`);
+  } else if (decision === 'no_event' && summary.filterConfidence !== null) {
+    details.push(`chắc chắn ${Math.round(summary.filterConfidence * 100)}%`);
+  }
+  if (summary.filterNote) details.push(summary.filterNote);
+  else if (skipped) details.push('đã bỏ qua lần gọi LLM');
+  else details.push('đã trích xuất toàn bộ');
+  if (latency) details.push(latency);
+
+  const action = skipped
+    ? secondaryButton(
+        'extract-events-all',
+        'Trích xuất toàn bộ',
+        'scan',
+        state.extraction ? 'disabled' : '',
+      )
+    : '';
+
+  return `<div class="screening-result">
+      <p class="muted small"><strong>Sàng lọc:</strong> ${escapeHtml(
+        FILTER_DECISION_TEXT[decision].toLowerCase(),
+      )} · ${escapeHtml(details.join(' · '))}</p>
+      ${action}
+    </div>`;
 }
 
 function documentCard(state: AppState): string {
@@ -97,6 +164,8 @@ function documentCard(state: AppState): string {
           ? `Xem toàn bộ (+${new Intl.NumberFormat('vi-VN').format(hidden)} ký tự)`
           : 'Xem toàn bộ'
     }</button>
+    ${screeningToggle(state, doc)}
+    ${screeningResult(state, doc)}
     <div class="card__actions">${actions}</div>
   </section>`;
 }

@@ -79,11 +79,9 @@ function handleClick(event: MouseEvent): void {
   const action = trigger.dataset.action ?? '';
 
   switch (action) {
-    case 'tab': {
-      const tab = trigger.dataset.tab as Tab | undefined;
-      if (tab) store.set({ tab });
+    case 'tab':
+      if (trigger.dataset.tab) store.set({ tab: trigger.dataset.tab as Tab });
       break;
-    }
     case 'goto-events':
     case 'goto-profiles': {
       const tab: Tab = action === 'goto-events' ? 'events' : 'profiles';
@@ -109,7 +107,8 @@ function handleClick(event: MouseEvent): void {
       void captureCurrentPage({ forceRaw: true });
       break;
     case 'extract-events':
-      void extractEventsAction();
+    case 'extract-events-all':
+      void extractEventsAction(action === 'extract-events-all' ? 'off' : undefined);
       break;
     case 'cancel-extraction':
       cancelExtractionAction();
@@ -260,6 +259,11 @@ function handleChange(event: Event): void {
 
   if (target.dataset.action === 'select-document') {
     selectDocument(target.value);
+    return;
+  }
+
+  if (target.dataset.action === 'toggle-filter-screen') {
+    store.set({ filterScreenEnabled: target instanceof HTMLInputElement && target.checked });
     return;
   }
 

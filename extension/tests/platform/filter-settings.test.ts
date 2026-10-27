@@ -16,7 +16,7 @@ describe('cài đặt sàng lọc nội dung', () => {
   it('trả mặc định khi chưa có bản ghi', async () => {
     expect(await loadFilterSettings()).toEqual(DEFAULT_FILTER_SETTINGS);
     expect(DEFAULT_FILTER_SETTINGS).toMatchObject({
-      mode: 'screen',
+      mode: 'report',
       endpoint: 'http://127.0.0.1:8081',
       timeoutMs: 15_000,
       windowChars: 4_000,
@@ -27,7 +27,7 @@ describe('cài đặt sàng lọc nội dung', () => {
 
   it('lưu rồi đọc lại đúng giá trị dưới khoá contentFilter', async () => {
     const saved = await saveFilterSettings({
-      mode: 'report',
+      mode: 'screen',
       endpoint: 'http://127.0.0.1:8081',
       timeoutMs: 9_000,
       windowChars: 3_000,
@@ -35,7 +35,7 @@ describe('cài đặt sàng lọc nội dung', () => {
       minSentencesToSkip: 4,
     });
 
-    expect(saved.mode).toBe('report');
+    expect(saved.mode).toBe('screen');
     expect(await loadFilterSettings()).toEqual(saved);
     expect(await getSetting(FILTER_SETTINGS_KEY)).toEqual(saved);
   });

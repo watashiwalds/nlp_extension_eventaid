@@ -2,13 +2,26 @@ import { ACTION_TITLE, EXTRACTION_NOTIFICATION_ID, PENDING_OPEN_KEY } from '../.
 import type { ExtractionJob } from '../../shared/contracts';
 import type { PendingOpen } from '../../shared/messages';
 
+/** Bước sàng lọc kết luận chắc chắn không có việc nên job dừng trước LLM. */
+function skippedByFilter(job: ExtractionJob): boolean {
+  return job.filterDecision === 'no_event' && job.savedCount === 0 && job.filterNote === null;
+}
+
 function notificationMessage(job: ExtractionJob): string {
+  if (skippedByFilter(job)) {
+    return 'Bước sàng lọc cho thấy không có nội dung công việc. Mở bảng điều khiển nếu bạn muốn trích xuất toàn bộ.';
+  }
   const parts: string[] = [];
   if (job.savedCount > 0) parts.push(`Đã lưu ${job.savedCount} sự kiện nháp.`);
   else parts.push('Không có sự kiện mới để lưu.');
   if (job.duplicateCount > 0) parts.push(`Bỏ qua ${job.duplicateCount} sự kiện trùng.`);
   if (job.truncated) parts.push('Tài liệu dài nên chỉ xử lý phần đầu.');
   return parts.join(' ');
+}
+
+function notificationTitle(job: ExtractionJob): string {
+  if (skippedByFilter(job)) return 'Không có nội dung công việc';
+  return job.savedCount > 0 ? 'Đã trích xuất xong' : 'Không có sự kiện mới';
 }
 
 function markPanelFallback(): void {
@@ -39,7 +52,7 @@ export async function showDoneNotification(job: ExtractionJob): Promise<void> {
     await chrome.notifications.create(EXTRACTION_NOTIFICATION_ID, {
       type: 'basic',
       iconUrl: chrome.runtime.getURL('icons/icon128.png'),
-      title: job.savedCount > 0 ? 'Đã trích xuất xong' : 'Không có sự kiện mới',
+      title: notificationTitle(job),
       message: notificationMessage(job),
       priority: 2,
       buttons: [
