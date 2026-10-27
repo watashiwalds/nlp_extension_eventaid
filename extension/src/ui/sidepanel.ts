@@ -5,6 +5,7 @@ import { hideToast, loadAll, store } from './store';
 import type { Tab } from './store';
 import { renderApp } from './render';
 import { handleProviderChange, syncProviderPanels } from './provider-panels';
+import { checkSettingsHealth, submitSettingsForm } from './settings-wiring';
 import { activeDocument } from './store';
 import {
   applyFilterFromForm,
@@ -13,7 +14,6 @@ import {
   captureCurrentPage,
   cancelExtractionAction,
   changeStatusAction,
-  checkLlmHealthAction,
   clearAllData,
   clearFilter,
   closeEventForm,
@@ -37,7 +37,6 @@ import {
   openProfileForm,
   revokeLlmConsentAction,
   saveEventFromForm,
-  saveLlmSettingsFromForm,
   savePastedText,
   saveProfileFromForm,
   selectAllVisibleDrafts,
@@ -115,11 +114,10 @@ function handleClick(event: MouseEvent): void {
     case 'cancel-extraction':
       cancelExtractionAction();
       break;
-    case 'check-llm': {
-      const form = trigger.closest('form');
-      void checkLlmHealthAction(form instanceof HTMLFormElement ? form : undefined);
+    case 'check-llm':
+    case 'check-filter':
+      checkSettingsHealth(action, trigger);
       break;
-    }
     case 'revoke-consent':
       void revokeLlmConsentAction(trigger.dataset.origin ?? '');
       break;
@@ -240,8 +238,8 @@ function handleSubmit(event: SubmitEvent): void {
     void saveProfileFromForm(form);
     return;
   }
-  if (form.id === 'llm-settings-form') {
-    void saveLlmSettingsFromForm(form);
+  if (form.id === 'llm-settings-form' || form.id === 'filter-settings-form') {
+    submitSettingsForm(form);
     return;
   }
   if (form.id === 'filter-form') {

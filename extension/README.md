@@ -10,9 +10,13 @@ Tổng quan tính năng và cách chạy: xem [`../README.md`](../README.md).
 > Consent theo origin, quyền host cấp lúc chạy và nút xoá key nằm trong Cài đặt.
 > Checklist thủ công với Gemini/Cloudflared vẫn chờ chạy (`../docs/kiem-thu-demo.md` §8).
 >
-> **Chưa có:** bước **sàng lọc PhoBERT** trước LLM (Slice F). Kế hoạch
-> `../docs/ke-hoach-bo-loc-noi-dung.md` sẽ nối dịch vụ FastAPI cục bộ tại `127.0.0.1:8000` vào
-> `offscreen/run-job.ts`; hiện job gọi LLM trực tiếp như trước.
+> **Đã có (F1):** client HTTP + card cài đặt cho bước **sàng lọc PhoBERT** — `PhobertTaskFilter`
+> (`platform/inference/phobert-filter.ts`), lưu cài đặt (`platform/storage/filter-settings.ts`),
+> card "Sàng lọc nội dung (PhoBERT)" trong Cài đặt, kiểm tra kết nối và quyền host loopback.
+>
+> **Chưa có:** bước sàng lọc **chưa được nối vào job** (F2). Kế hoạch
+> `../docs/ke-hoach-bo-loc-noi-dung.md` sẽ nối dịch vụ FastAPI cục bộ vào `offscreen/run-job.ts`;
+> hiện job gọi LLM trực tiếp như trước, không tài liệu nào bị bỏ qua.
 
 ## Lệnh
 
@@ -29,21 +33,24 @@ LLAMA_EVAL=1 npx vitest run tests/eval/extraction.live.eval.test.ts \
 
 Load unpacked từ `dist/`.
 
-## Dịch vụ sàng lọc (Slice F — chưa triển khai)
+## Dịch vụ sàng lọc (Slice F — F1: client + cài đặt)
 
-Khi làm Slice F, extension sẽ gọi thêm dịch vụ PhoBERT cục bộ. Cách chạy dịch vụ (không sửa
-`ml_hasevent_filter/`):
+Cách chạy dịch vụ (không sửa `ml_hasevent_filter/`):
 
 ```bash
 cd ../ml_hasevent_filter/handover_api_code
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 MODEL_DIR=../phobert_task_classifier_final \
-  uvicorn app:app --host 127.0.0.1 --port 8000
+  uvicorn app:app --host 127.0.0.1 --port 8081
 ```
 
 - `MODEL_DIR` là bắt buộc vì `app.py` mặc định trỏ tới đường dẫn không tồn tại.
-- Health: `curl -s http://127.0.0.1:8000/health`.
+- Extension mặc định gọi **8081**; `8000` vẫn dùng được nếu đổi `--port` và ô địa chỉ trong Cài đặt
+  (cả hai cổng đã có trong `host_permissions`).
+- Health: `curl -s http://127.0.0.1:8081/health` → `{"status":"ok","model":…,"device":"cuda"}`.
+- F1 đã chạy `PhobertTaskFilter` với dịch vụ thật ở 8081 (health + `/analyze`, 28 ms); bấm
+  "Kiểm tra kết nối" trong Chrome vẫn nằm trong checklist thủ công.
 - Biến `FILTER_EVAL=1` cho bộ đo thật sẽ được thêm ở F3 cùng `tests/eval/filter.live.eval.test.ts`.
 - Chi tiết hợp đồng, chế độ `off`/`report`/`screen`, ngưỡng 0.85 và tiêu chí nghiệm thu:
   [`../docs/ke-hoach-bo-loc-noi-dung.md`](../docs/ke-hoach-bo-loc-noi-dung.md).
@@ -66,9 +73,11 @@ MODEL_DIR=../phobert_task_classifier_final \
 | `src/core/extraction/*` | Chunk, prompt, schema, normalize, dedup, profile-match, pipeline (thuần, test bằng Node) |
 | `src/core/ports/inference.ts` | Interface `InferenceProvider` (`llama.cpp`, `openai-compatible`, `mock`) |
 | `src/core/inference/provider-choice.ts` | Quy tắc thuần: chuẩn hoá/validate endpoint, local vs remote, consent, endpoint hiệu lực |
-| *(Slice F, chưa có)* `src/core/ports/content-filter.ts` | Interface `ContentFilter` + type quyết định sàng lọc cấp tài liệu |
-| *(Slice F, chưa có)* `src/core/filter/*` | Chia cửa sổ, gộp quyết định, `MockFilter` (thuần, test bằng Node) |
-| *(Slice F, chưa có)* `src/platform/inference/phobert-filter.ts` | Client gọi dịch vụ PhoBERT `127.0.0.1:8000` (health, `/analyze`, timeout, fail-open) |
+| `src/core/ports/content-filter.ts` | Interface `ContentFilter`, `FilterError`, `isFilterAborted()` (Slice F) |
+| `src/core/extraction/{filter-types,prefilter,mock-filter}.ts` | Chia cửa sổ, gộp quyết định, `MockContentFilter` (thuần, test bằng Node) |
+| `src/platform/inference/phobert-filter.ts` | Client gọi dịch vụ PhoBERT cục bộ `127.0.0.1:8081` (health 2 s, `/analyze`, timeout, abort, Zod) |
+| `src/platform/storage/filter-settings.ts` | `loadFilterSettings` / `saveFilterSettings` (khoá `contentFilter`) |
+| `src/ui/views/filter-settings.ts` + `src/ui/actions/filter-settings.ts` + `src/ui/settings-wiring.ts` | Card sàng lọc, validate endpoint loopback, lưu + kiểm tra kết nối, dispatcher form Cài đặt |
 | `src/platform/inference/llama-cpp.ts` | Provider local: `llama-server` (health, models, timeout, abort) |
 | `src/platform/inference/openai-compatible.ts` | Provider remote: `/models`, `/chat/completions`, Bearer key, retry 429/5xx, lỗi 401/403/404/429/5xx; gửi schema rút gọn và hạ một lần sang `json_object` khi 400/422 |
 | `src/platform/inference/http.ts` | Helper HTTP dùng chung: timeout/abort, header, parse model, map lỗi, che key |
@@ -94,10 +103,11 @@ MODEL_DIR=../phobert_task_classifier_final \
 
 - `core/**` **không** import `chrome.*`, `platform/**`, `ui/**` (ESLint chặn).
 - Mọi dữ liệu vào `innerHTML` phải qua `escapeHtml` (`src/ui/components.ts`).
-- Không thêm host permission tĩnh ngoài `http://127.0.0.1:8080/*`; không remote code.
+- Không thêm host permission tĩnh ngoài các host loopback đã khai: `http://127.0.0.1:8080/*` (LLM),
+  `http://127.0.0.1:8081/*` + `http://localhost:8081/*` (sàng lọc, mặc định) và
+  `http://127.0.0.1:8000/*` + `http://localhost:8000/*` (alias). Không remote code.
   Endpoint remote dùng `optional_host_permissions` + `chrome.permissions.request` cho đúng origin và
   chỉ chạy sau consent; không thêm `https://*/*` vào `host_permissions` tĩnh. Mặc định vẫn là local.
-  Khi làm Slice F, thêm đúng hai host loopback `http://127.0.0.1:8000/*` và `http://localhost:8000/*`
-  cho dịch vụ sàng lọc; đó vẫn là máy người dùng, không phải backend từ xa.
+  Dịch vụ sàng lọc chỉ chạy trên máy người dùng, không phải backend từ xa.
 - Kết quả trích xuất luôn lưu ở `status = 'nhap'`; người dùng duyệt mới chuyển trạng thái.
 - File ~300 dòng, một trách nhiệm (`max-lines` cảnh báo ở 320).

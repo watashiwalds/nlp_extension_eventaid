@@ -17,7 +17,14 @@ export default defineManifest({
     'sidePanel',
     'contextMenus',
   ],
-  host_permissions: ['http://127.0.0.1:8080/*'],
+  host_permissions: [
+    'http://127.0.0.1:8080/*',
+    /* Dịch vụ sàng lọc PhoBERT cục bộ: 8081 là mặc định hiện tại, 8000 là alias. */
+    'http://127.0.0.1:8081/*',
+    'http://localhost:8081/*',
+    'http://127.0.0.1:8000/*',
+    'http://localhost:8000/*',
+  ],
   /*
    * Quyền host cho endpoint ngoài chỉ được xin lúc chạy, trong thao tác của người dùng.
    * Mẫu HTTPS rộng cho mọi endpoint HTTPS; hai mẫu HTTP còn lại chỉ dành cho
@@ -47,6 +54,6 @@ export default defineManifest({
   },
   content_security_policy: {
     extension_pages:
-      "script-src 'self'; object-src 'self'; connect-src http://127.0.0.1:8080 http://localhost:8080 http://[::1]:8080 https://*",
+      "script-src 'self'; object-src 'self'; connect-src http://127.0.0.1:8080 http://localhost:8080 http://[::1]:8080 http://127.0.0.1:8081 http://localhost:8081 http://127.0.0.1:8000 http://localhost:8000 https://*",
   },
 });

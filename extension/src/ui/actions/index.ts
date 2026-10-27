@@ -27,6 +27,14 @@ export {
   saveLlmSettingsFromForm,
 } from './settings';
 export {
+  checkFilterHealthAction,
+  clearFilterHealth,
+  readFilterForm,
+  saveFilterSettingsFromForm,
+  setFilterHealth,
+  validateFilterEndpoint,
+} from './filter-settings';
+export {
   closeProfileForm,
   deleteProfileAction,
   openProfileForm,

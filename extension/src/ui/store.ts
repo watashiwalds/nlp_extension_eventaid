@@ -1,6 +1,7 @@
 import type {
   Event,
   EventStatus,
+  FilterSettings,
   Label,
   LlmSettings,
   NormalizedDocument,
@@ -10,6 +11,10 @@ import type { FormErrors } from '../core/forms';
 import { pruneDraftSelectionIds } from '../core/event-review';
 import { listDocuments, listEvents, listProfiles } from '../platform/storage/db';
 import { DEFAULT_LLM_SETTINGS, loadLlmSettings } from '../platform/storage/settings';
+import {
+  DEFAULT_FILTER_SETTINGS,
+  loadFilterSettings,
+} from '../platform/storage/filter-settings';
 
 /** Store pub/sub tối giản — không dùng Redux/Zustand. */
 export function createStore<T>(initial: T) {
@@ -123,6 +128,8 @@ export interface AppState {
   expandedDocument: boolean;
   pasteOpen: boolean;
   llm: LlmSettings;
+  /** Cấu hình bước sàng lọc nội dung (Slice F). */
+  contentFilter: FilterSettings;
   extraction: ExtractionState | null;
   toast: Toast | null;
   busy: string | null;
@@ -178,6 +185,7 @@ export const store = createStore<AppState>({
   expandedDocument: false,
   pasteOpen: false,
   llm: DEFAULT_LLM_SETTINGS,
+  contentFilter: DEFAULT_FILTER_SETTINGS,
   extraction: null,
   toast: null,
   busy: null,
@@ -201,11 +209,12 @@ export function editingProfile(state: AppState): Profile | null {
 
 export async function loadAll(): Promise<void> {
   try {
-    const [documents, profiles, events, llm] = await Promise.all([
+    const [documents, profiles, events, llm, contentFilter] = await Promise.all([
       listDocuments(),
       listProfiles(),
       listEvents(),
       loadLlmSettings(),
+      loadFilterSettings(),
     ]);
     const current = store.get();
     const mergedDocuments = mergeById(documents, current.documents, (doc) => doc.documentId).sort(
@@ -225,6 +234,7 @@ export async function loadAll(): Promise<void> {
       events: mergedEvents,
       selectedDraftIds: pruneDraftSelectionIds(current.selectedDraftIds, mergedEvents),
       llm,
+      contentFilter,
       activeDocumentId: activeId,
       overviewProfileId:
         current.overviewProfileId &&

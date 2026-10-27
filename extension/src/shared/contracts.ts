@@ -191,10 +191,13 @@ export const FILTER_DECISIONS = ['has_event', 'no_event', 'uncertain'] as const;
 export const FilterDecisionSchema = z.enum(FILTER_DECISIONS);
 export type FilterDecision = z.infer<typeof FilterDecisionSchema>;
 
+/** Mặc định dịch vụ PhoBERT cục bộ. Cổng 8000 vẫn được khai báo làm alias. */
+export const DEFAULT_FILTER_ENDPOINT = 'http://127.0.0.1:8081';
+
 /** Cấu hình bước sàng lọc PhoBERT cục bộ — đọc lên phải validate bằng Zod. */
 export const FilterSettingsSchema = z.object({
   mode: FilterModeSchema.default('screen'),
-  endpoint: z.string().url().default('http://127.0.0.1:8000'),
+  endpoint: z.string().url().default(DEFAULT_FILTER_ENDPOINT),
   timeoutMs: z.number().int().positive().max(60_000).default(15_000),
   /** < 5000 của server; 4000 để chừa biên. */
   windowChars: z.number().int().min(200).max(4_800).default(4_000),

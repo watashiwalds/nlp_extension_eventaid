@@ -18,6 +18,7 @@ import {
   textInput,
 } from '../components';
 import { formatCharCount } from '../format';
+import { filterSettingsCard } from './filter-settings';
 
 function formatConsentTime(iso: string): string {
   const date = new Date(iso);
@@ -188,6 +189,8 @@ export function settingsView(state: AppState): string {
     </div>
 
     ${providerChoices(state.llm)}
+
+    ${filterSettingsCard(state.contentFilter)}
 
     <section class="card">
       ${sectionHeader('Dữ liệu cục bộ')}

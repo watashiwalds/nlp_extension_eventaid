@@ -1,9 +1,10 @@
 # Kế hoạch tích hợp bước sàng lọc nội dung PhoBERT (ml_hasevent_filter)
 
-> Trạng thái: **F0 đã triển khai (2026-10-26); F1–F4 chưa triển khai.**
-> Hợp đồng + lõi thuần đã có trong mã nhưng **chưa nối vào job/UI** — bước sàng lọc chưa hoạt động;
-> xem nhật ký §12.4. Tài liệu liên quan đã đồng bộ ngày 2026-10-26 (xem §13).
-> Chia phiên triển khai chi tiết ở §12.1 (P0–P12); ba điểm bổ sung khi rà soát code ở §0.1.
+> Trạng thái: **F0 + F1 đã triển khai (2026-10-26 / 2026-10-27); F2–F4 chưa triển khai.**
+> Hợp đồng, lõi thuần, HTTP client và card cài đặt đã có trong mã nhưng **chưa nối vào job** — bước
+> sàng lọc **chưa chạy** khi trích xuất; xem nhật ký §12.4. Tài liệu liên quan đã đồng bộ ngày
+> 2026-10-26 và cập nhật tiếp ngày 2026-10-27 (xem §13); điểm lệch cổng `8081` ghi ở §0.2.
+> Chia phiên triển khai chi tiết ở §12.1 (P0–P12); các điểm bổ sung khi rà soát code ở §0.1–§0.2.
 > Phạm vi: dùng `ml_hasevent_filter` làm **bước sàng lọc cấp tài liệu** trước khi gọi LLM.
 > **Không sửa một dòng nào trong `ml_hasevent_filter/`.**
 > Liên quan: `script.md` KS-05 (pipeline 6 bước), `ke_hoach_phat_trien.md` §2/§6,
@@ -17,7 +18,7 @@
 |---|---|---|
 | Q1 | Hành vi mặc định | **Sàng lọc cả tài liệu**: gọi bước sàng lọc để biết tài liệu có nội dung sự kiện hay không; **nếu có thì LLM nhận toàn văn**, nếu không thì chưa gọi LLM và cho người dùng bấm "Trích xuất toàn bộ" |
 | Q2 | Vùng bôi đen / văn bản dán | **Không lọc** — giữ nguyên lựa chọn chủ động của người dùng |
-| Q3 | Alias loopback | Giữ **cả** `http://127.0.0.1:8000/*` và `http://localhost:8000/*` |
+| Q3 | Alias loopback | Giữ **cả** `http://127.0.0.1:8000/*` và `http://localhost:8000/*` (Q10 bổ sung cổng **8081** làm mặc định) |
 | Q4 | Ngưỡng tự bỏ qua tài liệu | **`0.85`** và **tối thiểu 3 câu** |
 | Q5 | Chế độ thứ ba | **Giữ `report`** (chỉ báo cáo, luôn gửi toàn văn cho LLM) làm đường đo và đường lùi |
 | Q6 | Cách gọi | Dùng từ **"sàng lọc"** trên UI và tài liệu; mã nguồn dùng `screen`/`filter` |
@@ -37,6 +38,12 @@ phải quyết định lại trong lúc code.
 | Q7 | Bản trước xếp E01–E15 là mẫu dương, nhưng `E06` trong `tests/fixtures/eval/cases-b.ts` là mẫu âm: `category: 'negative'`, `expected: []`, `source: 'paste'` | Bộ dương là **14 mẫu E01–E05, E07–E15**; E06 chuyển sang bộ âm. Chỉ số “0 tài liệu dương bị bỏ sót” tính trên 14 mẫu. Vì `source = 'paste'`, E06 chỉ đo được ở mức model, không đo qua pipeline (Q2 luôn bỏ qua `paste`). |
 | Q8 | §9.2 cần hiển thị “chắc chắn 91%” và “1,8 s” nhưng §5.3 thiếu trường | Thêm `filterConfidence` và `filterLatencyMs` vào `ExtractionJobSchema` và `JOB_DONE`, đều có mặc định để tương thích ngược. |
 | Q9 | Chưa viết rõ thứ tự ưu tiên của `filterRunMode`, tài liệu rỗng và nghĩa của `filterApplied` | `filterRunMode = 'off'` thắng mọi cấu hình; `'force'` chạy `screen`; `'auto'`/không có thì theo `settings.mode`; `selection`/`paste` luôn `off`. Không có cửa sổ nào ⇒ `uncertain`. `filterApplied = true` chỉ khi **tất cả** cửa sổ phân tích xong; lỗi/timeout bất kỳ ⇒ `false` + `filterNote` (fail-open). |
+
+### 0.2. Bổ sung khi triển khai F1 (2026-10-27)
+
+| # | Vấn đề | Quyết định |
+|---|---|---|
+| Q10 | Máy dev hiện chạy `uvicorn` ở **cổng 8081**, không phải 8000 như Q3/§14 | `DEFAULT_FILTER_ENDPOINT = 'http://127.0.0.1:8081'`. Manifest khai báo **cả hai** cổng trên cả `127.0.0.1` và `localhost` (`8000` và `8081`) để 8000 vẫn là alias hợp lệ; UI chỉ nhận loopback ở đúng hai cổng này (khớp `host_permissions`), từ chối path/query/hash. Đổi cổng sau này chỉ cần sửa hằng số + manifest. |
 
 ---
 
@@ -128,7 +135,7 @@ bị bỏ sót" (§11.4).
 
 | # | Quyết định | Lý do |
 |---|---|---|
-| **D1** | Gọi model qua **HTTP cục bộ** (`127.0.0.1:8000`), không nhúng model vào extension | Không được thêm WASM/ONNX/remote code (AGENTS §4); PyTorch + `pyvi` không chạy trong MV3 |
+| **D1** | Gọi model qua **HTTP cục bộ** (`127.0.0.1`; nay mặc định cổng **8081**, `8000` là alias — Q10), không nhúng model vào extension | Không được thêm WASM/ONNX/remote code (AGENTS §4); PyTorch + `pyvi` không chạy trong MV3 |
 | **D2** | Chạy trong **offscreen document** | Đã là nơi chạy tác vụ dài, sống độc lập khi đóng panel; content script không được gọi mạng |
 | **D3** | Ba chế độ: `off` · `report` · `screen`; **mặc định `screen`** (Q1) | `report` để đo mà không bao giờ chặn; `screen` là hành vi đã chốt |
 | **D4** | **Fail-open**: lỗi/timeout/không kết nối ⇒ trích xuất toàn văn, ghi chú | Extension phải dùng được khi chưa bật Python |
@@ -145,7 +152,7 @@ bị bỏ sót" (§11.4).
 ```text
 NormalizedDocument
    │
-   ├─► [MỚI] Sàng lọc nội dung (PhoBERT @ 127.0.0.1:8000)     src/core/extraction/prefilter.ts
+   ├─► [MỚI] Sàng lọc nội dung (PhoBERT @ 127.0.0.1:8081)     src/core/extraction/prefilter.ts
    │        chia cửa sổ ≤ 4000 ký tự → POST /analyze
    │        → FilterDecision: has_event | no_event | uncertain
    │
@@ -214,7 +221,8 @@ export const FILTER_MODES = ['off', 'report', 'screen'] as const;
 
 export const FilterSettingsSchema = z.object({
   mode: z.enum(FILTER_MODES).default('screen'),   // Q1
-  endpoint: z.string().url().default('http://127.0.0.1:8000'),
+  // Q10: mặc định cổng 8081; 8000 vẫn là alias trong manifest
+  endpoint: z.string().url().default(DEFAULT_FILTER_ENDPOINT), // 'http://127.0.0.1:8081'
   timeoutMs: z.number().int().positive().max(60_000).default(15_000),
   /** < 5000 của server; 4000 để chừa biên. */
   windowChars: z.number().int().min(200).max(4_800).default(4_000),
@@ -246,7 +254,7 @@ filterNote: z.string().nullable().default(null),  // vd "Sàng lọc không ph�
 ```
 
 `JOB_DONE` mang đúng bộ trường trên (1 cờ + 1 enum + 4 số + 1 ghi chú); cập nhật mọi
-sender/receiver và `tests/shared/contracts.test.ts`.
+sender/receiver và `tests/shared/filter-contracts.test.ts` (tách khỏi `contracts.test.ts` ở F1).
 
 ---
 
@@ -311,6 +319,9 @@ Vì LLM nhận **nguyên văn**, `chunkText`, cờ `truncated`, prompt, normaliz
 | `src/core/extraction/mock-filter.ts` | `MockContentFilter` (scripted) cho test/UI | 50 |
 | `src/platform/inference/phobert-filter.ts` | `PhobertTaskFilter`: `/analyze`, `/health`, timeout, abort, validate response bằng Zod | 180 |
 | `src/platform/storage/filter-settings.ts` | `loadFilterSettings` / `saveFilterSettings` / `DEFAULT_FILTER_SETTINGS` | 40 |
+| `src/ui/views/filter-settings.ts` | Card "Sàng lọc nội dung (PhoBERT)" (§9.1) | 120 |
+| `src/ui/actions/filter-settings.ts` | `readFilterForm`, `validateFilterEndpoint`, lưu cài đặt, health check | 160 |
+| `src/ui/settings-wiring.ts` | Gộp handler form Cài đặt (LLM + sàng lọc) để `sidepanel.ts` không phình | 30 |
 
 ### 7.2. Sửa
 
@@ -323,12 +334,12 @@ Vì LLM nhận **nguyên văn**, `chunkText`, cờ `truncated`, prompt, normaliz
 | `src/platform/offscreen/main.ts` | Khởi tạo `PhobertTaskFilter`; nhận `filterRunMode`; nhận diện `FilterError('aborted')` |
 | `src/platform/background/index.ts` | Chuyển tiếp `filterRunMode`; map bộ trường lọc vào job |
 | `src/platform/background/jobs.ts` | `makeJob` khởi tạo mặc định mới |
-| `src/ui/store.ts` | `filter: FilterSettings`, `filterHealth` |
-| `src/ui/actions/settings.ts` | `saveFilterSettingsFromForm`, `checkFilterHealthAction` |
+| `src/ui/store.ts` | `contentFilter: FilterSettings` (đọc trong `loadAll`) |
+| `src/ui/actions/settings.ts` | Giữ nguyên phần LLM; phần sàng lọc tách sang `actions/filter-settings.ts` |
 | `src/ui/actions/extract.ts` | `extractEventsAction(filterRunMode)`; nút "Trích xuất toàn bộ" |
-| `src/ui/views/settings.ts` | Card "Sàng lọc nội dung (PhoBERT)" |
+| `src/ui/views/settings.ts` | Chèn `filterSettingsCard(state.contentFilter)` vào tab Cài đặt |
 | `src/ui/views/capture.ts` | Dòng kết luận của bước sàng lọc + nút chạy lại toàn bộ |
-| `manifest.config.ts` | `host_permissions` + CSP `connect-src` thêm `127.0.0.1:8000`, `localhost:8000` |
+| `manifest.config.ts` | `host_permissions` + CSP `connect-src` thêm `127.0.0.1:8081`, `localhost:8081`, `127.0.0.1:8000`, `localhost:8000` |
 
 **Không sửa:** `src/core/extraction/{pipeline,chunk,prompt,normalize,schema,dedup,profile-match}.ts`,
 `src/platform/inference/llama-cpp.ts`, `ml_hasevent_filter/**`.
@@ -373,7 +384,7 @@ Bạn có thể trích xuất toàn bộ."* + nút hành động.
 ```text
 Sàng lọc nội dung (PhoBERT)
 Máy chủ Python phân loại từng câu thành "câu giao việc", chạy trên chính máy bạn.
-Nội dung chỉ được gửi tới http://127.0.0.1:8000.
+Nội dung chỉ được gửi tới dịch vụ cục bộ (mặc định http://127.0.0.1:8081).
 Khi tài liệu có nội dung công việc, LLM vẫn nhận toàn văn; bước này chỉ quyết định có gọi LLM hay không.
 
 Chế độ
@@ -381,12 +392,14 @@ Chế độ
   ( ) Chỉ báo cáo (an toàn)            — luôn gửi toàn văn cho LLM, chỉ ghi nhận kết luận
   (•) Sàng lọc trước khi trích xuất    — bỏ qua lần gọi LLM khi chắc chắn không có nội dung công việc
 
-Địa chỉ máy chủ   [http://127.0.0.1:8000]
+Địa chỉ máy chủ   [http://127.0.0.1:8081]
 Timeout (ms) [15000]   Ngưỡng bỏ qua [0.85]   Số câu tối thiểu [3]
 [Lưu cài đặt]  [Kiểm tra kết nối]
 ```
 
 Health hiển thị thiết bị (`cpu`/`cuda`) vì ảnh hưởng trực tiếp tới thời gian sàng lọc.
+Ô địa chỉ chỉ nhận `127.0.0.1`/`localhost` ở cổng **8000** hoặc **8081** (đúng các cổng đã khai
+trong `host_permissions`); path/query/hash bị từ chối ngay trên form (Q10).
 
 ### 9.2. Tab Quét nội dung
 
@@ -420,12 +433,14 @@ Health hiển thị thiết bị (`cpu`/`cuda`) vì ảnh hưởng trực tiếp
 - host_permissions: ['http://127.0.0.1:8080/*'],
 + host_permissions: [
 +   'http://127.0.0.1:8080/*',
-+   'http://127.0.0.1:8000/*',
++   'http://127.0.0.1:8081/*',   // mặc định hiện tại (Q10)
++   'http://localhost:8081/*',
++   'http://127.0.0.1:8000/*',   // alias
 +   'http://localhost:8000/*',
 + ],
 
 - connect-src http://127.0.0.1:8080
-+ connect-src http://127.0.0.1:8080 http://127.0.0.1:8000 http://localhost:8000
++ connect-src http://127.0.0.1:8080 http://127.0.0.1:8081 http://localhost:8081 http://127.0.0.1:8000 http://localhost:8000
 ```
 
 - Vẫn **không** có `<all_urls>`, không host remote, không remote code. Đây là dịch vụ **cục bộ thứ hai**
@@ -444,6 +459,9 @@ Health hiển thị thiết bị (`cpu`/`cuda`) vì ảnh hưởng trực tiếp
 | `tests/platform/phobert-filter.test.ts` | mock `fetch` như `llama-cpp.test.ts`: 200 hợp lệ; 200 thiếu trường ⇒ `invalid-response`; 422 (quá 5000) ⇒ `http` kèm gợi ý; 500; timeout; abort; `/health` 200/503/không kết nối; cắt `/` cuối endpoint |
 | `tests/platform/offscreen-job.test.ts` (mở rộng) | `screen` + `no_event` ⇒ không gọi provider, `savedCount = 0`; `screen` + `has_event` ⇒ provider nhận **nguyên văn**; `report` + `no_event` ⇒ **vẫn** gọi provider; `selection`/`paste` ⇒ không gọi filter; lỗi filter ⇒ toàn văn + `filterNote` + `filterApplied = false`; `filterRunMode: 'off'` ⇒ không gọi filter; huỷ giữa bước sàng lọc ⇒ `aborted`; `filterConfidence`/`filterLatencyMs` khớp kết quả |
 | `tests/shared/contracts.test.ts` (mở rộng) | job cũ thiếu trường lọc vẫn parse được (mặc định) |
+| `tests/shared/filter-contracts.test.ts` | (F1) phần hợp đồng sàng lọc tách khỏi `contracts.test.ts`: `FilterSettings` mặc định + ngưỡng, job cũ, `JOB_DONE` cũ/mới, `filterRunMode` hai chiều |
+| `tests/platform/filter-settings.test.ts` | (F1) mặc định, lưu/đọc khoá `contentFilter`, bản ghi hỏng/cũ, từ chối giá trị sai |
+| `tests/ui/filter-settings.test.ts` | (F1) card render, lưu từ form, chặn endpoint ngoài loopback, health 200/503/lỗi mạng, `validateFilterEndpoint` |
 | `tests/ui/smoke.test.ts` (mở rộng) | card cài đặt render, không lỗi escape |
 
 ### 11.2. Bộ mẫu
@@ -463,7 +481,7 @@ filter với `selection`. Test này **không** đo model và **không** được
 ### 11.3. Đo thật (có model)
 
 `tests/eval/filter.live.eval.test.ts`, gate bằng `FILTER_EVAL=1`, endpoint `FILTER_ENDPOINT`
-(mặc định `http://127.0.0.1:8000`), bỏ qua khi không đặt biến — cùng pattern `LLAMA_EVAL=1`.
+(mặc định `http://127.0.0.1:8081`), bỏ qua khi không đặt biến — cùng pattern `LLAMA_EVAL=1`.
 In bảng: case, `decision`, `confidence`, `evidence/total`, latency, và **kết quả trích xuất đầy đủ
 khi chạy `screen`** để so với baseline không lọc. Đây là nguồn số duy nhất cho §11.4.
 
@@ -499,7 +517,7 @@ ngắn. P0–P12 ánh xạ vào các slice F0–F3 bên dưới; **tổng công 
 | **P1** | F0a | Port, `filter-types`, `FilterSettingsSchema`, mở rộng job + message | `src/core/ports/content-filter.ts`, `src/core/extraction/filter-types.ts`, `src/shared/{contracts,messages,constants}.ts` | §5; contract test | — | 0,5 |
 | **P2** | F0b | Chia cửa sổ, gộp quyết định, mock filter | `src/core/extraction/{prefilter,mock-filter}.ts` | §6; §11.1 (core) | P1 | 0,5 |
 | **P3** | F1a | HTTP client PhoBERT + test mock `fetch` | `src/platform/inference/phobert-filter.ts` | §11.1 (client) | P1 | 0,5 |
-| **P4** | F1b | Lưu cài đặt, card UI, health, manifest/CSP | `src/platform/storage/filter-settings.ts`, `src/ui/{store.ts,views/settings.ts,actions/settings.ts,actions/index.ts,sidepanel.ts}`, `manifest.config.ts` | §9.1, §10 | P3 | 0,75 |
+| **P4** | F1b | Lưu cài đặt, card UI, health, manifest/CSP | `src/platform/storage/filter-settings.ts`, `src/ui/{store.ts,views/filter-settings.ts,views/settings.ts,actions/filter-settings.ts,actions/index.ts,settings-wiring.ts,sidepanel.ts}`, `manifest.config.ts` | §9.1, §10 | P3 | 0,75 |
 | **P5** | F2a | Nối sàng lọc vào job, background, notification | `src/platform/offscreen/**`, `src/platform/background/**` | §8; §11.1 (job) | P1, P2, P3 | 0,75 |
 | **P6** | F2b | Checkbox, dòng kết luận, nút “Trích xuất toàn bộ” | `src/ui/actions/extract.ts`, `src/ui/views/capture.ts`, `src/ui/{store.ts,sidepanel.ts}`, `tests/ui/smoke.test.ts` | §9.2 | P4, P5 | 0,5 |
 | **P7** | F2c | Nghiệm thu tay 5 kịch bản + huỷ giữa bước sàng lọc | `docs/kiem-tra-slice-f.md`, `docs/kiem-thu-demo.md` §9 | §12.2 | P6, P0 | 0,25 |
@@ -598,18 +616,40 @@ năng đã chạy: bước sàng lọc chỉ hoạt động sau P5–P6 và ch�
 
 | Phiên | Trạng thái | Ngày | Bằng chứng / ghi chú |
 |---|---|---|---|
-| P0 | Chưa chạy | — | Cần `uvicorn` + `/health` + `/analyze`; là điều kiện vào P4, P7, P9. |
+| P0 | **Xong** | 2026-10-27 | Dịch vụ chạy sẵn ở `127.0.0.1:8081` (không phải 8000 — Q10). `GET /health` → `{"status":"ok","model":"PhoBERT TASK/NON_TASK","device":"cuda"}`; `POST /analyze` trả `has_task/confidence/needs_review/evidence/total_sentences`. |
 | P1 | **Xong** | 2026-10-26 | `content-filter.ts`, `filter-types.ts`; `FilterSettingsSchema` + 7 trường job; `filterRunMode` hai chiều; +4 contract test. |
 | P2 | **Xong** | 2026-10-26 | `prefilter.ts`, `mock-filter.ts`; +27 test (21 prefilter + 6 mock). |
-| P3 | Chưa bắt đầu | — | Phiên tiếp theo; chỉ phụ thuộc P1 (đã xong). |
-| P4–P12 | Chưa làm | — | Giữ nguyên thứ tự và phụ thuộc ở §12.1. |
+| P3 | **Xong** | 2026-10-27 | `src/platform/inference/phobert-filter.ts`: `/health` timeout 2 s (map `device`, 503 = đang tải model), `/analyze` timeout theo cài đặt + `AbortSignal`, Zod validate response, `FilterError` (`network`/`timeout`/`http`/`invalid-response`/`aborted`), gợi ý 5000 ký tự khi 422, `latencyMs` đo phía client. +12 test |
+| P4 | **Xong** | 2026-10-27 | Lưu cài đặt (`filter-settings.ts`, khoá `contentFilter`), card UI + health (`views/filter-settings.ts`, `actions/filter-settings.ts`), `settings-wiring.ts` gộp handler, `store.contentFilter` + `loadAll`, manifest/CSP 4 origin (8081 mặc định + 8000 alias). +18 test (5 storage, 11 UI, 2 contract tách ra) |
+| P5–P12 | Chưa làm | — | Giữ nguyên thứ tự và phụ thuộc ở §12.1. **Bước sàng lọc vẫn chưa chạy khi trích xuất.** |
 
 Gate F0 (2026-10-26): `typecheck` / `lint` / `test` / `build` xanh; **295 passed, 17 skipped (30 file)**.
+
+Gate F1 (2026-10-27): `typecheck` / `lint` / `test` / `build` xanh; **385 passed, 17 skipped (40 file)**
+(39 file chạy + 1 file live `llama-server` bị skip). `PhobertTaskFilter` đã được chạy **với dịch vụ
+thật** ở `127.0.0.1:8081`: `health()` → `{ok: true, device: "cuda"}`, `analyze()` map đúng
+`hasTask/confidence/needsReview/evidence/totalSentences` (28 ms). Nghiệm thu tay P4 **trong Chrome**
+vẫn chưa chạy: cần bấm "Kiểm tra kết nối" trong Cài đặt với `uvicorn` thật (checklist §9 của
+`docs/kiem-thu-demo.md`, làm cùng P7).
 
 **Điểm lệch F0:** `src/platform/offscreen/run-job.ts` (file của P5) đã phải thêm 7 trường lọc trung
 tính vào `ExtractionJobResult` để `JOB_DONE` biên dịch với schema mới. Không đổi hành vi; P5 thay
 giá trị trung tính bằng kết quả thật. Ngoài ra chưa có thay đổi nào ở UI, cài đặt, manifest hay
 luồng chạy job.
+
+**Điểm lệch F1:**
+- **Cổng mặc định 8081** thay vì 8000 (§0.2 Q10). Manifest/CSP khai báo cả `8081` và `8000` trên
+  `127.0.0.1` + `localhost`; UI từ chối mọi cổng khác để lỗi hiện ngay trên form thay vì `fetch`
+  bị Chrome chặn.
+- **Tách file để giữ `max-lines` 320:** card sàng lọc và action của nó nằm ở hai file mới thay vì
+  nhồi vào `views/settings.ts` (249 → 252 dòng) và `actions/settings.ts` (352 dòng). `sidepanel.ts`
+  gọi một dispatcher `settings-wiring.ts` cho cả hai form Cài đặt.
+- **Phần hợp đồng sàng lọc** chuyển từ `tests/shared/contracts.test.ts` sang
+  `tests/shared/filter-contracts.test.ts` (file cũ đã vượt 320 dòng).
+- P4 **không** chạm `run-job.ts`, `run-job` vẫn trả trường lọc trung tính như F0.
+- **Mặc định `screen`** trong schema theo Q1/D3, nhưng vì sàng lọc chưa nối vào job nên **chưa có
+  hành vi nào thay đổi**. Trước khi F2 bật mặc định cho người dùng, F3 phải chứng minh **0 tài liệu
+  dương bị bỏ sót**; nếu không, hạ mặc định về `report` và ghi lý do.
 
 ---
 
@@ -617,9 +657,9 @@ luồng chạy job.
 
 | File | Sửa gì |
 |---|---|
-| `AGENTS.md` §3 | Hàng "Classifier": TF-IDF→JSON→TS **thay bằng** "PhoBERT TASK/NON_TASK microservice (FastAPI, `127.0.0.1:8000`), dùng để sàng lọc cấp tài liệu" |
-| `AGENTS.md` §4 | Host permission tối thiểu thêm `127.0.0.1:8000` + `localhost:8000`; nêu rõ là dịch vụ cục bộ, không phải remote |
-| `AGENTS.md` §5 | Sơ đồ runtime: thêm nhánh `phobert-filter.ts ──HTTP──► 127.0.0.1:8000` trước `llama-cpp.ts` |
+| `AGENTS.md` §3 | Hàng "Classifier": TF-IDF→JSON→TS **thay bằng** "PhoBERT TASK/NON_TASK microservice (FastAPI, `127.0.0.1:8081`, `8000` alias), dùng để sàng lọc cấp tài liệu" |
+| `AGENTS.md` §4 | Host permission tối thiểu thêm `8081` + `8000` trên `127.0.0.1`/`localhost`; nêu rõ là dịch vụ cục bộ, không phải remote |
+| `AGENTS.md` §5 | Sơ đồ runtime: thêm nhánh `phobert-filter.ts ──HTTP──► 127.0.0.1:8081` trước `llama-cpp.ts` |
 | `AGENTS.md` §11 | Trạng thái: "sàng lọc PhoBERT (Slice F, **chưa triển khai**)" + mặc định `screen` khi ship |
 | `ke_hoach_phat_trien.md` §2, §6 | §6 viết lại: classifier là **dịch vụ Python cục bộ**, không còn `classifier.json`; nêu rõ quyết định **không cắt câu** |
 | `docs/DEVIATIONS.md` | Hàng "Classifier" thay bằng "Sàng lọc nội dung (Slice F)" — trạng thái **chưa có**; hàng "Offscreen document" ghi rõ hiện chỉ chạy LLM |
@@ -633,6 +673,10 @@ luồng chạy job.
 > Bảng này được viết trước khi `AGENTS.md` §3–§5 được đồng bộ một phần (2026-10-26). Khi làm P10,
 > chỉ chuyển trạng thái "planned" → "đã triển khai" và bổ sung nhánh runtime; không lặp lại nội dung
 > đã có. `AGENTS.md` §11 chỉ đổi sau khi P9 có số thật (P12).
+>
+> F1 (2026-10-27) đã cập nhật trước `AGENTS.md` §3–§5, §11 và `extension/README.md` cho đúng phần
+> **đã có thật** (client + card cài đặt + quyền), vẫn ghi rõ bước sàng lọc **chưa nối vào job**;
+> `docs/DEVIATIONS.md` và `docs/kiem-thu-demo.md` §9 để P6/P10 làm cùng lúc với F2.
 
 ---
 
@@ -644,16 +688,28 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 # BẮT BUỘC: đường dẫn mặc định trong app.py trỏ tới handover_api_code/models/... (không tồn tại)
 MODEL_DIR=../phobert_task_classifier_final \
-  uvicorn app:app --host 127.0.0.1 --port 8000
+  uvicorn app:app --host 127.0.0.1 --port 8081
 ```
+
+Cổng **8081** là mặc định của extension (Q10). Muốn dùng **8000** thì đổi `--port 8000` và sửa ô
+"Địa chỉ máy chủ" trong Cài đặt cho khớp; cả hai cổng đều đã nằm trong `host_permissions`.
 
 Kiểm tra:
 
 ```bash
-curl -s http://127.0.0.1:8000/health
-curl -s -X POST http://127.0.0.1:8000/analyze \
+curl -s http://127.0.0.1:8081/health
+curl -s -X POST http://127.0.0.1:8081/analyze \
   -H 'Content-Type: application/json' \
   -d '{"text":"Hải gửi báo cáo tiến độ trước 17 giờ hôm nay."}'
+```
+
+Kết quả đã đo trên máy dev (2026-10-27, GPU):
+
+```json
+{"status":"ok","model":"PhoBERT TASK/NON_TASK","device":"cuda"}
+{"has_task":true,"confidence":0.6447,"needs_review":true,
+ "evidence":[{"sentence_index":1,"sentence":"Hải gửi báo cáo tiến độ trước 17 giờ hôm nay.","task_confidence":0.6447}],
+ "total_sentences":1}
 ```
 
 Lưu ý vận hành (không phải thay đổi code):
@@ -663,7 +719,8 @@ Lưu ý vận hành (không phải thay đổi code):
 - `pyvi` là gói cũ; nếu cài trên Python 3.13 thất bại, dùng venv Python 3.11/3.12.
 - `requirements.txt` cho `transformers<6.0` nhưng trọng số ghi `transformers_version 5.20.2`; nếu
   load lỗi tokenizer, ghim `transformers==5.20.2`.
-- Cổng 8000 hay bị chiếm; endpoint trong cài đặt cho phép đổi nhưng phải khớp `host_permissions`.
+- Cổng 8000 hay bị chiếm; extension mặc định gọi **8081** (Q10) và chấp nhận cả 8000, nhưng phải
+  khớp `host_permissions`.
 
 ---
 
@@ -695,9 +752,10 @@ Lưu ý vận hành (không phải thay đổi code):
 - [x] Chốt 6 quyết định ở §0 (2026-10-26).
 - [x] Chốt 3 điểm bổ sung khi rà soát code ở §0.1 (2026-10-26).
 - [x] Chia phiên triển khai P0–P12 (§12.1, 2026-10-26).
-- [ ] Máy dev chạy được `uvicorn` cục bộ (CPU là đủ; không cần GPU) để nghiệm thu F1.
-- [ ] Đồng ý thay đổi `manifest.config.ts`: thêm `http://127.0.0.1:8000/*` và `http://localhost:8000/*`.
-- [ ] Không có thay đổi nào trong `ml_hasevent_filter/` (ràng buộc của yêu cầu).
+- [x] Máy dev chạy được `uvicorn` cục bộ (2026-10-27, cổng 8081, `device: cuda`).
+- [x] Đồng ý thay đổi `manifest.config.ts`: thêm `8081` + `8000` trên `127.0.0.1`/`localhost` (đã làm ở F1).
+- [x] Không có thay đổi nào trong `ml_hasevent_filter/` (ràng buộc của yêu cầu).
+- [x] Chốt cổng mặc định 8081 và quy tắc alias (§0.2 Q10, 2026-10-27).
 
 ---
 
