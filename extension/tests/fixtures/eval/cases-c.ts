@@ -249,3 +249,81 @@ export const E15: EvalCase = {
     { title: 'Nộp báo cáo tổng kết', profileNames: ['Trần Thị Bình'] },
   ],
 };
+
+export const E16: EvalCase = {
+  id: 'E16',
+  category: 'edge',
+  title: 'Suy năm từ ngữ cảnh cho 2 sự kiện (v5)',
+  source: 'paste',
+  text: 'Nhóm 5 sẽ họp nhóm đồ án lúc 9:00 ngày 12/11 tại thư viện. Hạn nộp đề cương là 15/11.',
+  now: EVAL_NOW,
+  // v5: cả hai mốc thiếu năm; Hôm nay 22/10/2026 → suy năm 2026. Sự kiện chỉ có
+  // ngày giữ dạng "YYYY-MM-DD" kèm `nam_suy_doan` + `gio_chua_ro`.
+  expected: [
+    expected('Họp nhóm đồ án', '2026-11-12T09:00', null),
+    expected('Nộp đề cương', null, '2026-11-15'),
+  ],
+  allowedDates: ['2026-11-12', '2026-11-15'],
+  mockOutput: {
+    events: [
+      rawEvent({
+        title: 'Họp nhóm đồ án',
+        start: '2026-11-12T09:00',
+        startRaw: '9:00 ngày 12/11',
+        summary: ['Họp tại thư viện'],
+        confidence: 0.85,
+        uncertain: ['nam_suy_doan'],
+        quote: 'Nhóm 5 sẽ họp nhóm đồ án lúc 9:00 ngày 12/11 tại thư viện.',
+      }),
+      rawEvent({
+        title: 'Nộp đề cương',
+        start: '2026-11-15',
+        startRaw: '15/11',
+        summary: ['Hạn nộp đề cương'],
+        confidence: 0.75,
+        uncertain: ['nam_suy_doan', 'gio_chua_ro'],
+        quote: 'Hạn nộp đề cương là 15/11.',
+      }),
+    ],
+  },
+  metrics: metrics({ matched: 2, missed: 0, extra: 0, inventedDates: 0, totalActual: 2 }),
+  requiredUncertain: [
+    { title: 'Họp nhóm đồ án', keys: ['nam_suy_doan'] },
+    { title: 'Nộp đề cương', keys: ['nam_suy_doan', 'gio_chua_ro'] },
+  ],
+};
+
+export const E17: EvalCase = {
+  id: 'E17',
+  category: 'event',
+  title: 'Giờ nói mơ hồ được quy ước (v5)',
+  source: 'paste',
+  text: 'Hội chợ sách mở cửa từ 9:00 ngày 3/12 và đóng cửa vào buổi tối ngày 7/12.',
+  now: EVAL_NOW,
+  // v5: "buổi tối" → 19:00 theo bảng quy ước; hai mốc thiếu năm → suy năm 2026.
+  // endRaw giữ nguyên cụm "buổi tối" để người dùng đối chiếu nguồn.
+  expected: [
+    expected('Hội chợ sách', '2026-12-03T09:00', null, {
+      endValue: '2026-12-07T19:00',
+      endDate: null,
+    }),
+  ],
+  allowedDates: ['2026-12-03', '2026-12-07'],
+  mockOutput: {
+    events: [
+      rawEvent({
+        title: 'Hội chợ sách',
+        start: '2026-12-03T09:00',
+        end: '2026-12-07T19:00',
+        startRaw: 'từ 9:00 ngày 3/12',
+        endRaw: 'đến buổi tối ngày 7/12',
+        summary: ['Hội chợ sách kéo dài nhiều ngày'],
+        confidence: 0.85,
+        uncertain: ['nam_suy_doan', 'gio_suy_doan'],
+        quote: 'Hội chợ sách mở cửa từ 9:00 ngày 3/12 và đóng cửa vào buổi tối ngày 7/12.',
+      }),
+    ],
+  },
+  metrics: metrics({ matched: 1, missed: 0, extra: 0, inventedDates: 0, totalActual: 1 }),
+  requiredUncertain: [{ title: 'Hội chợ sách', keys: ['nam_suy_doan', 'gio_suy_doan'] }],
+};

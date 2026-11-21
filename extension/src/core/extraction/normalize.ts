@@ -7,12 +7,13 @@ import type {
   SourceRef,
 } from '../../shared/contracts';
 import { UNCERTAIN_TEXT } from '../../shared/constants';
-import { durationMinutes, normalizeIsoLocal, parseDateOnly } from '../dates';
+import { durationMinutes, normalizeIsoLocal, parseDateOnly, yearInTimeZone } from '../dates';
 import { makeEvent } from '../events';
 import type { EventInput } from '../events';
 import { dedupe } from '../text';
 import type { RawEvent } from './schema';
 import type { CandidateRunMeta, NormalizeContext } from './types';
+import { vagueTimeFromRaw } from './vague-time';
 import { LOW_CONFIDENCE } from './confidence';
 
 export { LOW_CONFIDENCE };
@@ -23,6 +24,35 @@ const HAS_YEAR = /\b(?:19|20)\d{2}\b/;
 const HAS_TIME = /\b\d{1,2}\s*(?::\s*\d{2}|h\s*\d{0,2}|giờ)/i;
 const RELATIVE_DATE =
   /\b(?:hôm nay|hôm qua|ngày mai|ngày kia|tuần sau|tuần này|tuần trước|tháng sau|tháng này|tháng trước|năm sau|thứ\s*[2-7]|chủ nhật|đầu tháng|cuối tháng)\b/i;
+
+/** Cặp ngày/tháng trong văn bản kiểu Việt Nam (ngày trước, tháng sau). */
+const DAY_MONTH_PATTERNS: readonly RegExp[] = [
+  /\b(\d{1,2})\s*[/\-.]\s*(\d{1,2})\b/g,
+  /\bngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\b/gi,
+];
+
+function dayMonthIn(text: string): Array<{ day: number; month: number }> {
+  const found: Array<{ day: number; month: number }> = [];
+  for (const pattern of DAY_MONTH_PATTERNS) {
+    for (const match of text.matchAll(pattern)) {
+      found.push({ day: Number(match[1]), month: Number(match[2]) });
+    }
+  }
+  return found;
+}
+
+/**
+ * Suy năm được (prompt v5): raw phải NÊU ngày/tháng khớp giá trị model trả,
+ * raw KHÔNG chứa năm nào, và năm của giá trị trùng năm ngữ cảnh (hôm nay).
+ * Mọi điều kiệnfail → giữ hành vi cũ (nam_chua_ro, value=null).
+ */
+function yearInferrable(rawText: string, isoDate: string, contextYear: number): boolean {
+  if (!rawText || HAS_YEAR.test(rawText)) return false;
+  if (Number(isoDate.slice(0, 4)) !== contextYear) return false;
+  const month = Number(isoDate.slice(5, 7));
+  const day = Number(isoDate.slice(8, 10));
+  return dayMonthIn(rawText).some((item) => item.day === day && item.month === month);
+}
 
 interface DateNormalization {
   ref: DateTimeRef;
@@ -91,12 +121,19 @@ function rawForDate(rawText: string, source: string, isoDate: string): string {
 /**
  * Chuẩn hoá một mốc thời gian theo bảng §5.2: chỉ điền `value` khi có đủ ngày VÀ giờ.
  * Thiếu một trong hai thì giữ `raw` và ghi khoá `uncertain` tương ứng.
+ *
+ * Ngoại lệ v5 — suy đoán CÓ GẮN CỜ: khi `contextYear` được cung cấp, raw nêu rõ
+ * ngày/tháng mà thiếu năm, model trả đủ `YYYY-MM-DD[THH:mm]` với năm trùng năm
+ * ngữ cảnh → chấp nhận giá trị và ghi `nam_suy_doan`. Giờ mơ hồ ("chiều muộn",
+ * "buổi tối"…) chỉ được chấp nhận nếu model trả đúng giờ quy ước trong
+ * `vague-time.ts` → ghi `gio_suy_doan`. Không đạt điều kiện → hành vi cũ.
  */
 export function normalizeDateTime(
   value: string | null,
   raw: string,
   timezone = 'Asia/Ho_Chi_Minh',
   sourceText = '',
+  contextYear: number | null = null,
 ): DateNormalization {
   const rawText = (raw ?? '').trim();
   const trimmed = (value ?? '').trim();
@@ -140,13 +177,20 @@ export function normalizeDateTime(
       return { ref: { value: normalized, date: null, raw: rawText }, uncertain };
     }
 
+    // v5: raw nêu ngày/tháng nhưng thiếu năm — model trả đủ năm ngữ cảnh thì nhận.
+    let yearInferred = false;
     if (!hasYear) {
-      uncertain.push('nam_chua_ro');
-      if (!hasTime) uncertain.push('gio_chua_ro');
-      return { ref: { value: null, date: null, raw: clip(rawText, 200) }, uncertain };
+      if (contextYear != null && yearInferrable(rawText, isoDate, contextYear)) {
+        yearInferred = true;
+        uncertain.push('nam_suy_doan');
+      } else {
+        uncertain.push('nam_chua_ro');
+        if (!hasTime) uncertain.push('gio_chua_ro');
+        return { ref: { value: null, date: null, raw: clip(rawText, 200) }, uncertain };
+      }
     }
 
-    const dateTrusted = evidenceDates.has(isoDate);
+    const dateTrusted = yearInferred ? true : evidenceDates.has(isoDate);
     if (!dateTrusted && evidenceDates.size > 0) {
       uncertain.push('ngay_khong_khop');
       if (!hasTime) uncertain.push('gio_chua_ro');
@@ -160,13 +204,34 @@ export function normalizeDateTime(
         uncertain.push('do_tin_cay_thap');
         return { ref: { value: null, date: null, raw: clip(rawText, 200) }, uncertain };
       }
+      // v5: giờ mơ hồ — chỉ nhận khi model trả đúng giờ quy ước trong bảng.
+      const vague = vagueTimeFromRaw(rawText);
+      if (vague && normalized.slice(11, 16) === vague) {
+        uncertain.push('gio_suy_doan');
+        return { ref: { value: normalized, date: null, raw: clip(rawText, 200) }, uncertain };
+      }
       uncertain.push('gio_chua_ro');
-      return { ref: { value: null, date: isoDate, raw: clip(rawForDate(rawText, source, isoDate), 200) }, uncertain };
+      return {
+        ref: {
+          value: null,
+          date: isoDate,
+          raw: clip(yearInferred ? rawText : rawForDate(rawText, source, isoDate), 200),
+        },
+        uncertain,
+      };
     }
 
     if (!dateTrusted) uncertain.push('do_tin_cay_thap');
     return {
-      ref: { value: normalized, date: null, raw: dateTrusted ? rawForDate(rawText, source, isoDate) : rawText },
+      ref: {
+        value: normalized,
+        date: null,
+        raw: dateTrusted
+          ? yearInferred
+            ? clip(rawText, 200)
+            : rawForDate(rawText, source, isoDate)
+          : rawText,
+      },
       uncertain,
     };
   }
@@ -174,6 +239,18 @@ export function normalizeDateTime(
   // Không có mốc nào trong nguồn → để trống, `deriveUncertain` của buildEvent lo phần còn lại.
   if (!rawText && !trimmed) {
     return { ref: { value: null, date: null, raw: null }, uncertain };
+  }
+
+  // v5: model trả ngày chỉ có ngày (`YYYY-MM-DD`) cho raw thiếu năm — nhận khi
+  // ngày/tháng khớp raw và năm trùng năm ngữ cảnh; giờ vẫn ghi `gio_chua_ro`.
+  if (
+    contextYear != null &&
+    rawText &&
+    parseDateOnly(trimmed) &&
+    yearInferrable(rawText, trimmed, contextYear)
+  ) {
+    uncertain.push('nam_suy_doan', 'gio_chua_ro');
+    return { ref: { value: null, date: trimmed, raw: clip(rawText, 200) }, uncertain };
   }
 
   if (!hasYear) uncertain.push('nam_chua_ro');
@@ -210,8 +287,23 @@ function normalizeSummary(items: string[]): string[] {
  * ngày giờ không bịa, uncertain được hợp nhất. Hồ sơ được khớp ở bước sau.
  */
 export function normalizeEvent(raw: RawEvent, context: NormalizeContext): EventCandidate {
-  const start = normalizeDateTime(raw.start, raw.startRaw, context.timezone, context.sourceText);
-  const end = normalizeDateTime(raw.end, raw.endRaw, context.timezone, context.sourceText);
+  // Năm ngữ cảnh cho suy đoán v5; không đọc được năm thì tắt suy đoán (an toàn).
+  const rawYear = yearInTimeZone(context.now, context.timezone);
+  const contextYear = Number.isInteger(rawYear) && rawYear > 0 ? rawYear : null;
+  const start = normalizeDateTime(
+    raw.start,
+    raw.startRaw,
+    context.timezone,
+    context.sourceText,
+    contextYear,
+  );
+  const end = normalizeDateTime(
+    raw.end,
+    raw.endRaw,
+    context.timezone,
+    context.sourceText,
+    contextYear,
+  );
   const startValue = start.ref.value;
   const endValue = end.ref.value;
   const endRef = endValue || end.ref.date ? end.ref : null;

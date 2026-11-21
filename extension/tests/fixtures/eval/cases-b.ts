@@ -47,28 +47,29 @@ export const E07: EvalCase = {
 export const E08: EvalCase = {
   id: 'E08',
   category: 'edge',
-  title: 'Buổi học bù thiếu năm',
+  title: 'Buổi học bù thiếu năm — suy từ ngữ cảnh (v5)',
   source: 'paste',
   text: 'Thông báo học bù: Buổi học bù diễn ra lúc 8h ngày 15/11 tại phòng C101. Sinh viên có mặt đúng giờ.',
   now: EVAL_NOW,
-  expected: [expected('Buổi học bù', null, null)],
-  // Không có ngày nào được phép: mọi ngày trong output đều là bịa.
-  allowedDates: [],
+  // v5: "15/11" không có năm nhưng Hôm nay (22/10/2026) cho phép suy năm 2026;
+  // giá trị suy phải kèm cờ `nam_suy_doan` để người dùng soát khi duyệt.
+  expected: [expected('Buổi học bù', '2026-11-15T08:00', null)],
+  allowedDates: ['2026-11-15'],
   mockOutput: {
     events: [
       rawEvent({
         title: 'Buổi học bù',
-        start: null,
+        start: '2026-11-15T08:00',
         startRaw: '8h ngày 15/11',
         summary: ['Học bù tại phòng C101'],
         confidence: 0.6,
-        uncertain: ['nam_chua_ro'],
+        uncertain: ['nam_suy_doan'],
         quote: 'Buổi học bù diễn ra lúc 8h ngày 15/11 tại phòng C101.',
       }),
     ],
   },
   metrics: metrics({ matched: 1, missed: 0, extra: 0, inventedDates: 0, totalActual: 1 }),
-  requiredUncertain: [{ title: 'Buổi học bù', keys: ['nam_chua_ro'] }],
+  requiredUncertain: [{ title: 'Buổi học bù', keys: ['nam_suy_doan'] }],
 };
 
 export const E09: EvalCase = {

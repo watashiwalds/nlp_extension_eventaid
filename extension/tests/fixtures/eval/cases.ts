@@ -1,13 +1,14 @@
 import { E01, E02, E03, E04, E05 } from './cases-a';
 import { E06, E07, E08, E09, E10 } from './cases-b';
-import { E11, E12, E13, E14, E15 } from './cases-c';
+import { E11, E12, E13, E14, E15, E16, E17 } from './cases-c';
 import type { EvalCase } from './case-types';
 
 /**
- * Bộ mẫu Slice E — 15 tài liệu tự soạn, không có dữ liệu cá nhân thật.
+ * Bộ mẫu đánh giá — tài liệu tự soạn, không có dữ liệu cá nhân thật.
  *
  * Dữ liệu được chia theo nhóm để mỗi file dưới ngưỡng `max-lines`; thứ tự
- * E01…E15 và hợp đồng `EvalCase` nằm ở `case-types.ts`.
+ * E01…E17 và hợp đồng `EvalCase` nằm ở `case-types.ts`. E16/E17 bổ sung cho
+ * prompt v5 (suy năm từ ngữ cảnh, giờ mơ hồ có gắn cờ).
  */
 
 export { EVAL_NOW } from './case-types';
@@ -29,6 +30,8 @@ export const EVAL_CASES: readonly EvalCase[] = [
   E13,
   E14,
   E15,
+  E16,
+  E17,
 ];
 
 export function evalCase(id: string): EvalCase {

@@ -496,6 +496,9 @@ interface Event {
 
   // --- Trạng thái ---
   status: "nhap" | "dang_theo_doi" | "hoan_thanh" | "huy";
+  // Cờ uncertain (bảng đầy đủ trong shared/constants.ts): nam_chua_ro, gio_chua_ro,
+  // ngay_tuong_doi, do_tin_cay_thap, ngay_khong_khop, mui_gio_gia_dinh,
+  // v5 — suy đoán có gắn cờ: nam_suy_doan (năm suy từ ngữ cảnh), gio_suy_doan (giờ mơ hồ).
   validation: { uncertain: string[] };   // VD: ["nam_chua_ro", "mui_gio_gia_dinh"]
   notifications: {
     milestones: ("1_tuan_truoc" | "1_ngay_truoc" | "ngay_dien_ra")[];

@@ -71,6 +71,9 @@ export const UNCERTAIN_TEXT: Record<string, string> = {
   ngay_tuong_doi: 'Ngày suy ra từ cách nói tương đối',
   do_tin_cay_thap: 'Độ tin cậy thấp',
   ngay_khong_khop: 'Ngày không khớp với nguồn',
+  /** Prompt v5: suy đoán CÓ GẮN CỜ — giá trị điền được nhưng phải soát khi duyệt. */
+  nam_suy_doan: 'Năm suy đoán từ ngữ cảnh (ngày hiện tại)',
+  gio_suy_doan: 'Giờ suy đoán từ cách nói mơ hồ',
 };
 
 export const MILESTONE_TEXT = {

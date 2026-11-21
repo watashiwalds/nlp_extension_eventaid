@@ -295,18 +295,36 @@ EventCandidate[]
 | Nguồn | Ví dụ | `start.value` | `start.date` | `uncertain` |
 |---|---|---|---|---|
 | Đủ ngày + giờ | "9:00 ngày 2/11/2026" | `2026-11-02T09:00` | `null` | — |
-| Thiếu năm | "15/11 lúc 8h" | `null` | `null` (giữ `raw`) | `nam_chua_ro` |
+| Thiếu năm, có ngữ cảnh (v5) | "15/11 lúc 8h" + hôm nay 2026 | `2026-11-15T08:00` | `null` | `nam_suy_doan` |
+| Thiếu năm, không suy được | ngày/giờ model trả lệch hoặc không có ngữ cảnh | `null` | `null` (giữ `raw`) | `nam_chua_ro` |
 | Chỉ có ngày | "hạn nộp 20/11/2026" | `null` | `2026-11-20` | `gio_chua_ro` |
 | Tương đối | "thứ 3 tuần sau" | tính được thì điền | `null` | `ngay_tuong_doi` |
+| Giờ mơ hồ (v5) | "chiều muộn ngày 31/10" | `2026-10-31T18:00` | `null` | `nam_suy_doan` + `gio_suy_doan` |
 | Khoảng | "từ 8h đến 11h ngày 5/11" | start + end | `null` | — |
 
-Nguyên tắc: **không điền giá trị không có trong nguồn**. Thiếu năm thì `value = null`,
-`date = null`, giữ `raw`. Thiếu giờ nhưng biết ngày thì `value = null`, `date = YYYY-MM-DD`,
+Nguyên tắc gốc: **không điền giá trị không có trong nguồn**. Từ prompt v5 (2026-11-09,
+yêu cầu của người dùng) nới thành **suy đoán CÓ GẮN CỜ**: model được phép điền giá trị
+khi có ngữ cảnh, nhưng (a) điều kiện nhận ở normalize phải khớp kiểm chứng ngược về raw,
+(b) phải gắn cờ để người dùng soát khi duyệt (bản ghi vẫn là `nhap`):
+
+- **Suy năm:** raw nêu rõ ngày/tháng, KHÔNG chứa năm nào, model trả
+  `YYYY-MM-DD[THH:mm]` với ngày/tháng khớp raw và năm trùng năm của "Hôm nay"
+  → nhận giá trị + `nam_suy_doan`. Không có ngữ cảnh (`contextYear = null`), năm lệch
+  hoặc ngày/tháng lệch → hành vi cũ (`nam_chua_ro`, `value = null`). Sự kiện chỉ có
+  ngày nhận dạng `YYYY-MM-DD` (không tự thêm `T00:00`).
+- **Giờ mơ hồ:** bảng quy ước dùng chung ở `core/extraction/vague-time.ts`
+  (sáng sớm 07:00, buổi sáng 09:00, trưa 12:00, đầu giờ chiều 13:00, chiều muộn 18:00,
+  buổi chiều 15:00, tối muộn/khuya 21:00, buổi tối 19:00). Model đề xuất giờ không nằm
+  trong bảng → từ chối, giữ `date` + `gio_chua_ro`. `raw` luôn giữ cụm gốc để người dùng
+  đối chiếu.
+
+Thiếu giờ nhưng biết ngày (không thuộc bảng mơ hồ) thì `value = null`, `date = YYYY-MM-DD`,
 giữ `raw` nếu khớp (nếu raw lệch, lấy đoạn nguồn quanh đúng ngày); không tự thêm `00:00`.
-Sự kiện vẫn được đề xuất (recall), chỉ không tham gia nhắc việc cho tới khi người dùng điền giờ.
+Sự kiện thiếu giờ vẫn không tham gia nhắc việc cho tới khi người dùng điền giờ.
 
 Ngày ISO do model trả được đối chiếu với ngày tuyệt đối trong `raw` và đoạn nguồn đã gửi
-model. Nếu nguồn có ngày nhưng không khớp, `value` và `date` bị bỏ, thêm `ngay_khong_khop`.
+model. Nếu nguồn có ngày nhưng không khớp, `value` và `date` bị bỏ, thêm `ngay_khong_khop`
+(riêng nhánh suy năm v5, ngày/tháng đã khớp raw nên bỏ qua kiểm chứng năm trong nguồn).
 
 Bổ sung `UNCERTAIN_TEXT` trong `shared/constants.ts`:
 
@@ -316,6 +334,9 @@ gio_chua_ro: 'Chưa rõ giờ',
 ngay_tuong_doi: 'Ngày suy ra từ cách nói tương đối',
 do_tin_cay_thap: 'Độ tin cậy thấp',
 ngay_khong_khop: 'Ngày không khớp với nguồn',
+// v5 — suy đoán có gắn cờ:
+nam_suy_doan: 'Năm suy đoán từ ngữ cảnh (ngày hiện tại)',
+gio_suy_doan: 'Giờ suy đoán từ cách nói mơ hồ',
 ```
 
 ### 5.3. Cổng suy luận
@@ -353,7 +374,7 @@ export interface InferenceProvider {
 
 ## 6. Prompt và schema đầu ra
 
-### 6.1. System prompt (v4)
+### 6.1. System prompt (v5)
 
 ```text
 Bạn là bộ trích xuất sự kiện lịch trình từ văn bản tiếng Việt.
@@ -363,17 +384,18 @@ Hôm nay: {today} ({weekday}). Múi giờ: Asia/Ho_Chi_Minh (UTC+7).
 
 Quy tắc:
 1. Chỉ trả về sự kiện lịch trình có thật trong văn bản; không suy diễn sự kiện không tồn tại.
-2. Ngày tương đối quy đổi theo "Hôm nay". Thiếu năm hoặc thiếu giờ thì để start/end = null,
-   giữ nguyên chuỗi gốc ở startRaw/endRaw và ghi nam_chua_ro/gio_chua_ro.
-3. Không tự thêm 00:00 cho ngày chỉ có ngày.
-4. startRaw phải là đúng đoạn mô tả start; endRaw phải là đúng đoạn mô tả end.
-5. Chỉ tạo start + end khi văn bản nói rõ một khoảng; hai mốc riêng lẻ là hai sự kiện.
-6. summary gồm 1–5 ý, mỗi ý tối đa 25 từ, chỉ dùng thông tin có trong văn bản.
-7. quote là đoạn nguyên văn ngắn nhất (≤ 40 từ) chứa thời điểm và tên sự kiện. Nếu văn
-   bản có tên người liên quan, chọn đoạn chứa cả tên người đó.
-8. confidence từ 0 đến 1, phản ánh độ chắc chắn của toàn bộ sự kiện.
-9. Không có sự kiện nào thì trả {"events": []}.
-10. Chỉ trả JSON đúng schema, không giải thích, không markdown.
+2. Ngày tương đối quy đổi theo "Hôm nay". Với "thứ X tuần sau", đếm kỹ từ thứ của
+   hôm nay; nếu không chắc chắn thì để start=null, giữ startRaw và ghi ngay_tuong_doi.
+3. Suy năm từ ngữ cảnh: ngày/tháng thiếu năm (vd "12/11") thì dùng năm của "Hôm nay"
+   để điền đủ; chỉ có ngày thì trả "YYYY-MM-DD", không thêm "T00:00"; giữ nguyên đoạn
+   gốc ở startRaw/endRaw và ghi nam_suy_doan.
+4. Giờ nói mơ hồ: dùng bảng quy ước (chiều muộn=18:00, buổi tối=19:00, …), giữ cụm
+   gốc ở startRaw/endRaw và ghi gio_suy_doan; cụm ngoài bảng thì để null + gio_chua_ro.
+5. Không suy được theo 3–4 mà vẫn thiếu năm/giờ → start/end=null + nam_chua_ro/gio_chua_ro.
+6. startRaw/endRaw là đúng đoạn mô tả start/end, không hoán đổi.
+7. Hai mốc riêng lẻ là hai sự kiện, trừ khi văn bản nói rõ một khoảng.
+8. summary 1–5 ý; quote nguyên văn ≤ 40 từ; confidence 0–1.
+9. Không có sự kiện nào thì trả {"events": []}; chỉ trả JSON đúng schema.
 ```
 
 > **v3 (sau nghiệm thu Phiên B):** bỏ danh sách hồ sơ khỏi prompt. Model chỉ trích sự kiện;
@@ -382,6 +404,19 @@ Quy tắc:
 >
 > **v4:** thêm ví dụ chỉ có ngày và ví dụ khoảng rõ ràng; nhấn mạnh không tự thêm `00:00`
 > và không hoán đổi `startRaw`/`endRaw`.
+>
+> **v5 (2026-11-09, yêu cầu của người dùng):** cho phép **suy đoán có gắn cờ** cho dữ liệu
+> thiếu khi có ngữ cảnh — suy năm từ "Hôm nay" (`nam_suy_doan`) và quy ước giờ mơ hồ
+> (`gio_suy_doan`, bảng dùng chung `core/extraction/vague-time.ts` với normalize). Thêm
+> Ví dụ 5 (giờ mơ hồ + thiếu năm); Ví dụ 1/2 được sửa để dạy hành vi mới. Điều kiện nhận
+> ở `normalize.ts` xem §5.2. E08 được lật kỳ vọng theo chính sách mới; thêm mẫu E16/E17.
+> **Lặp lại trong ngày:** lần đo đầu của v5 làm model gộp các phiên liệt kê riêng (E03
+> 3→1 sự kiện) và tách khoảng "mở/đóng cửa" (E17 1→2) — sửa quy tắc 7 để phân định rõ
+> ("mở cửa/đóng cửa, khai mạc/bế mạc" = MỘT khoảng; "Phiên A, Phiên B" liệt kê riêng =
+> các sự kiện RIÊNG). Sau sửa: đo thật trên Ternary-Bonsai-2-9B PQ2_0 cho recall
+> 88,0% (L1) / 82,6% (L2), 0 ngày bịa, 0 lỗi JSON — cao hơn v4 (81,8% / 80,0%); E04
+> (mất ngày hạn nộp) được sửa nhờ suy năm; E08/E16/E17 đạt hết. Chi tiết:
+> `ket-qua-danh-gia-slice-e.md` §8.
 
 User message:
 
@@ -391,11 +426,12 @@ User message:
 </document>
 ```
 
-- Few-shot: 4 ví dụ ngắn — thông báo lớp có 2 sự kiện, chỉ có ngày, khoảng rõ ràng,
-  email không có sự kiện.
-- `PROMPT_VERSION = 'v4'` được lưu vào `extractionMeta` để so sánh giữa các lần đo.
+- Few-shot: 5 ví dụ ngắn — thông báo lớp có 2 sự kiện (hạn nộp suy năm), chỉ có ngày,
+  khoảng rõ ràng, email không có sự kiện, giờ mơ hồ + thiếu năm.
+- `PROMPT_VERSION = 'v5'` được lưu vào `extractionMeta` để so sánh giữa các lần đo.
   v2 thêm nhắc đếm thứ cẩn thận cho ngày tương đối; v3 bỏ hồ sơ khỏi prompt và chuyển
-  sang khớp hồ sơ sau khi trích; v4 thêm ngày chỉ có ngày và ánh xạ raw rõ ràng.
+  sang khớp hồ sơ sau khi trích; v4 thêm ngày chỉ có ngày và ánh xạ raw rõ ràng;
+  v5 thêm suy năm từ ngữ cảnh và bảng giờ mơ hồ.
 
 ### 6.2. JSON Schema cho `response_format`
 

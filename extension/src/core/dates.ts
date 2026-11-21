@@ -100,6 +100,15 @@ function partsInTimeZone(instant: Date, timezone: string): string | null {
  * hoặc offset) và quy về `YYYY-MM-DDTHH:mm` theo múi giờ đã chọn.
  * Trả `null` nếu ngày không có thật — tuyệt đối không tự sửa thành ngày khác.
  */
+/** Năm hiện tại theo múi giờ đã chọn (dùng cho suy đoán năm ở prompt v5). */
+export function yearInTimeZone(now: Date, timezone: string): number {
+  const year = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+  }).formatToParts(now);
+  return Number(year.find((part) => part.type === 'year')?.value ?? '0');
+}
+
 export function normalizeIsoLocal(value: string, timezone = 'Asia/Ho_Chi_Minh'): string | null {
   const text = value.trim();
 

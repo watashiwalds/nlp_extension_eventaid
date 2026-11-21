@@ -70,7 +70,7 @@ describe('normalizeDateTime', () => {
     expect(result.uncertain).not.toContain('nam_chua_ro');
   });
 
-  it('model tự điền ISO khi nguồn thiếu năm → value null, gắn nam_chua_ro', () => {
+  it('model tự điền ISO khi nguồn thiếu năm, KHÔNG có ngữ cảnh → value null, gắn nam_chua_ro', () => {
     const result = normalizeDateTime('2026-11-15T08:00', '8:00 ngày 15/11');
     expect(result.ref.value).toBeNull();
     expect(result.ref.date).toBeNull();

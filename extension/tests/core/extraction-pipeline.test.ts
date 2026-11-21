@@ -82,7 +82,7 @@ describe('pipeline trích xuất', () => {
       runId: outcome.runId,
       provider: 'mock',
       model: 'mock-v1',
-      promptVersion: 'v4',
+      promptVersion: 'v5',
       chunkIndex: 0,
       chunkCount: 1,
     });

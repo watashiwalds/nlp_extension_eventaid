@@ -5,3 +5,11 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
+slides_img/
+.repowise/
+presentation*
+*pptx*
+
+# venv cho skill viết báo cáo
+.venv/
+__pycache__/
