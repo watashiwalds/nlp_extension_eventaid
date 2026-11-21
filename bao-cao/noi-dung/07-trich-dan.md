@@ -1,6 +1,24 @@
 # Phần 7. Trích dẫn
 
-<!--
-Danh mục tham khảo theo IEEE, đánh số [1]..[N] trùng với trích dẫn trong thân bài.
-Mỗi dòng một tài liệu, bắt đầu bằng "N. ". Không đưa tài liệu không được trích.
--->
+1. J. Strötgen and M. Gertz, "HeidelTime: High quality rule-based extraction and normalization of temporal expressions," in *Proc. 5th Int. Workshop Semantic Evaluation (SemEval 2010)*, Uppsala, Sweden, 2010, pp. 321–324. [Online]. Available: https://aclanthology.org/S10-1071/
+2. A. X. Chang and C. D. Manning, "SUTime: A library for recognizing and normalizing time expressions," in *Proc. 8th Int. Conf. Language Resources and Evaluation (LREC'12)*, Istanbul, Turkey, 2012, pp. 3735–3740. [Online]. Available: https://aclanthology.org/L12-1122/
+3. Meta, "Duckling: Language, engine, and tooling for expressing, testing, and evaluating composable language rules on input strings," GitHub repository, 2026. [Online]. Available: https://github.com/facebook/duckling [Accessed: Nov. 21, 2026].
+4. G. Lample, M. Ballesteros, S. Subramanian, K. Kawakami, and C. Dyer, "Neural architectures for named entity recognition," in *Proc. 2016 Conf. North American Chapter Assoc. Computational Linguistics: Human Language Technologies (NAACL-HLT)*, San Diego, CA, USA, 2016, pp. 260–270, doi: 10.18653/v1/N16-1030.
+5. D. Q. Nguyen and A. T. Nguyen, "PhoBERT: Pre-trained language models for Vietnamese," in *Findings Assoc. Computational Linguistics: EMNLP 2020*, 2020, pp. 1037–1042, doi: 10.18653/v1/2020.findings-emnlp.92.
+6. Y. Lu, Q. Liu, D. Dai, X. Xiao, H. Lin, X. Han, L. Sun, and H. Wu, "Unified structure generation for universal information extraction," in *Proc. 60th Annu. Meeting Assoc. Computational Linguistics (Volume 1: Long Papers)*, Dublin, Ireland, 2022, pp. 5755–5772, doi: 10.18653/v1/2022.acl-long.395.
+7. B. T. Willard and R. Louf, "Efficient guided generation for large language models," *arXiv preprint arXiv:2307.09702*, 2023. [Online]. Available: https://arxiv.org/abs/2307.09702
+8. Z. Ji et al., "Survey of hallucination in natural language generation," *ACM Computing Surveys*, vol. 55, no. 12, pp. 1–38, Dec. 2023, doi: 10.1145/3571730.
+9. Google, "Manage your events from Gmail," Google Calendar Help. [Online]. Available: https://support.google.com/calendar/answer/6084018 [Accessed: Nov. 21, 2026].
+10. Flexibits, "Adding Events and Tasks — Natural Language Input," Fantastical Help & Documentation. [Online]. Available: https://flexibits.com/fantastical [Accessed: Nov. 21, 2026].
+11. T. Vu, D. Q. Nguyen, D. Q. Nguyen, M. Dras, and M. Johnson, "VnCoreNLP: A Vietnamese natural language processing toolkit," in *Proc. 2018 Conf. North American Chapter Assoc. Computational Linguistics: Demonstrations (NAACL-HLT)*, New Orleans, LA, USA, 2018, pp. 56–60, doi: 10.18653/v1/N18-5012.
+12. R. Sennrich, B. Haddow, and A. Birch, "Neural machine translation of rare words with subword units," in *Proc. 54th Annu. Meeting Assoc. Computational Linguistics (Volume 1: Long Papers)*, Berlin, Germany, 2016, pp. 1715–1725, doi: 10.18653/v1/P16-1162.
+13. A. Vaswani et al., "Attention is all you need," in *Proc. Advances in Neural Information Processing Systems (NeurIPS)*, vol. 30, Long Beach, CA, USA, 2017, pp. 5998–6008.
+14. Y. Liu et al., "RoBERTa: A robustly optimized BERT pretraining approach," *arXiv preprint arXiv:1907.11692*, 2019. [Online]. Available: https://arxiv.org/abs/1907.11692
+15. A. Wright, H. Andrews, B. Hutton, and G. Dennis, "JSON Schema: A media type for describing JSON documents," Internet Engineering Task Force (IETF), Internet-Draft draft-bhutton-json-schema-01, 2022. [Online]. Available: https://json-schema.org/specification [Accessed: Nov. 21, 2026].
+16. C. Kohlschütter, P. Fankhauser, and W. Nejdl, "Boilerplate detection using shallow text features," in *Proc. 3rd ACM Int. Conf. Web Search and Data Mining (WSDM '10)*, New York, NY, USA, 2010, pp. 441–450, doi: 10.1145/1718487.1718542.
+17. Mozilla, "@mozilla/readability: A standalone version of the readability library used for Firefox Reader View," GitHub repository, 2026. [Online]. Available: https://github.com/mozilla/readability [Accessed: Nov. 21, 2026].
+18. Google, "Migrate to Manifest V3," Chrome for Developers Documentation. [Online]. Available: https://developer.chrome.com/docs/extensions/develop/migrate [Accessed: Nov. 21, 2026].
+19. Google, "chrome.offscreen API Reference," Chrome for Developers Documentation. [Online]. Available: https://developer.chrome.com/docs/extensions/reference/api/offscreen [Accessed: Nov. 21, 2026].
+20. E. Frantar, S. Ashkboos, T. Hoefler, and D. Alistarh, "GPTQ: Accurate post-training quantization for generative pre-trained transformers," in *Proc. 11th Int. Conf. Learning Representations (ICLR)*, Kigali, Rwanda, 2023. [Online]. Available: https://arxiv.org/abs/2210.17323
+21. G. Gerganov et al., "llama.cpp: LLM inference in C/C++," GitHub repository, 2026. [Online]. Available: https://github.com/ggml-org/llama.cpp [Accessed: Nov. 21, 2026].
+22. C. D. Manning, P. Raghavan, and H. Schütze, *Introduction to Information Retrieval*. Cambridge, UK: Cambridge University Press, 2008.

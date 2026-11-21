@@ -560,12 +560,98 @@ def render_cover(doc, data: dict[str, str], base_dir: Path) -> None:
     centered(data.get("nam", ""), 13, bold=True, after=0)
 
 
-def render_toc(doc) -> None:
+def collect_headings(content_dir: Path) -> list[tuple[int, str]]:
+    """Thu thập toàn bộ các đề mục H1, H2, H3 từ các phần của báo cáo."""
+    entries: list[tuple[int, str]] = []
+    for filename, default_title in PARTS:
+        path = content_dir / filename
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        entries.append((1, part_title(text, default_title)))
+        body = part_body(text)
+        body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
+        body = re.sub(r"```.*?```", "", body, flags=re.S)
+        for line in body.splitlines():
+            match = HEADING_RE.match(line.strip())
+            if match:
+                level = len(match.group(1))
+                if level in (2, 3):
+                    entries.append((level, match.group(2).strip()))
+    return entries
+
+
+def _add_toc_line(
+    doc,
+    level: int,
+    title: str,
+    page: str,
+    *,
+    include_begin: bool = False,
+    include_end: bool = False,
+) -> None:
+    p = doc.add_paragraph()
+    pf = p.paragraph_format
+    pf.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    pf.line_spacing = 1.2
+    indent_map = {1: 0.0, 2: 0.6, 3: 1.2}
+    pf.left_indent = Cm(indent_map.get(level, 0.0))
+    pf.space_before = Pt(3.0 if level == 1 else 0.0)
+    pf.space_after = Pt(2.0 if level == 1 else 1.5)
+
+    # Đặt tab dừng căn phải có dấu chấm (leader dots) tại đúng chiều rộng vùng chữ (16.0 cm)
+    ppr = p._p.get_or_add_pPr()
+    tabs = OxmlElement("w:tabs")
+    tab = OxmlElement("w:tab")
+    tab.set(qn("w:val"), "right")
+    tab.set(qn("w:leader"), "dot")
+    tab.set(qn("w:pos"), str(int(Cm(16.0).twips)))
+    tabs.append(tab)
+    ppr.append(tabs)
+
+    if include_begin:
+        run_begin = p.add_run()
+        begin = OxmlElement("w:fldChar")
+        begin.set(qn("w:fldCharType"), "begin")
+        instr = OxmlElement("w:instrText")
+        instr.set(qn("xml:space"), "preserve")
+        instr.text = 'TOC \\o "1-3" \\h \\z \\u'
+        separate = OxmlElement("w:fldChar")
+        separate.set(qn("w:fldCharType"), "separate")
+        for el in (begin, instr, separate):
+            run_begin._r.append(el)
+
+    is_bold = level == 1
+    r_title = p.add_run(title)
+    r_title.bold = is_bold
+    p.add_run("\t")
+    r_page = p.add_run(page)
+    r_page.bold = is_bold
+
+    if include_end:
+        run_end = p.add_run()
+        end = OxmlElement("w:fldChar")
+        end.set(qn("w:fldCharType"), "end")
+        run_end._r.append(end)
+
+
+def render_toc(doc, content_dir: Path, page_map: dict[str, int] | None = None) -> None:
     doc.add_paragraph("MỤC LỤC", style="TieuDeMucLuc")
-    paragraph = doc.add_paragraph()
-    paragraph.paragraph_format.line_spacing = 1.3
-    _field(paragraph, 'TOC \\o "1-3" \\h \\z \\u', "Mục lục sẽ hiện sau khi cập nhật trường (Ctrl+A, F9).")
-    doc.add_paragraph()
+    entries = collect_headings(content_dir)
+    if not entries:
+        paragraph = doc.add_paragraph()
+        paragraph.paragraph_format.line_spacing = 1.3
+        _field(paragraph, 'TOC \\o "1-3" \\h \\z \\u', "Mục lục sẽ hiện sau khi cập nhật trường (Ctrl+A, F9).")
+        return
+
+    for idx, (level, title) in enumerate(entries):
+        page_str = str(page_map.get(title, "...")) if page_map else "..."
+        _add_toc_line(
+            doc,
+            level,
+            title,
+            page_str,
+            include_begin=(idx == 0),
+            include_end=(idx == len(entries) - 1),
+        )
 
 
 def part_body(text: str) -> str:
@@ -585,7 +671,62 @@ def part_title(text: str, default: str) -> str:
     return default
 
 
-def build(root: Path, with_toc: bool = True) -> Path:
+def _detect_heading_pages(docx_path: Path, headings: list[tuple[int, str]]) -> dict[str, int]:
+    """Dùng LibreOffice + pdftotext (nếu có sẵn) để tính chính xác số trang của từng đề mục."""
+    import shutil
+    import subprocess
+    import tempfile
+
+    if not shutil.which("soffice") or not shutil.which("pdftotext"):
+        return {}
+    try:
+        with tempfile.TemporaryDirectory(prefix="baocao_toc_") as tmp:
+            tmp_path = Path(tmp)
+            profile_uri = f"file://{tmp_path}/lo_profile"
+            subprocess.run(
+                [
+                    "soffice",
+                    f"-env:UserInstallation={profile_uri}",
+                    "--headless",
+                    "--convert-to",
+                    "pdf",
+                    "--outdir",
+                    str(tmp_path),
+                    str(docx_path),
+                ],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=30,
+            )
+            pdf_path = tmp_path / (docx_path.stem + ".pdf")
+            if not pdf_path.exists():
+                return {}
+            raw = subprocess.check_output(["pdftotext", str(pdf_path), "-"], timeout=15).decode(
+                "utf-8", errors="ignore"
+            )
+            pages = raw.split("\x0c")
+            page_map: dict[str, int] = {}
+            # Bỏ qua trang bìa (trang 1) và trang mục lục (trang 2)
+            for pno, ptxt in enumerate(pages, start=1):
+                if pno <= 2:
+                    continue
+                lines = [" ".join(line.split()) for line in ptxt.splitlines() if line.strip()]
+                joined = " ".join(lines)
+                for _, title in headings:
+                    if title in page_map:
+                        continue
+                    norm_title = " ".join(title.split())
+                    if any(line == norm_title or line.startswith(norm_title) for line in lines) or (
+                        norm_title in joined
+                    ):
+                        page_map[title] = pno
+            return page_map
+    except Exception:
+        return {}
+
+
+def _build_once(root: Path, with_toc: bool, page_map: dict[str, int] | None = None) -> Path:
     content_dir = root / "noi-dung"
     if not content_dir.is_dir():
         sys.exit(f"Không thấy {content_dir}. Chạy 'init' trước.")
@@ -600,7 +741,7 @@ def build(root: Path, with_toc: bool = True) -> Path:
     doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
 
     if with_toc:
-        render_toc(doc)
+        render_toc(doc, content_dir, page_map)
         doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
 
     for filename, default_title in PARTS:
@@ -621,6 +762,16 @@ def build(root: Path, with_toc: bool = True) -> Path:
     _enable_update_fields(doc)
     output = root / "bao-cao.docx"
     doc.save(output)
+    return output
+
+
+def build(root: Path, with_toc: bool = True) -> Path:
+    output = _build_once(root, with_toc=with_toc, page_map=None)
+    if with_toc:
+        headings = collect_headings(root / "noi-dung")
+        page_map = _detect_heading_pages(output, headings)
+        if page_map:
+            output = _build_once(root, with_toc=with_toc, page_map=page_map)
     return output
 
 
