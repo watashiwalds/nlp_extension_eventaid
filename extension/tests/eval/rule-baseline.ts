@@ -92,7 +92,7 @@ function findDateHits(sentence: string, now: Date): DateHit[] {
   }
 
   // 2) `dd/mm/yyyy`, `dd-mm-yyyy`
-  for (const m of sentence.matchAll(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.]((?:19|20)\d{2})\b/g)) {
+  for (const m of sentence.matchAll(/(\d{1,2})[/.-](\d{1,2})[/.-]((?:19|20)\d{2})\b/g)) {
     push({
       date: dateKeyOf(Number(m[3]), Number(m[2]), Number(m[1])),
       raw: m[0],
@@ -178,9 +178,12 @@ function findTimeHits(sentence: string): TimeHit[] {
 
   // Cặp `từ A đến B` / `A–B`: hit sau của cặp là giờ kết thúc.
   for (let i = 1; i < hits.length; i += 1) {
-    const between = sentence.slice(hits[i - 1].index + hits[i - 1].raw.length, hits[i].index);
+    const prev = hits[i - 1];
+    const current = hits[i];
+    if (!prev || !current) continue;
+    const between = sentence.slice(prev.index + prev.raw.length, current.index);
     if (/^\s*(đến|tới|–|-|—)\s*$/.test(between) && between.length <= 12) {
-      hits[i].rangeEnd = true;
+      current.rangeEnd = true;
     }
   }
 
