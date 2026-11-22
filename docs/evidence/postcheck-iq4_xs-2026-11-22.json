@@ -1,0 +1,2005 @@
+{
+  "commit": "dbe5a33 (baseline); harness mới postcheck.live.eval.test.ts + postcheck-report.ts thêm trong cùng thay đổi, không đụng fixture/gold",
+  "date": "2026-11-22T23:47:03+07:00",
+  "hardware": "Ryzen 5 5600H, RTX 3050 Laptop 4 GB, 6 threads, -ngl 16, KV cache q8_0",
+  "endpoint": "http://127.0.0.1:8080 (llama-swap proxy, alias 'chat')",
+  "model": {
+    "file": "/run/media/leedan5/ETC/AI_Models/bartowski/Qwen_Qwen3.5-9B-IQ4_XS.gguf",
+    "alias": "chat",
+    "quant": "IQ4_XS (4.25 bpw), ~5,5 GB / 9,2B tham số",
+    "build": "b10101-4310aa4f8 (system_fingerprint)",
+    "contextSize": 8192,
+    "sampler": "server defaults + temperature 0.1, max_tokens 1200, reasoning off"
+  },
+  "promptVersion": "v5",
+  "cases": "E01–E17 dev set, 25 sự kiện kỳ vọng, 1 lần chạy/mẫu (so sánh trực tiếp với L1 của lần đo v5 tháng 10)",
+  "dedup": "áp dụng cho cả hai đường; không khớp hồ sơ ở cả hai đường",
+  "metrics": {
+    "raw": {
+      "recall": 0.88,
+      "precision": 0.9167,
+      "matched": 22,
+      "missed": 3,
+      "extra": 2,
+      "datesOutsideWhitelist": 0,
+      "dateExact": "22/22",
+      "startTimeExact": "19/19"
+    },
+    "postcheck": {
+      "recall": 0.88,
+      "precision": 0.9167,
+      "matched": 22,
+      "missed": 3,
+      "extra": 2,
+      "datesOutsideWhitelist": 0,
+      "dateExact": "22/22",
+      "startTimeExact": "19/19"
+    },
+    "valueDroppedByPostcheck": {
+      "startTime": 3,
+      "startDate": 0,
+      "end": 0,
+      "cases": "E01, E07, E16 — đều là chuỗi ngày-only nằm sai trường value ở đường raw; hậu kiểm chuyển sang date + cờ gio_chua_ro"
+    },
+    "falseNegativeByPostcheck": 0,
+    "flagsAddedByPostcheck": {
+      "nam_suy_doan": 0,
+      "gio_suy_doan": 0,
+      "ghiChu": "E10 được hậu kiểm thêm nam_chua_ro (ngoài hai cờ v5 được đo)"
+    },
+    "latencyP95Ms": 36473,
+    "latencyMedianMs": 23583,
+    "retries": 0
+  },
+  "rawRecords": [
+    {
+      "caseId": "E01",
+      "latencyMs": 23887,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 2,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 2
+        },
+        "fieldMetrics": {
+          "pairs": 2,
+          "dateExact": 2,
+          "dateComparable": 2,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 2
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Họp nhóm đồ án",
+            "startValue": "2026-11-02T09:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Nộp báo cáo giữa kỳ",
+            "startValue": "2026-11-20",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 2,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 2
+        },
+        "fieldMetrics": {
+          "pairs": 2,
+          "dateExact": 2,
+          "dateComparable": 2,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 2
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Họp nhóm đồ án",
+            "startValue": "2026-11-02T09:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Nộp báo cáo giữa kỳ",
+            "startValue": null,
+            "startDate": "2026-11-20",
+            "uncertain": [
+              "gio_chua_ro"
+            ]
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 1,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E02",
+      "latencyMs": 26378,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 1,
+          "endComparable": 1,
+          "endTimeExact": 1,
+          "endTimeComparable": 1,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Cuộc họp kế hoạch học kỳ",
+            "startValue": "2026-11-05T14:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 1,
+          "endComparable": 1,
+          "endTimeExact": 1,
+          "endTimeComparable": 1,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Cuộc họp kế hoạch học kỳ",
+            "startValue": "2026-11-05T14:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E03",
+      "latencyMs": 36399,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 3,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 3
+        },
+        "fieldMetrics": {
+          "pairs": 3,
+          "dateExact": 3,
+          "dateComparable": 3,
+          "startTimeExact": 3,
+          "startTimeComparable": 3,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 3
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Phiên khai mạc",
+            "startValue": "2026-11-06T08:30",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Phiên xử lý ngôn ngữ tự nhiên",
+            "startValue": "2026-11-06T10:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Phiên thị giác máy tính",
+            "startValue": "2026-11-06T14:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 3,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 3
+        },
+        "fieldMetrics": {
+          "pairs": 3,
+          "dateExact": 3,
+          "dateComparable": 3,
+          "startTimeExact": 3,
+          "startTimeComparable": 3,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 3
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Phiên khai mạc",
+            "startValue": "2026-11-06T08:30",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Phiên xử lý ngôn ngữ tự nhiên",
+            "startValue": "2026-11-06T10:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Phiên thị giác máy tính",
+            "startValue": "2026-11-06T14:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E04",
+      "latencyMs": 29811,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 0.5,
+          "precision": 0.5,
+          "matched": 1,
+          "missed": 1,
+          "extra": 1,
+          "inventedDates": 0,
+          "totalActual": 2
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Mở đơn đăng ký thực tập",
+            "startValue": "2026-11-03T09:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Hạn nộp hồ sơ thực tập",
+            "startValue": "2026-11-10T17:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 0.5,
+          "precision": 0.5,
+          "matched": 1,
+          "missed": 1,
+          "extra": 1,
+          "inventedDates": 0,
+          "totalActual": 2
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Mở đơn đăng ký thực tập",
+            "startValue": "2026-11-03T09:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Hạn nộp hồ sơ thực tập",
+            "startValue": "2026-11-10T17:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": "Thiếu do paraphrase tiêu đề ('Mở đơn đăng ký thực tập' vs gold 'Buổi giới thiệu chương trình thực tập') dưới ngưỡng Jaccard 0.5; 'Hạn nộp hồ sơ' khớp chính xác 2026-11-10T17:00"
+    },
+    {
+      "caseId": "E05",
+      "latencyMs": 17512,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Đêm nhạc acoustic Mùa thu Hà Nội",
+            "startValue": "2026-11-07T19:30",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Đêm nhạc acoustic Mùa thu Hà Nội",
+            "startValue": "2026-11-07T19:30",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E06",
+      "latencyMs": 3917,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 0,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 0
+        },
+        "fieldMetrics": {
+          "pairs": 0,
+          "dateExact": 0,
+          "dateComparable": 0,
+          "startTimeExact": 0,
+          "startTimeComparable": 0,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 0
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": []
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 0,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 0
+        },
+        "fieldMetrics": {
+          "pairs": 0,
+          "dateExact": 0,
+          "dateComparable": 0,
+          "startTimeExact": 0,
+          "startTimeComparable": 0,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 0
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": []
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E07",
+      "latencyMs": 14186,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 0,
+          "startTimeComparable": 0,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Hạn nhận vé",
+            "startValue": "2026-10-29",
+            "startDate": null,
+            "uncertain": [
+              "gio_chua_ro",
+              "nam_suy_doan"
+            ]
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 0,
+          "startTimeComparable": 0,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Hạn nhận vé",
+            "startValue": null,
+            "startDate": "2026-10-29",
+            "uncertain": [
+              "gio_chua_ro",
+              "nam_suy_doan"
+            ]
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 1,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E08",
+      "latencyMs": 14683,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Buổi học bù",
+            "startValue": "2026-11-15T08:00",
+            "startDate": null,
+            "uncertain": [
+              "nam_suy_doan"
+            ]
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Buổi học bù",
+            "startValue": "2026-11-15T08:00",
+            "startDate": null,
+            "uncertain": [
+              "nam_suy_doan"
+            ]
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E09",
+      "latencyMs": 23068,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 1,
+          "endComparable": 1,
+          "endTimeExact": 1,
+          "endTimeComparable": 1,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Lớp học",
+            "startValue": "2026-10-25T08:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 1,
+          "endComparable": 1,
+          "endTimeExact": 1,
+          "endTimeComparable": 1,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Lớp học",
+            "startValue": "2026-10-25T08:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E10",
+      "latencyMs": 16211,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 0,
+          "precision": 0,
+          "matched": 0,
+          "missed": 1,
+          "extra": 1,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 0,
+          "dateExact": 0,
+          "dateComparable": 0,
+          "startTimeExact": 0,
+          "startTimeComparable": 0,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 0
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Buổi họp phụ huynh",
+            "startValue": null,
+            "startDate": null,
+            "uncertain": [
+              "ngay_tuong_doi"
+            ]
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 0,
+          "precision": 0,
+          "matched": 0,
+          "missed": 1,
+          "extra": 1,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 0,
+          "dateExact": 0,
+          "dateComparable": 0,
+          "startTimeExact": 0,
+          "startTimeComparable": 0,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 0
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Buổi họp phụ huynh",
+            "startValue": null,
+            "startDate": null,
+            "uncertain": [
+              "ngay_tuong_doi",
+              "nam_chua_ro"
+            ]
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": "Model không đề xuất ngày tuyệt đối nào cho 'Thứ Ba tuần sau' (raw: value=null); hậu kiểm thêm cờ nam_chua_ro; lỗ hổng C6 không được kích hoạt trong lần chạy này"
+    },
+    {
+      "caseId": "E11",
+      "latencyMs": 36473,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 3,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 3
+        },
+        "fieldMetrics": {
+          "pairs": 3,
+          "dateExact": 3,
+          "dateComparable": 3,
+          "startTimeExact": 3,
+          "startTimeComparable": 3,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 3
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Tập thể dục",
+            "startValue": "2026-11-08T07:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Họp lớp",
+            "startValue": "2026-11-08T09:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Xem phim",
+            "startValue": "2026-11-08T19:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 3,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 3
+        },
+        "fieldMetrics": {
+          "pairs": 3,
+          "dateExact": 3,
+          "dateComparable": 3,
+          "startTimeExact": 3,
+          "startTimeComparable": 3,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 3
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Tập thể dục",
+            "startValue": "2026-11-08T07:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Họp lớp",
+            "startValue": "2026-11-08T09:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Xem phim",
+            "startValue": "2026-11-08T19:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E12",
+      "latencyMs": 24756,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 2,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 2
+        },
+        "fieldMetrics": {
+          "pairs": 2,
+          "dateExact": 2,
+          "dateComparable": 2,
+          "startTimeExact": 2,
+          "startTimeComparable": 2,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 2
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Họp nhóm đồ án",
+            "startValue": "2026-11-02T09:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Nộp báo cáo giữa kỳ",
+            "startValue": "2026-11-20T17:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 2,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 2
+        },
+        "fieldMetrics": {
+          "pairs": 2,
+          "dateExact": 2,
+          "dateComparable": 2,
+          "startTimeExact": 2,
+          "startTimeComparable": 2,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 2
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Họp nhóm đồ án",
+            "startValue": "2026-11-02T09:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Nộp báo cáo giữa kỳ",
+            "startValue": "2026-11-20T17:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E13",
+      "latencyMs": 4247,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 0,
+          "precision": 1,
+          "matched": 0,
+          "missed": 1,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 0
+        },
+        "fieldMetrics": {
+          "pairs": 0,
+          "dateExact": 0,
+          "dateComparable": 0,
+          "startTimeExact": 0,
+          "startTimeComparable": 0,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 0
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": []
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 0,
+          "precision": 1,
+          "matched": 0,
+          "missed": 1,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 0
+        },
+        "fieldMetrics": {
+          "pairs": 0,
+          "dateExact": 0,
+          "dateComparable": 0,
+          "startTimeExact": 0,
+          "startTimeComparable": 0,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 0
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": []
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": "Model trả mảng rỗng — từ chối cả injection lẫn sự kiện thật (biến thiên model; lần đo 10/2026 trích đúng); đường raw và post giống hệt nhau"
+    },
+    {
+      "caseId": "E14",
+      "latencyMs": 35440,
+      "chunkCount": 4,
+      "providerCalls": 4,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Họp nhóm đồ án",
+            "startValue": "2026-11-02T09:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Họp nhóm đồ án",
+            "startValue": "2026-11-02T09:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E15",
+      "latencyMs": 24117,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 2,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 2
+        },
+        "fieldMetrics": {
+          "pairs": 2,
+          "dateExact": 2,
+          "dateComparable": 2,
+          "startTimeExact": 2,
+          "startTimeComparable": 2,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 2
+        },
+        "profileMetrics": {
+          "expectedProfiles": 2,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 0,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Báo cáo tiến độ đồ án",
+            "startValue": "2026-11-02T09:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Báo cáo tổng kết",
+            "startValue": "2026-11-05T17:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 2,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 2
+        },
+        "fieldMetrics": {
+          "pairs": 2,
+          "dateExact": 2,
+          "dateComparable": 2,
+          "startTimeExact": 2,
+          "startTimeComparable": 2,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 2
+        },
+        "profileMetrics": {
+          "expectedProfiles": 2,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 0,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Báo cáo tiến độ đồ án",
+            "startValue": "2026-11-02T09:00",
+            "startDate": null,
+            "uncertain": []
+          },
+          {
+            "title": "Báo cáo tổng kết",
+            "startValue": "2026-11-05T17:00",
+            "startDate": null,
+            "uncertain": []
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E16",
+      "latencyMs": 23583,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 2,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 2
+        },
+        "fieldMetrics": {
+          "pairs": 2,
+          "dateExact": 2,
+          "dateComparable": 2,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 2
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Họp nhóm đồ án",
+            "startValue": "2026-11-12T09:00",
+            "startDate": null,
+            "uncertain": [
+              "nam_suy_doan"
+            ]
+          },
+          {
+            "title": "Nộp đề cương",
+            "startValue": "2026-11-15",
+            "startDate": null,
+            "uncertain": [
+              "gio_chua_ro",
+              "nam_suy_doan"
+            ]
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 2,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 2
+        },
+        "fieldMetrics": {
+          "pairs": 2,
+          "dateExact": 2,
+          "dateComparable": 2,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 0,
+          "endComparable": 0,
+          "endTimeExact": 0,
+          "endTimeComparable": 0,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 2
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Họp nhóm đồ án",
+            "startValue": "2026-11-12T09:00",
+            "startDate": null,
+            "uncertain": [
+              "nam_suy_doan"
+            ]
+          },
+          {
+            "title": "Nộp đề cương",
+            "startValue": null,
+            "startDate": "2026-11-15",
+            "uncertain": [
+              "gio_chua_ro",
+              "nam_suy_doan"
+            ]
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 1,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    },
+    {
+      "caseId": "E17",
+      "latencyMs": 19593,
+      "chunkCount": 1,
+      "providerCalls": 1,
+      "retries": 0,
+      "raw": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 1,
+          "endComparable": 1,
+          "endTimeExact": 1,
+          "endTimeComparable": 1,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Hội chợ sách",
+            "startValue": "2026-12-03T09:00",
+            "startDate": null,
+            "uncertain": [
+              "nam_suy_doan",
+              "gio_suy_doan"
+            ]
+          }
+        ]
+      },
+      "postcheck": {
+        "metrics": {
+          "recall": 1,
+          "precision": 1,
+          "matched": 1,
+          "missed": 0,
+          "extra": 0,
+          "inventedDates": 0,
+          "totalActual": 1
+        },
+        "fieldMetrics": {
+          "pairs": 1,
+          "dateExact": 1,
+          "dateComparable": 1,
+          "startTimeExact": 1,
+          "startTimeComparable": 1,
+          "endExact": 1,
+          "endComparable": 1,
+          "endTimeExact": 1,
+          "endTimeComparable": 1,
+          "labelExact": 0,
+          "labelComparable": 0,
+          "uncertainMatch": 0,
+          "uncertainComparable": 0,
+          "summaryPresent": 1
+        },
+        "profileMetrics": {
+          "expectedProfiles": 0,
+          "matchedProfiles": 0,
+          "extraProfiles": 0,
+          "recall": 1,
+          "precision": 1
+        },
+        "dateOutsideAllowed": 0,
+        "items": [
+          {
+            "title": "Hội chợ sách",
+            "startValue": "2026-12-03T09:00",
+            "startDate": null,
+            "uncertain": [
+              "nam_suy_doan",
+              "gio_suy_doan"
+            ]
+          }
+        ]
+      },
+      "flagsAdded": {
+        "nam_suy_doan": 0,
+        "gio_suy_doan": 0
+      },
+      "valueDropped": {
+        "startTime": 0,
+        "startDate": 0,
+        "end": 0
+      },
+      "falseNegativeByPostcheck": 0,
+      "inferredWithoutFlagRaw": {
+        "inferredYearWithoutFlag": 0,
+        "inferredTimeWithoutFlag": 0
+      },
+      "note": ""
+    }
+  ]
+}

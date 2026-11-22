@@ -42,3 +42,4 @@ lưu một file JSON theo template dưới đây, kèm một file `.md` tổng h
 | File | Chủ đề | Model | Ngày |
 |---|---|---|---|
 | `postcheck-iq4_xs-2026-11-22.json` | TASK 01 — ablation Raw LLM vs LLM + hậu kiểm | Qwen3.5-9B IQ4_XS | 2026-11-22 |
+| `postcheck-ablation.md` | Bảng + kết luận TASK 01 | Qwen3.5-9B IQ4_XS | 2026-11-22 |
