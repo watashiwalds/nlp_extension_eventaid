@@ -57,7 +57,7 @@ describe('review order', () => {
     });
     const low = llm(0.2, { title: 'Bảo vệ đồ án' });
 
-    const sorted = sortDraftsForReview([manual, high, low]);
+    const sorted = sortDraftsForReview([manual, high, low], NOW);
     expect(sorted.map((event) => event.id)).toEqual([low.id, high.id, manual.id]);
   });
 
@@ -65,13 +65,13 @@ describe('review order', () => {
     const uncertain = llm(0.9, { startValue: null, startDate: '2026-11-02' });
     const normal = llm(0.9, { title: 'Khác', relatedProfiles: ['p1'] });
     expect(needsReviewAttention(uncertain)).toBe(true);
-    expect(sortDraftsForReview([normal, uncertain])[0]?.id).toBe(uncertain.id);
+    expect(sortDraftsForReview([normal, uncertain], NOW)[0]?.id).toBe(uncertain.id);
   });
 
   it('không đổi thứ tự thời gian trong cùng nhóm', () => {
     const later = llm(0.9, { title: 'Sau', startValue: '2026-11-05T09:00' });
     const sooner = llm(0.9, { title: 'Trước', startValue: '2026-11-02T09:00' });
-    expect(sortDraftsForReview([later, sooner]).map((event) => event.title)).toEqual([
+    expect(sortDraftsForReview([later, sooner], NOW).map((event) => event.title)).toEqual([
       'Trước',
       'Sau',
     ]);

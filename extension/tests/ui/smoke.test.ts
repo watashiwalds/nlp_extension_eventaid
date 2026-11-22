@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderApp } from '../../src/ui/render';
 import { EMPTY_EVENT_DRAFT, store } from '../../src/ui/store';
 import { clearAll, listEvents } from '../../src/platform/storage/db';
@@ -170,53 +170,62 @@ describe('render side panel', () => {
   });
 
   it('Tổng quan có tab hồ sơ và lọc kế hoạch theo hồ sơ', () => {
-    const an = makeProfile(
-      { name: 'Nguyễn Minh An', role: '', org: '', email: '', nicknames: [], keywords: [], notes: '' },
-      NOW,
-    );
-    const bao = makeProfile(
-      { name: 'Trần Bảo', role: '', org: '', email: '', nicknames: [], keywords: [], notes: '' },
-      NOW,
-    );
-    const ofAn = makeEvent(
-      {
-        title: 'Bảo vệ đồ án',
-        label: 'công_vụ',
-        startValue: '2026-11-02T09:00',
-        endValue: null,
-        durationMinutesInput: 60,
-        summary: [],
-        relatedProfiles: [an.id],
-        sources: [],
-      },
-      NOW,
-    );
-    const ofBao = makeEvent(
-      {
-        title: 'Đi xem phim',
-        label: 'giải_trí',
-        startValue: '2026-11-03T19:00',
-        endValue: null,
-        durationMinutesInput: 120,
-        summary: [],
-        relatedProfiles: [bao.id],
-        sources: [],
-      },
-      NOW,
-    );
+    // View tổng quan dùng `new Date()` để lọc sự kiện đã qua; đóng băng thời gian
+    // để fixture 2–3/11/2026 luôn là "sắp tới", không phụ thuộc ngày chạy test.
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(NOW);
 
-    store.set({ tab: 'overview', profiles: [an, bao], events: [ofAn, ofBao], overviewProfileId: null });
-    const all = renderApp(store.get());
-    expect(all).toContain('data-action="select-overview-profile"');
-    expect(all).toContain('Tất cả');
-    expect(all).toContain('Bảo vệ đồ án');
-    expect(all).toContain('Đi xem phim');
+      const an = makeProfile(
+        { name: 'Nguyễn Minh An', role: '', org: '', email: '', nicknames: [], keywords: [], notes: '' },
+        NOW,
+      );
+      const bao = makeProfile(
+        { name: 'Trần Bảo', role: '', org: '', email: '', nicknames: [], keywords: [], notes: '' },
+        NOW,
+      );
+      const ofAn = makeEvent(
+        {
+          title: 'Bảo vệ đồ án',
+          label: 'công_vụ',
+          startValue: '2026-11-02T09:00',
+          endValue: null,
+          durationMinutesInput: 60,
+          summary: [],
+          relatedProfiles: [an.id],
+          sources: [],
+        },
+        NOW,
+      );
+      const ofBao = makeEvent(
+        {
+          title: 'Đi xem phim',
+          label: 'giải_trí',
+          startValue: '2026-11-03T19:00',
+          endValue: null,
+          durationMinutesInput: 120,
+          summary: [],
+          relatedProfiles: [bao.id],
+          sources: [],
+        },
+        NOW,
+      );
 
-    store.set({ overviewProfileId: an.id });
-    const scoped = renderApp(store.get());
-    expect(scoped).toContain('Kế hoạch của Nguyễn Minh An');
-    expect(scoped).toContain('Bảo vệ đồ án');
-    expect(scoped).not.toContain('Đi xem phim');
+      store.set({ tab: 'overview', profiles: [an, bao], events: [ofAn, ofBao], overviewProfileId: null });
+      const all = renderApp(store.get());
+      expect(all).toContain('data-action="select-overview-profile"');
+      expect(all).toContain('Tất cả');
+      expect(all).toContain('Bảo vệ đồ án');
+      expect(all).toContain('Đi xem phim');
+
+      store.set({ overviewProfileId: an.id });
+      const scoped = renderApp(store.get());
+      expect(scoped).toContain('Kế hoạch của Nguyễn Minh An');
+      expect(scoped).toContain('Bảo vệ đồ án');
+      expect(scoped).not.toContain('Đi xem phim');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('Tổng quan chưa có nội dung thì có CTA sang tab quét', () => {
