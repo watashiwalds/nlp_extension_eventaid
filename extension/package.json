@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Demo Chrome Extension (MV3) doc noi dung trang web, quan ly ho so va tao su kien thu cong - khong dung mo hinh hoc may.",
+  "description": "Demo Chrome Extension (MV3) doc noi dung trang web, quan ly ho so, tao su kien thu cong hoac bang LLM cuc bo (llama.cpp) co san loc PhoBERT truoc khi trich xuat.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

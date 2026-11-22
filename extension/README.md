@@ -31,7 +31,13 @@ npm run lint
 npm test
 LLAMA_EVAL=1 npx vitest run tests/eval/extraction.live.eval.test.ts \
   --reporter=verbose --disableConsoleIntercept   # đo thật, cần llama-server
+LLAMA_EVAL=1 LLAMA_MODEL=chat npx vitest run tests/eval/postcheck.live.eval.test.ts \
+  --reporter=verbose --disableConsoleIntercept   # ablation raw vs hậu kiểm (TASK 01)
 ```
+
+Số đo của các lần chạy thật (commit, model, sampler, bảng tổng hợp) nằm ở
+[`../docs/evidence/`](../docs/evidence/). Baseline luật tất định (TASK 05) chạy
+luôn trong `npm test` (`tests/eval/rule-baseline.eval.test.ts`), không cần model.
 
 Load unpacked từ `dist/`.
 
@@ -43,11 +49,12 @@ Cách chạy dịch vụ (không sửa `ml_hasevent_filter/`):
 cd ../ml_hasevent_filter/handover_api_code
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-MODEL_DIR=../phobert_task_classifier_final \
-  uvicorn app:app --host 127.0.0.1 --port 8081
+uvicorn app:app --host 127.0.0.1 --port 8081
 ```
 
-- `MODEL_DIR` là bắt buộc vì `app.py` mặc định trỏ tới đường dẫn không tồn tại.
+- Không cần đặt `MODEL_DIR`: `app.py` mặc định đọc
+  `handover_api_code/models/phobert_task_classifier_final` (thư mục model nằm ngay trong
+  `handover_api_code/`). Cần trỏ nơi khác thì đặt `MODEL_DIR=<đường dẫn>`.
 - Extension mặc định gọi **8081**; `8000` vẫn dùng được nếu đổi `--port` và ô địa chỉ trong Cài đặt
   (cả hai cổng đã có trong `host_permissions`).
 - Health: `curl -s http://127.0.0.1:8081/health` → `{"status":"ok","model":…,"device":"cuda"}`.
@@ -103,7 +110,7 @@ MODEL_DIR=../phobert_task_classifier_final \
 | `src/ui/views/*` | View functions trả về HTML (không framework); `capture.ts` cho tab quét nội dung, `event-card.ts` cho thẻ/chi tiết sự kiện, `event-review.ts` cho thanh duyệt |
 | `src/ui/popup.*` | Popup: quét nhanh + mở side panel |
 | `tests/` | Vitest: core + parse + page snapshot + smoke UI (jsdom + fake-indexeddb) |
-| `tests/eval/*` | Slice E: metric, test tất định `MockProvider`, harness đo thật `llama-server` (`LLAMA_EVAL=1`) |
+| `tests/eval/*` | Slice E + cải thiện báo cáo: metric + field metrics, gold freeze, test tất định `MockProvider`, ablation raw/hậu kiểm (`LLAMA_EVAL=1`), baseline luật tất định, harness đo thật `llama-server` |
 
 ## Quy ước
 

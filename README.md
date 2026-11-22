@@ -11,8 +11,10 @@ thủ công hoặc bằng **LLM**. Mặc định toàn bộ dữ liệu và suy 
 > với Gemini/Cloudflared thật; xem [`docs/kiem-thu-demo.md`](docs/kiem-thu-demo.md) §8.
 >
 > Cùng ngày, dự án chốt thêm **bước sàng lọc nội dung bằng PhoBERT** (dịch vụ Python cục bộ tại
-> `127.0.0.1:8000`, dùng model bàn giao trong `ml_hasevent_filter/`) chạy **trước** LLM để bỏ qua
-> tài liệu không liên quan. Đây là **Slice F, chưa triển khai**; xem
+> `127.0.0.1:8081`, dùng model bàn giao trong `ml_hasevent_filter/`) chạy **trước** LLM.
+> **Slice F — F0 + F1 + F2 đã triển khai:** job chạy **sàng lọc → quyết định → LLM**; tab Quét nội
+> dung có checkbox sàng lọc, dòng kết luận và nút "Trích xuất toàn bộ". **Mặc định là `report`**
+> (không bỏ qua lần gọi LLM) cho tới khi F3 đo được **0 tài liệu dương bị bỏ**; xem
 > [`docs/ke-hoach-bo-loc-noi-dung.md`](docs/ke-hoach-bo-loc-noi-dung.md).
 
 Repo này chứa cả bộ tài liệu kế hoạch (gốc) và mã nguồn demo (`extension/`).
@@ -32,8 +34,9 @@ Repo này chứa cả bộ tài liệu kế hoạch (gốc) và mã nguồn demo
 | 7 | **Duyệt nháp + chống trùng** | Chế độ **Duyệt nháp**: badge **Máy đề xuất**, mức tin cậy (Thấp/Vừa/Cao, không hiện %), nguồn/trích dẫn đầy đủ; chọn nhiều nháp để **Duyệt đã chọn** (`nhap → dang_theo_doi`) hoặc **Xoá nháp đã chọn** có xác nhận; cảnh báo khi thiếu giờ/ngày; gợi ý **Có thể trùng** cho paraphrase, không tự gộp |
 | 8 | **Chọn nơi chạy suy luận** | **Máy này** mặc định; **Endpoint khác** nhập base URL HTTPS + API key + model; **Kiểm tra kết nối** trước khi lưu; consent theo origin + thu hồi; **Xoá key**; quay về local vẫn giữ cấu hình remote để đổi lại |
 
-**Chưa có (đúng phạm vi demo hiện tại):** nhắc việc sự kiện (`chrome.alarms`/KS-10), Gmail/PDF/DOCX,
-**sàng lọc nội dung PhoBERT (Slice F)**. Gộp nguồn tự động và sửa nhanh tại chỗ chưa làm — xem [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md). Checklist thủ công cho provider (§8) vẫn chờ chạy với endpoint thật.
+**Chưa có (đúng phạm vi demo hiện tại):** nhắc việc sự kiện (`chrome.alarms`/KS-10), Gmail/PDF/DOCX.
+**Hạn chế đã biết:** sàng lọc PhoBERT đo đầu-cuối (F3) và nghiệm thu tay P7 chưa chạy; mặc định vẫn
+`report`. Gộp nguồn tự động và sửa nhanh tại chỗ chưa làm — xem [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md). Checklist thủ công cho provider (§8) vẫn chờ chạy với endpoint thật.
 Chi tiết lệch so với kế hoạch: [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md).
 Bảng đối chiếu đầy đủ chức năng chính thức vs. demo: [`docs/chuc-nang-demo-vs-chinh-thuc.md`](docs/chuc-nang-demo-vs-chinh-thuc.md).
 
@@ -59,9 +62,10 @@ npm run build
    job vẫn chạy và sẽ có thông báo khi xong. Kết quả được lưu ở trạng thái **Nháp**.
    Muốn dùng Gemini/dịch vụ OpenAI-compatible/máy trạm Cloudflared: chọn **Endpoint khác**, nhập base
    URL HTTPS + API key + model, cấp quyền host và đồng ý gửi dữ liệu cho đúng origin.
-   Bước **sàng lọc PhoBERT** (Slice F) **chưa có**, nên hiện không cần chạy dịch vụ thứ hai;
-   job gọi thẳng provider đã chọn. Khi làm Slice F, lệnh chạy dịch vụ sàng lọc nằm trong
-   [`extension/README.md`](extension/README.md).
+   Muốn dùng **sàng lọc PhoBERT**: chạy dịch vụ Python cục bộ theo lệnh trong
+   [`extension/README.md`](extension/README.md) (cổng 8081), tick checkbox sàng lọc ở tab Quét nội
+   dung rồi bấm **Trích xuất toàn bộ**. Mặc định chế độ là `report` — sàng lọc báo kết luận nhưng
+   không bỏ qua lần gọi LLM; đổi sang `screen` trong Cài đặt khi muốn bỏ qua.
 
 > `dist/` không được commit. Mỗi lần đổi code: `npm run build` rồi bấm **Reload** ở `chrome://extensions`.
 
@@ -73,7 +77,7 @@ npm run build
 | `npm run build` | `tsc --noEmit` + `vite build` → `dist/` |
 | `npm run typecheck` | TypeScript strict, 0 lỗi |
 | `npm run lint` | ESLint (flat config) |
-| `npm test` | Vitest: 358 test / 36 file (core, parse, page snapshot, extraction/LLM, provider remote/factory/permissions, form Cài đặt, duyệt nháp, job, Slice E eval, smoke test UI bằng jsdom); 17 test live skip nếu không có `LLAMA_EVAL=1` |
+| `npm test` | Vitest: 485 test / 49 file, 447 pass + 38 skip (2 harness live) — gồm core, parse, page snapshot, extraction/LLM, gold freeze + field metrics, ablation raw/hậu kiểm, baseline luật tất định, provider remote/factory/permissions, form Cài đặt, duyệt nháp, job, sàng lọc, Slice E eval, smoke test UI bằng jsdom; các harness live (`LLAMA_EVAL=1`) skip khi không có model |
 | `npm run icons` | Sinh lại icon PNG |
 
 ---
@@ -94,7 +98,8 @@ npm run build
 │  ├─ kiem-thu-demo.md           # Checklist kiểm thử thủ công theo KS
 │  ├─ ke-hoach-llm-trich-xuat.md # Kế hoạch lớp trích xuất LLM (Slice A–E)
 │  ├─ ke-hoach-da-provider.md    # Kế hoạch + ghi chú triển khai chọn nơi chạy suy luận (KS-14)
-│  ├─ ke-hoach-bo-loc-noi-dung.md # Kế hoạch sàng lọc PhoBERT trước LLM (Slice F, chưa triển khai)
+│  ├─ ke-hoach-bo-loc-noi-dung.md # Kế hoạch sàng lọc PhoBERT trước LLM (Slice F: F0+F1+F2 đã làm, mặc định report)
+│  ├─ evidence/                   # Số đo cho báo cáo: ablation, baseline, provenance PhoBERT (kèm template)
 │  ├─ ban-giao-slice-d.md        # Bàn giao & phạm vi Slice D (đã nghiệm thu)
 │  ├─ kiem-tra-slice-d.md        # Bản ghi nghiệm thu Slice D
 │  ├─ ban-giao-slice-e.md        # Bàn giao & phạm vi Slice E (đo chất lượng)
@@ -119,19 +124,20 @@ npm run build
 ## 4. Quyền & quyền riêng tư
 
 - Permissions: `activeTab`, `scripting`, `storage`, `offscreen`, `notifications`, `sidePanel`, `contextMenus`.
-- Host permission tĩnh duy nhất: `http://127.0.0.1:8080/*` cho `llama-server` cục bộ. Endpoint remote dùng
+- Host permission tĩnh: `http://127.0.0.1:8080/*` cho `llama-server` cục bộ và các cổng loopback
+  `8081`/`8000` cho dịch vụ sàng lọc PhoBERT. Endpoint remote dùng
   `optional_host_permissions` (`https://*/*`, `http://localhost:8080/*`, `http://[::1]:8080/*`) và xin
   quyền lúc chạy cho **đúng origin** người dùng nhập.
 - **Remote là opt-in:** endpoint ngoài phải dùng HTTPS (chỉ localhost được HTTP); chỉ chạy sau khi
   người dùng chọn + đồng ý một lần cho mỗi origin; có nút thu hồi; API key lưu cục bộ, không xuất
   JSON/log. Xem [`docs/ke-hoach-da-provider.md`](docs/ke-hoach-da-provider.md).
-- **Slice F (chưa có trong code):** thêm host tĩnh `http://127.0.0.1:8000/*` và
-  `http://localhost:8000/*` cho dịch vụ sàng lọc PhoBERT cục bộ. Đây vẫn là loopback, **không phải**
-  backend từ xa.
+- **Slice F (đã có trong code, F1):** host tĩnh loopback `http://127.0.0.1:8081/*` +
+  `http://localhost:8081/*` (mặc định) và `http://127.0.0.1:8000/*` + `http://localhost:8000/*`
+  (alias) cho dịch vụ sàng lọc PhoBERT cục bộ. Vẫn là loopback, **không phải** backend từ xa.
 - Chỉ đọc khi người dùng bấm hoặc chọn menu chuột phải; Readability chạy trong side panel, không inject thư viện vào trang.
 - CSP giữ `script-src 'self'`; `connect-src` gồm `http://127.0.0.1:8080`, `http://localhost:8080`,
-  `http://[::1]:8080` và `https://*` cho endpoint người dùng chọn; không remote code, không WASM.
-  Khi làm Slice F, `connect-src` mở thêm `http://127.0.0.1:8000` + `http://localhost:8000` cho dịch vụ sàng lọc (loopback).
+  `http://[::1]:8080`, các cổng sàng lọc `8081`/`8000` loopback và `https://*` cho endpoint người
+  dùng chọn; không remote code, không WASM.
 - Toàn bộ nội dung động được escape trước khi chèn vào `innerHTML`.
 
 ---
@@ -157,10 +163,11 @@ Checklist thủ công (theo kịch bản KS): [`docs/kiem-thu-demo.md`](docs/kie
    là chạy checklist thủ công với endpoint thật. Xem
    [`docs/ke-hoach-da-provider.md`](docs/ke-hoach-da-provider.md) §8 và
    [`docs/kiem-thu-demo.md`](docs/kiem-thu-demo.md) §8.
-3. **Sàng lọc nội dung bằng PhoBERT** (Slice F — chưa triển khai): dịch vụ Python cục bộ tại
-   `127.0.0.1:8000` quyết định tài liệu có nội dung sự kiện hay không **trước khi gọi LLM**; tài
-   liệu không liên quan không tốn 20–34 s gọi model. Không cắt câu gửi LLM; lọc vùng chọn bị bỏ qua.
-   Xem [`docs/ke-hoach-bo-loc-noi-dung.md`](docs/ke-hoach-bo-loc-noi-dung.md).
+3. **Sàng lọc nội dung bằng PhoBERT** (Slice F — F0 + F1 + F2 đã triển khai, mặc định `report`):
+   dịch vụ Python cục bộ tại `127.0.0.1:8081` quyết định tài liệu có nội dung sự kiện hay không
+   **trước khi gọi LLM**; tài liệu không liên quan không tốn 20–34 s gọi model. Không cắt câu gửi
+   LLM; lọc vùng chọn bị bỏ qua. Còn lại: đo đầu-cuối 3 chế độ (F3) và nghiệm thu tay P7.
+   Số đo ablation/baseline: [`docs/evidence/`](docs/evidence/).
 4. **Nhắc việc sự kiện** bằng `chrome.alarms` + `notifications` (KS-10, tối đa 2 nút).
 5. Gmail read-only + PDF/DOCX ở sprint cuối.
 

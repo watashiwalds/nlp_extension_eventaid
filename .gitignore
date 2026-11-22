@@ -9,6 +9,7 @@ slides_img/
 .repowise/
 presentation*
 *pptx*
+.idea/
 ml_hasevent_filter/handover_api_code/models
 
 # venv cho skill viết báo cáo
