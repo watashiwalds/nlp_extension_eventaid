@@ -43,3 +43,5 @@ lưu một file JSON theo template dưới đây, kèm một file `.md` tổng h
 |---|---|---|---|
 | `postcheck-iq4_xs-2026-11-22.json` | TASK 01 — ablation Raw LLM vs LLM + hậu kiểm | Qwen3.5-9B IQ4_XS | 2026-11-22 |
 | `postcheck-ablation.md` | Bảng + kết luận TASK 01 | Qwen3.5-9B IQ4_XS | 2026-11-22 |
+| `rule-baseline-2026-11-23.json` | TASK 05 — baseline rule-based trên E01–E17 | không dùng model | 2026-11-23 |
+| `rule-baseline-2026-11-23.md` | Bảng so ba rule vs raw vs post-check | — | 2026-11-23 |

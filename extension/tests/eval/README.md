@@ -14,6 +14,8 @@ công thức đo và pipeline, không phải chứng minh chất lượng model.
 | `gold-freeze.test.ts` | Khoá gold: 17 id, tổng 25 sự kiện, quy ước E12 rescan, không trùng text. |
 | `extraction.eval.test.ts` | Chạy 17 mẫu qua `extractEvents()` với `MockProvider`, assert số đo và các bẫy. |
 | `extraction.live.eval.test.ts` | Đo thật bằng `llama-server`; chỉ chạy khi đặt `LLAMA_EVAL=1`. |
+| `rule-baseline.ts` + `rule-baseline.eval.test.ts` | Baseline luật tất định (TASK 05): chạy trong Node, chấm bằng cùng công cụ đo. |
+| `postcheck.live.eval.test.ts` + `postcheck-report.ts` | Ablation Raw vs hậu kiểm (TASK 01): 1 lần gọi model, 2 đường xử lý; gate `LLAMA_EVAL=1`. |
 | `../fixtures/eval/cases.ts` | Điểm vào bộ mẫu; dữ liệu chia theo nhóm trong `cases-a/b/c.ts`. |
 | `../fixtures/eval/case-types.ts` | Kiểu `EvalCase` và helper dựng fixture. |
 | `../fixtures/eval/README.md` | Hợp đồng đóng băng gold set (nguồn, 25 sự kiện, quy ước E12, cam kết freeze). |

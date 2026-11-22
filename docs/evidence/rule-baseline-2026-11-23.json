@@ -1,0 +1,551 @@
+{
+  "commit": "10ff593 (baseline); rule-baseline.ts thêm trong cùng thay đổi, không đụng fixture/gold",
+  "date": "2026-11-23T00:05:35+07:00",
+  "hardware": "Node thuần, không cần model",
+  "endpoint": "không dùng",
+  "model": {
+    "file": "không dùng (rule-based tất định)",
+    "sampler": "n/a"
+  },
+  "promptVersion": "n/a (baseline rule-based, tái dùng bảng vague-time của prompt v5)",
+  "cases": "E01–E17 dev set, 25 sự kiện kỳ vọng",
+  "metrics": {
+    "eventLevel": {
+      "recall": 0.8,
+      "precision": 0.6061,
+      "matched": 20,
+      "missed": 5,
+      "extra": 13
+    },
+    "temporalFieldOnPairs": {
+      "pairs": 20,
+      "dateExact": 20,
+      "dateComparable": 20,
+      "startTimeExact": 17,
+      "startTimeComparable": 17,
+      "endExact": 0,
+      "endComparable": 1,
+      "endTimeExact": 0,
+      "endTimeComparable": 1,
+      "labelExact": 0,
+      "labelComparable": 0,
+      "uncertainMatch": 0,
+      "uncertainComparable": 0,
+      "summaryPresent": 20
+    },
+    "datesOutsideWhitelist": 4,
+    "ghiChu": "Event-level là lower bound do title heuristic (mệnh đề trước biểu thức thời gian đầu tiên, fallback 8 từ). Temporal-field trên cặp ghép là phép so công bằng về thời gian."
+  },
+  "rawRecords": [
+    {
+      "caseId": "E01",
+      "totalActual": 2,
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 2,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "fieldMetrics": {
+        "pairs": 2,
+        "dateExact": 2,
+        "dateComparable": 2,
+        "startTimeExact": 1,
+        "startTimeComparable": 1,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 2
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E02",
+      "totalActual": 2,
+      "metrics": {
+        "recall": 0,
+        "precision": 0,
+        "matched": 0,
+        "missed": 1,
+        "extra": 2,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "fieldMetrics": {
+        "pairs": 0,
+        "dateExact": 0,
+        "dateComparable": 0,
+        "startTimeExact": 0,
+        "startTimeComparable": 0,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 0
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E03",
+      "totalActual": 4,
+      "metrics": {
+        "recall": 1,
+        "precision": 0.75,
+        "matched": 3,
+        "missed": 0,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 4
+      },
+      "fieldMetrics": {
+        "pairs": 3,
+        "dateExact": 3,
+        "dateComparable": 3,
+        "startTimeExact": 3,
+        "startTimeComparable": 3,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 3
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E04",
+      "totalActual": 2,
+      "metrics": {
+        "recall": 0.5,
+        "precision": 0.5,
+        "matched": 1,
+        "missed": 1,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "fieldMetrics": {
+        "pairs": 1,
+        "dateExact": 1,
+        "dateComparable": 1,
+        "startTimeExact": 1,
+        "startTimeComparable": 1,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 1
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E05",
+      "totalActual": 1,
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "fieldMetrics": {
+        "pairs": 1,
+        "dateExact": 1,
+        "dateComparable": 1,
+        "startTimeExact": 1,
+        "startTimeComparable": 1,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 1
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E06",
+      "totalActual": 1,
+      "metrics": {
+        "recall": 0,
+        "precision": 0,
+        "matched": 0,
+        "missed": 0,
+        "extra": 1,
+        "inventedDates": 1,
+        "totalActual": 1
+      },
+      "fieldMetrics": {
+        "pairs": 0,
+        "dateExact": 0,
+        "dateComparable": 0,
+        "startTimeExact": 0,
+        "startTimeComparable": 0,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 0
+      },
+      "dateOutsideAllowed": 1
+    },
+    {
+      "caseId": "E07",
+      "totalActual": 1,
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "fieldMetrics": {
+        "pairs": 1,
+        "dateExact": 1,
+        "dateComparable": 1,
+        "startTimeExact": 0,
+        "startTimeComparable": 0,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 1
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E08",
+      "totalActual": 1,
+      "metrics": {
+        "recall": 0,
+        "precision": 0,
+        "matched": 0,
+        "missed": 1,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "fieldMetrics": {
+        "pairs": 0,
+        "dateExact": 0,
+        "dateComparable": 0,
+        "startTimeExact": 0,
+        "startTimeComparable": 0,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 0
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E09",
+      "totalActual": 2,
+      "metrics": {
+        "recall": 0,
+        "precision": 0,
+        "matched": 0,
+        "missed": 1,
+        "extra": 2,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "fieldMetrics": {
+        "pairs": 0,
+        "dateExact": 0,
+        "dateComparable": 0,
+        "startTimeExact": 0,
+        "startTimeComparable": 0,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 0
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E10",
+      "totalActual": 1,
+      "metrics": {
+        "recall": 0,
+        "precision": 0,
+        "matched": 0,
+        "missed": 1,
+        "extra": 1,
+        "inventedDates": 1,
+        "totalActual": 1
+      },
+      "fieldMetrics": {
+        "pairs": 0,
+        "dateExact": 0,
+        "dateComparable": 0,
+        "startTimeExact": 0,
+        "startTimeComparable": 0,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 0
+      },
+      "dateOutsideAllowed": 1
+    },
+    {
+      "caseId": "E11",
+      "totalActual": 4,
+      "metrics": {
+        "recall": 1,
+        "precision": 0.75,
+        "matched": 3,
+        "missed": 0,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 4
+      },
+      "fieldMetrics": {
+        "pairs": 3,
+        "dateExact": 3,
+        "dateComparable": 3,
+        "startTimeExact": 3,
+        "startTimeComparable": 3,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 3
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E12",
+      "totalActual": 2,
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 2,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "fieldMetrics": {
+        "pairs": 2,
+        "dateExact": 2,
+        "dateComparable": 2,
+        "startTimeExact": 2,
+        "startTimeComparable": 2,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 2
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E13",
+      "totalActual": 2,
+      "metrics": {
+        "recall": 1,
+        "precision": 0.5,
+        "matched": 1,
+        "missed": 0,
+        "extra": 1,
+        "inventedDates": 1,
+        "totalActual": 2
+      },
+      "fieldMetrics": {
+        "pairs": 1,
+        "dateExact": 1,
+        "dateComparable": 1,
+        "startTimeExact": 1,
+        "startTimeComparable": 1,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 1
+      },
+      "dateOutsideAllowed": 1
+    },
+    {
+      "caseId": "E14",
+      "totalActual": 2,
+      "metrics": {
+        "recall": 1,
+        "precision": 0.5,
+        "matched": 1,
+        "missed": 0,
+        "extra": 1,
+        "inventedDates": 1,
+        "totalActual": 2
+      },
+      "fieldMetrics": {
+        "pairs": 1,
+        "dateExact": 1,
+        "dateComparable": 1,
+        "startTimeExact": 1,
+        "startTimeComparable": 1,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 1
+      },
+      "dateOutsideAllowed": 1
+    },
+    {
+      "caseId": "E15",
+      "totalActual": 2,
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 2,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "fieldMetrics": {
+        "pairs": 2,
+        "dateExact": 2,
+        "dateComparable": 2,
+        "startTimeExact": 2,
+        "startTimeComparable": 2,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 2
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E16",
+      "totalActual": 2,
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 2,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "fieldMetrics": {
+        "pairs": 2,
+        "dateExact": 2,
+        "dateComparable": 2,
+        "startTimeExact": 1,
+        "startTimeComparable": 1,
+        "endExact": 0,
+        "endComparable": 0,
+        "endTimeExact": 0,
+        "endTimeComparable": 0,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 2
+      },
+      "dateOutsideAllowed": 0
+    },
+    {
+      "caseId": "E17",
+      "totalActual": 2,
+      "metrics": {
+        "recall": 1,
+        "precision": 0.5,
+        "matched": 1,
+        "missed": 0,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "fieldMetrics": {
+        "pairs": 1,
+        "dateExact": 1,
+        "dateComparable": 1,
+        "startTimeExact": 1,
+        "startTimeComparable": 1,
+        "endExact": 0,
+        "endComparable": 1,
+        "endTimeExact": 0,
+        "endTimeComparable": 1,
+        "labelExact": 0,
+        "labelComparable": 0,
+        "uncertainMatch": 0,
+        "uncertainComparable": 0,
+        "summaryPresent": 1
+      },
+      "dateOutsideAllowed": 0
+    }
+  ]
+}
