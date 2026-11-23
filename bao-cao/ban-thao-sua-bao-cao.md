@@ -3,6 +3,7 @@
 > **Nguồn số:** mọi số dưới đây truy vết được trong `docs/evidence/`:
 > `postcheck-iq4_xs-2026-11-22.json` + `postcheck-ablation.md` (TASK 01),
 > `rule-baseline-2026-11-23.json` + `.md` (TASK 05), `phobert-handover.md` (TASK 06),
+> `filter-iq4_xs-2026-11-23.json` + `docs/ket-qua-bo-loc.md` (TASK 04),
 > và `docs/ket-qua-danh-gia-slice-e.md` §7 (số v5 tháng 10).
 > **Ngày soạn:** 23/11/2026. **Quy ước:** văn bản in nghiêng trong khối là phần
 > thay thế/ngày thêm; phần "[chờ số]" đánh dấu chỗ chưa thể viết vì TASK 03/04 chưa đo.
@@ -148,22 +149,73 @@ không đổi. Sampler chốt: mặc định server + `temperature 0.1` (phươn
 > thức phổ biến, không phải temporal parser đầy đủ (so sánh với HeidelTime/SUTime
 > ở §2 mang tính định hướng).
 
-## §5.4 / §5.5 — Đo Off/Report/Screen: **[chờ số — TASK 04 chưa chạy]**
+## §5.4 — Đo đầu-cuối ba chế độ sàng lọc (TASK 04, đã đo 23/11/2026)
+
+> **Thay toàn bộ phần "cần kiểm chứng" của §5.4 bằng:**
+>
+> Ba chế độ sàng lọc được đo đầu-cuối trên cùng một bộ 27 tài liệu (14 dương —
+> dùng lại 14 mẫu gold của bộ đánh giá chính, ép nguồn trang web; 13 âm — bản
+> tin không lịch trình, menu/footer, quảng cáo, bình luận, trang đăng nhập,
+> email xã giao, thông báo bảo trì, câu hỏi thường gặp, điều khoản), mỗi tài
+> liệu chạy ba chế độ với kho dữ liệu mới nên kết quả giữa các chế độ không
+> khử trùng lặp lẫn nhau. Cấu hình: model IQ4_XS chốt, prompt v5, temp 0,1;
+> dịch vụ PhoBERT chạy cục bộ trên GPU.
+>
+> | Chỉ số | Tắt sàng lọc (`off`) | Chỉ báo cáo (`report`) | Sàng lọc trước trích xuất (`screen`) |
+> |---|---:|---:|---:|
+> | Lượt gọi LLM | 30 | 30 | 30 |
+> | Lượt LLM tiết kiệm so với `off` | — | 0 | **0 (0,0%)** |
+> | Tài liệu dương bị bỏ qua | — | 0 | **0/14** |
+> | Mẫu âm bị bỏ qua | — | 0/13 | **0/13 (0%)** |
+> | Sự kiện mất so với `off` | — | 0 | **0** |
+> | Ngày ngoài whitelist | 0 | 0 | 0 |
+> | Độ trễ bước lọc p95 | — | 1,32 s* | 0,05 s* |
+> | Tổng thời gian (27 tài liệu) | 394,7 s | 397,1 s | 393,2 s |
+>
+> \* p95 `report` gồm một lần khởi động dịch vụ ở tài liệu đầu (4,6 s); sau khi
+> dịch vụ ấm, độ trễ điển hình của bước lọc là 11–51 ms mỗi cửa sổ.
+>
+> Kết quả cho thấy bộ lọc PhoBERT bàn giao ở mức tài liệu **an toàn nhưng không
+> tiết kiệm**: không một tài liệu dương hay một sự kiện nào bị bỏ (26/28 lần
+> lọc trên mẫu dương trả "có nội dung công việc", 2 lần "không chắc chắn"),
+> nhưng cũng không mẫu âm nào bị bỏ qua — model trả "có nội dung công việc"
+> trên hầu hết văn bản nhiễu (menu, FAQ, footer) với độ chắc chắn 0,51–0,64,
+> không bao giờ chạm ngưỡng bỏ 0,85. Do đó số lượt gọi LLM giữ nguyên ở cả ba
+> chế độ. Vì điều kiện "bỏ được ít nhất 70% mẫu âm" không đạt, nhóm **giữ mặc
+> định `report`**: người dùng vẫn bật được `screen` trong Cài đặt, và nút
+> "Trích xuất toàn bộ" luôn cho chạy lại không lọc. Số liệu: `docs/ket-qua-bo-loc.md`,
+> `docs/evidence/filter-iq4_xs-2026-11-23.json`.
+
+## §5.5 — Số đo chất lượng trích xuất trong phép so ba (chú thích cho bảng trên)
+
+> **Thêm một câu sau bảng §5.4 (hoặc vào §5.5):**
+>
+> Trong phép so ba này, chất lượng trích xuất trên nhóm mẫu dương là 72,7–77,3%
+> recall / 80,0–85,0% precision tùy chế độ (chênh lệch do biến thiên giữa các
+> lần chạy, mỗi cặp tài liệu–chế độ chỉ chạy một lần; bốn ca thiếu là các điểm
+> yếu đã biết của model — E03 gộp nhiều phiên, E04 paraphrase tiêu đề, E10 ngày
+> tương đối, E13 prompt injection). So sánh giữa các chế độ vẫn công bằng vì
+> cùng tài liệu, cùng cấu hình, chỉ khác việc có bước lọc; chất lượng LLM được
+> kết luận riêng ở §5.3.2–§5.3.3 trên bộ 17 mẫu với hai lượt chạy.
 
 ## §6.1 — Kết luận (sửa các gạch đầu dòng)
 
 - Gạch "0 ngày giờ bịa" → **"0 ngày nằm ngoài whitelist ngày của mẫu trên cả
   output thô lẫn sau hậu kiểm; hậu kiểm sửa thêm 3/24 sự kiện vi phạm hình hợp
   đồng thời gian với 0 sự kiện bị mất (§5.3.3)"**.
-- Gạch PhoBERT: giữ trạng thái "đã nối vào job, mặc định report"; **thêm**
-  "chưa có phép đo đầu-cuối 3 chế độ (§5.4 [chờ số])".
+- Gạch PhoBERT: giữ trạng thái "đã nối vào job, mặc định report"; **thay** câu
+  "chưa có phép đo đầu-cuối" **bằng**: "đã đo đầu-cuối ba chế độ trên 27 tài liệu:
+  không bỏ nhầm tài liệu dương hay mất sự kiện nào, nhưng không bỏ được mẫu âm
+  nào (model dương tính giả ở mức tài liệu) nên giữ mặc định report (§5.4)".
 - Thêm gạch baseline: "luật tất định đạt 80,0% recall nhưng precision 60,6% —
   xác nhận lựa chọn LLM + hậu kiểm (§5.3.5)".
 
 ## §6.2 — Hạn chế
 
-- Thay "chưa có phép đo đầu-cuối cho sàng lọc" bằng tình trạng thật:
-  **[chờ TASK 04 — nếu chưa đo thì giữ câu cũ]**.
+- Thay "chưa có phép đo đầu-cuối cho sàng lọc" bằng: "sàng lọc đã đo đầu-cuối
+  (§5.4): an toàn (0 bỏ nhầm) nhưng chưa tiết kiệm lượt gọi model trên bộ mẫu
+  hiện có; cần model phân loại tốt hơn hoặc ngưỡng hiệu chỉnh trên bộ dữ liệu
+  riêng trước khi nâng mặc định lên `screen`".
 - Thêm: "ngày tương đối chỉ gắn cờ, chưa quy đổi lịch (§4.6)".
 - Thêm: "ablation và baseline chạy trên dev set 17 mẫu; bộ giữ kín 50 mẫu là
   hướng tiếp theo" (điều chỉnh khi TASK 03 xong).
