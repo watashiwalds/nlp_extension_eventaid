@@ -123,7 +123,33 @@ không đổi. Sampler chốt: mặc định server + `temperature 0.1` (phươn
 > do model không đề xuất ngày tuyệt đối, E13 do model trả rỗng trong lần chạy
 > này (biến thiên giữa các lần chạy). Số liệu: `docs/evidence/postcheck-ablation.md`.
 
-## §5.3.4 (mới) — Tập giữ kín: **[chờ số — TASK 03 chưa chạy]**
+## §5.3.4 (mới) — Tập giữ kín (TASK 03, đã đo 23/11/2026)
+
+> **Thêm mục con mới vào §5.3:**
+>
+> **Tập giữ kín.** Để đo khả năng tổng quát hoá, nhóm soạn một bộ 50 mẫu **chốt
+> trước khi chạy**, tách khỏi dev set: 30 dương (8 ngày giờ rõ, 6 đa sự kiện,
+> 4 thiếu năm, 4 chỉ có ngày, 4 ngày tương đối, 4 lịch dạng trần thuật) và
+> 20 âm (8 không lịch trình, 4 có nhiệm vụ nhưng không lịch, 4 có ngày/số liệu
+> nhưng không phải sự kiện, 4 tin tức/mô tả). Bộ được đóng băng bằng test
+> riêng (không trùng văn bản với dev set, Jaccard < 0,8) và chỉ chạy **một
+> lần** sau khi chốt, với đúng cấu hình đã chọn (IQ4_XS, prompt v5, temp 0,1).
+>
+> | Chỉ số | Lượt 1 | Lượt 2 |
+> |---|---:|---:|
+> | Recall (39 sự kiện kỳ vọng) | **92,3% (36/39)** | 89,7% (35/39) |
+> | Precision | 90,0% (36/40) | 85,4% |
+> | Ngày ngoài whitelist | 0 | 0 |
+> | Sự kiện sinh trên 20 mẫu âm | **0** | 0 |
+> | p95 thời gian | 30,5 s | — |
+>
+> Kết quả held-out **không tụt so với dev set** (recall L1 92,3% so với 88,0%),
+> cho thấy pipeline không bị tune theo 17 mẫu dev. Ba sự kiện thiếu nằm ở hai
+> điểm yếu đã biết: ngày tương đối ("thứ Hai/thứ Sáu tuần sau" — H23, H25) và
+> paraphrase tiêu đề (H12). Bốn sự kiện thừa là "sự kiện cả ngày" model tạo
+> thêm từ dòng mở đầu của văn bản nhiều hoạt động (H09, H14). Không một mẫu âm
+> nào sinh sự kiện — model không bịa lịch trên nhiễu. Số liệu:
+> `docs/evidence/heldout-iq4_xs-2026-11-23.json`.
 
 ## §5.3.5 (mới) — Baseline rule-based (TASK 05)
 
@@ -217,16 +243,17 @@ không đổi. Sampler chốt: mặc định server + `temperature 0.1` (phươn
   hiện có; cần model phân loại tốt hơn hoặc ngưỡng hiệu chỉnh trên bộ dữ liệu
   riêng trước khi nâng mặc định lên `screen`".
 - Thêm: "ngày tương đối chỉ gắn cờ, chưa quy đổi lịch (§4.6)".
-- Thêm: "ablation và baseline chạy trên dev set 17 mẫu; bộ giữ kín 50 mẫu là
-  hướng tiếp theo" (điều chỉnh khi TASK 03 xong).
+- Thay câu "bộ giữ kín 50 mẫu là hướng tiếp theo" bằng: "ablation và baseline
+  chạy trên dev set 17 mẫu; bộ giữ kín 50 mẫu đã đo cho recall 92,3% — không
+  tụt so với dev set (§5.3.4)".
 - Thêm: "số liệu huấn luyện PhoBERT do nhóm huấn luyện cung cấp; nhóm báo cáo
   chỉ kiểm tra nhất quán số học và cấu hình suy luận" (footnote của §5.2/§5.5,
   xem `docs/evidence/phobert-handover.md`).
 
 ## §6.3 — Hướng phát triển
 
-- Thay "mục tiêu 150 mẫu" bằng: "đã có 17 mẫu dev đóng băng; mở rộng lên 50
-  mẫu giữ kín rồi 150 mẫu là việc tiếp theo" (**chỉnh lại khi TASK 03 xong**).
+- Thay "mục tiêu 150 mẫu" bằng: "đã có 17 mẫu dev đóng băng và 50 mẫu giữ kín
+  đã đo; mở rộng lên 150 mẫu là việc tiếp theo".
 - Thêm: "quy đổi ngày tương đối trong hậu kiểm (xây được trong baseline, xem
   §5.3.5) và đưa vào pipeline sau khi đo lại toàn bộ".
 
