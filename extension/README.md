@@ -64,7 +64,18 @@ uvicorn app:app --host 127.0.0.1 --port 8081
   → `has_event` (3/3 câu giao việc, 23 ms) và LLM được gọi; 4 tài liệu âm (menu/footer, bách khoa,
   công thức, bản tin) → không mẫu nào bị bỏ qua (2 `uncertain`, 2 `has_event` do model dương tính
   giả). Vì vậy mặc định vẫn là `report`.
-- Biến `FILTER_EVAL=1` cho bộ đo thật sẽ được thêm ở F3 cùng `tests/eval/filter.live.eval.test.ts`.
+- Đo đầu-cuối ba chế độ sàng lọc (F3/TASK 04 — cần PhoBERT 8081 **và** llama-server 8080):
+
+  ```bash
+  FILTER_EVAL=1 LLAMA_MODEL=chat npx vitest run tests/eval/filter.live.eval.test.ts \
+    --reporter=verbose --disableConsoleIntercept
+  ```
+
+  Kết quả lần đo 23/11/2026 (IQ4_XS): 0 dương bị bỏ, 0 sự kiện mất, nhưng **0/13 mẫu âm bị bỏ qua**
+  (model dương tính giả, không chạm ngưỡng 0,85) → giữ mặc định `report`; số chi tiết ở
+  [`../docs/ket-qua-bo-loc.md`](../docs/ket-qua-bo-loc.md) và
+  [`../docs/evidence/filter-iq4_xs-2026-11-23.json`](../docs/evidence/filter-iq4_xs-2026-11-23.json).
+  Test tất định cho harness đo (`tests/eval/filter.eval.test.ts`) chạy trong `npm test`, không cần dịch vụ.
 - Chi tiết hợp đồng, chế độ `off`/`report`/`screen`, ngưỡng 0.85 và tiêu chí nghiệm thu:
   [`../docs/ke-hoach-bo-loc-noi-dung.md`](../docs/ke-hoach-bo-loc-noi-dung.md).
 

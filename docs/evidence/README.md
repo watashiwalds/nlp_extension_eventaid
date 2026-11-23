@@ -45,3 +45,5 @@ lưu một file JSON theo template dưới đây, kèm một file `.md` tổng h
 | `postcheck-ablation.md` | Bảng + kết luận TASK 01 | Qwen3.5-9B IQ4_XS | 2026-11-22 |
 | `rule-baseline-2026-11-23.json` | TASK 05 — baseline rule-based trên E01–E17 | không dùng model | 2026-11-23 |
 | `rule-baseline-2026-11-23.md` | Bảng so ba rule vs raw vs post-check | — | 2026-11-23 |
+| `filter-iq4_xs-2026-11-23.json` | TASK 04 — đo đầu-cuối Off/Report/Screen, 27 tài liệu × 3 chế độ | Qwen3.5-9B IQ4_XS + PhoBERT | 2026-11-23 |
+| [`../ket-qua-bo-loc.md`](../ket-qua-bo-loc.md) | Kết luận F3: 0 dương bị bỏ, 0 sự kiện mất, 0% mẫu âm bị bỏ → giữ `report` | IQ4_XS + PhoBERT | 2026-11-23 |
