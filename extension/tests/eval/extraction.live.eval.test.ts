@@ -1,12 +1,8 @@
 /**
- * Đo thật bằng `llama-server` cho bộ mẫu Slice E.
- *
- * Chỉ chạy khi đặt `LLAMA_EVAL=1`; mặc định bị skip để CI không cần model/GPU.
- * Kết quả in ra console, không ghi vào DB và không tự sửa fixture.
- *
- * Cách chạy:
- *   LLAMA_EVAL=1 npx vitest run tests/eval/extraction.live.eval.test.ts \
- *     --reporter=verbose --disableConsoleIntercept
+ * Đo thật bằng `llama-server` cho bộ mẫu Slice E. Chỉ chạy khi `LLAMA_EVAL=1`
+ * (CI bỏ qua để không cần model/GPU). Kết quả in ra console; không ghi DB,
+ * không tự sửa fixture. `EVAL_IDS=H01,N02` chạy riêng một số mẫu (đo bổ sung);
+ * đầy đủ: LLAMA_EVAL=1 npx vitest run tests/eval/extraction.live.eval.test.ts
  */
 import { describe, it } from 'vitest';
 import { candidateDedupInput } from '../../src/core/extraction/dedup';
@@ -46,7 +42,8 @@ const USE_HELDOUT = process.env.EVAL_SET === 'heldout';
  * không cần MockProvider). Hai kiểu dùng chung mọi trường harness cần.
  */
 type LiveCase = EvalCase | HeldoutCase;
-const CASES: readonly LiveCase[] = USE_HELDOUT ? HELDOUT_CASES : EVAL_CASES;
+const ONLY_IDS = process.env.EVAL_IDS?.split(',');
+const CASES: readonly LiveCase[] = (USE_HELDOUT ? HELDOUT_CASES : EVAL_CASES).filter((item) => !ONLY_IDS || ONLY_IDS.includes(item.id));
 const SETTINGS = { chunkChars: 5_000, maxChunks: 4, maxTokens: 1_200, temperature: 0.1 };
 const CASE_TIMEOUT_MS = 15 * 60 * 1_000;
 
@@ -212,9 +209,7 @@ async function runOnce(
   }
 }
 
-function formatPercent(value: number): string {
-  return `${(value * 100).toFixed(1)}%`;
-}
+const formatPercent = (value: number): string => `${(value * 100).toFixed(1)}%`;
 
 describe.runIf(LIVE)('đo thật bằng llama-server', () => {
   it('kiểm tra kết nối và model đang nạp', async () => {

@@ -1,0 +1,2989 @@
+{
+  "commit": "f1643a7 (cây sạch)",
+  "date": "2026-11-23T15:21:49+07:00 (lượt chính) + hai lượt bổ sung cùng phiên, cùng cấu hình",
+  "hardware": "Ryzen 5 5600H, RTX 3050 Laptop 4 GB (dùng 3620/4096 MiB), 6 threads, -ngl 36 (offload một phần — model không vừa trọn VRAM), flash-attn on, KV cache q8_0",
+  "endpoint": "http://127.0.0.1:8080 (proxy local_infer, alias 'chat')",
+  "model": {
+    "file": "/run/media/leedan5/ETC/AI_Models/prismml/Ternary-Bonsai-2-27B-PTQ1_0.gguf",
+    "alias": "chat",
+    "quant": "PTQ1_0 ternary (1,75 bpw, group 128; ~27B tham số)",
+    "build": "b10827 (c96baf4ab) — build riêng cho model ternary tại /run/media/leedan5/Data/prismml_llama_cpp/llama.cpp",
+    "contextSize": 8192,
+    "sampler": "server defaults + temperature 0.1, max_tokens 1200, reasoning off"
+  },
+  "promptVersion": "v5",
+  "cases": "held-out 50 mẫu (30 dương + 20 âm), 39 sự kiện kỳ vọng, mỗi mẫu 2 lần. Thống kê chỉ trên mẫu dương (30/30 × 2 lượt); phần mẫu âm không đủ điều kiện đo trọn vẹn trên máy cá nhân → không đưa vào thống kê",
+  "metrics": {
+    "scope": "chỉ mẫu dương (H01–H30, 39 sự kiện kỳ vọng); lượt âm KHÔNG đưa vào thống kê",
+    "L1_positivesOnly": {
+      "matched": 37,
+      "expected": 39,
+      "missed": 2,
+      "extra": 4,
+      "recall": 0.9487,
+      "precision": 0.9024,
+      "inventedDatesOutsideWhitelist": 0,
+      "latencyP95s": 126.61,
+      "latencyMedians": 58.41,
+      "runs": 30
+    },
+    "L2_positivesOnly": {
+      "matched": 37,
+      "expected": 39,
+      "missed": 2,
+      "extra": 5,
+      "recall": 0.9487,
+      "precision": 0.881,
+      "inventedDatesOutsideWhitelist": 1,
+      "latencyP95s": 128.22,
+      "latencyMedians": 59.73,
+      "runs": 30
+    },
+    "negatives": "Không có — không đưa vào thống kê (máy cá nhân không giữ ổn định model 27B qua đủ 20 mẫu âm; 22/40 lượt đã đo được đều 0 sự kiện, không dùng để chấm)",
+    "invalidJsonResponses": 0,
+    "truncatedRuns": 0
+  },
+  "rawRecords": [
+    {
+      "caseId": "H01",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 61456,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Sinh hoạt câu lạc bộ Kỹ thuật số",
+          "startValue": "2026-10-28T18:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "buổi sinh hoạt tháng 10 diễn ra lúc 18:00 ngày 28/10/2026 tại phòng 401 nhà B4"
+        }
+      ]
+    },
+    {
+      "caseId": "H01",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 60290,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Sinh hoạt câu lạc bộ Kỹ thuật số",
+          "startValue": "2026-10-28T18:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "buổi sinh hoạt tháng 10 diễn ra lúc 18:00 ngày 28/10/2026 tại phòng 401 nhà B4"
+        }
+      ]
+    },
+    {
+      "caseId": "H02",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 62094,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Giao lưu tuyển dụng thực tập",
+          "startValue": "2026-11-04T14:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Công ty Phần mềm Sông Hồng phối hợp với khoa tổ chức buổi giao lưu tuyển dụng thực tập sinh lúc 14:30 ngày 04/11/2026 tại giảng đường A2."
+        }
+      ]
+    },
+    {
+      "caseId": "H02",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 62070,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Giao lưu tuyển dụng thực tập",
+          "startValue": "2026-11-04T14:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Công ty Phần mềm Sông Hồng phối hợp với khoa tổ chức buổi giao lưu tuyển dụng thực tập sinh lúc 14:30 ngày 04/11/2026 tại giảng đường A2."
+        }
+      ]
+    },
+    {
+      "caseId": "H03",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 61322,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Phiên hướng dẫn sử dụng kho tài liệu số",
+          "startValue": "2026-10-27T09:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Thư viện trường mở phiên hướng dẫn sử dụng kho tài liệu số lúc 9:30 ngày 27/10/2026 tại phòng 202 tòa thư viện."
+        }
+      ]
+    },
+    {
+      "caseId": "H03",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 61279,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Phiên hướng dẫn sử dụng kho tài liệu số",
+          "startValue": "2026-10-27T09:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Thư viện trường mở phiên hướng dẫn sử dụng kho tài liệu số lúc 9:30 ngày 27/10/2026 tại phòng 202 tòa thư viện."
+        }
+      ]
+    },
+    {
+      "caseId": "H04",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 56876,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Bảo vệ đồ án cơ sở nhóm 12",
+          "startValue": "2026-11-06T13:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Nhóm 12 bảo vệ đồ án cơ sở môn Hệ nhúng lúc 13:00 ngày 06/11/2026 tại phòng làm việc của khoa."
+        }
+      ]
+    },
+    {
+      "caseId": "H04",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 57497,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Bảo vệ đồ án cơ sở nhóm 12",
+          "startValue": "2026-11-06T13:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Nhóm 12 bảo vệ đồ án cơ sở môn Hệ nhúng lúc 13:00 ngày 06/11/2026 tại phòng làm việc của khoa."
+        }
+      ]
+    },
+    {
+      "caseId": "H05",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 57793,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Xưởng viết học thuật",
+          "startValue": "2026-11-12T15:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Xưởng viết học thuật dành cho sinh viên năm ba diễn ra lúc 15:00 ngày 12/11/2026 tại phòng tự học số 3."
+        }
+      ]
+    },
+    {
+      "caseId": "H05",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 57864,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Xưởng viết học thuật",
+          "startValue": "2026-11-12T15:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Xưởng viết học thuật dành cho sinh viên năm ba diễn ra lúc 15:00 ngày 12/11/2026 tại phòng tự học số 3."
+        }
+      ]
+    },
+    {
+      "caseId": "H06",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 55815,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Khai mạc giải bóng đá sinh viên",
+          "startValue": "2026-11-08T16:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Giải bóng đá sinh viên khai mạc với trận đấu giữa hai đội Khoa CNTT và Khoa Cơ khí lúc 16:00 ngày 08/11/2026 tại sân tập trung."
+        }
+      ]
+    },
+    {
+      "caseId": "H06",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 84578,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 2,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 0.5,
+        "matched": 1,
+        "missed": 0,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "items": [
+        {
+          "title": "Khai mạc giải bóng đá sinh viên",
+          "startValue": "2026-11-08T16:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Giải bóng đá sinh viên khai mạc với trận đấu giữa hai đội Khoa CNTT và Khoa Cơ khí lúc 16:00 ngày 08/11/2026 tại sân tập trung."
+        },
+        {
+          "title": "Mở cổng vào giải bóng đá sinh viên",
+          "startValue": null,
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "nam_chua_ro",
+            "gio_chua_ro"
+          ],
+          "confidence": 0.85,
+          "quote": "Cổng vào mở sớm nửa giờ cho khán giả."
+        }
+      ]
+    },
+    {
+      "caseId": "H07",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 61417,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Hẹn gặp giảng viên hướng dẫn đồ án",
+          "startValue": "2026-10-30T10:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.9,
+          "quote": "Nhóm 5 hẹn gặp giảng viên hướng dẫn đồ án lúc 10:00 ngày 30/10/2026 tại văn phòng giảng viên."
+        }
+      ]
+    },
+    {
+      "caseId": "H07",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 65281,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Hẹn gặp giảng viên hướng dẫn đồ án",
+          "startValue": "2026-10-30T10:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_suy_doan"
+          ],
+          "confidence": 0.9,
+          "quote": "Nhóm 5 hẹn gặp giảng viên hướng dẫn đồ án lúc 10:00 ngày 30/10/2026 tại văn phòng giảng viên. Cuộc hẹn kéo dài khoảng một giờ."
+        }
+      ]
+    },
+    {
+      "caseId": "H08",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 60734,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Đêm thơ nhạc Hà Nội mùa thu",
+          "startValue": "2026-11-14T19:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Đêm thơ nhạc với chủ đề \"Hà Nội mùa thu\" diễn ra lúc 19:00 ngày 14/11/2026 tại hội trường lớn."
+        }
+      ]
+    },
+    {
+      "caseId": "H08",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 60767,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Đêm thơ nhạc Hà Nội mùa thu",
+          "startValue": "2026-11-14T19:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Đêm thơ nhạc với chủ đề \"Hà Nội mùa thu\" diễn ra lúc 19:00 ngày 14/11/2026 tại hội trường lớn."
+        }
+      ]
+    },
+    {
+      "caseId": "H09",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 131451,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 3,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 3,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 3
+      },
+      "items": [
+        {
+          "title": "Lễ khai mạc Ngày hội việc làm",
+          "startValue": "2026-11-21T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Lễ khai mạc bắt đầu lúc 8:00 ngày 21/11/2026."
+        },
+        {
+          "title": "Khu phỏng vấn nhanh",
+          "startValue": "2026-11-21T10:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Khu phỏng vấn nhanh hoạt động từ 10:30 ngày 21/11/2026."
+        },
+        {
+          "title": "Buổi chia sẻ từ doanh nghiệp",
+          "startValue": "2026-11-21T14:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Buổi chia sẻ từ doanh nghiệp bắt đầu lúc 14:00 ngày 21/11/2026."
+        }
+      ]
+    },
+    {
+      "caseId": "H09",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 133531,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 3,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 3,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 3
+      },
+      "items": [
+        {
+          "title": "Lễ khai mạc Ngày hội việc làm",
+          "startValue": "2026-11-21T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Lễ khai mạc bắt đầu lúc 8:00 ngày 21/11/2026."
+        },
+        {
+          "title": "Khu phỏng vấn nhanh",
+          "startValue": "2026-11-21T10:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Khu phỏng vấn nhanh hoạt động từ 10:30 ngày 21/11/2026."
+        },
+        {
+          "title": "Buổi chia sẻ từ doanh nghiệp",
+          "startValue": "2026-11-21T14:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Buổi chia sẻ từ doanh nghiệp bắt đầu lúc 14:00 ngày 21/11/2026."
+        }
+      ]
+    },
+    {
+      "caseId": "H10",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 91212,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 2,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 2,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "items": [
+        {
+          "title": "Nhóm 1 trực thư viện",
+          "startValue": "2026-10-26T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Nhóm 1 trực từ 8:00 ngày 26/10/2026."
+        },
+        {
+          "title": "Nhóm 2 trực thư viện",
+          "startValue": "2026-10-28T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Nhóm 2 trực từ 8:00 ngày 28/10/2026."
+        }
+      ]
+    },
+    {
+      "caseId": "H10",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 91330,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 2,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 2,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "items": [
+        {
+          "title": "Nhóm 1 trực thư viện",
+          "startValue": "2026-10-26T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Nhóm 1 trực từ 8:00 ngày 26/10/2026."
+        },
+        {
+          "title": "Nhóm 2 trực thư viện",
+          "startValue": "2026-10-28T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Nhóm 2 trực từ 8:00 ngày 28/10/2026."
+        }
+      ]
+    },
+    {
+      "caseId": "H11",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 120700,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 3,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 0.6666666666666666,
+        "matched": 2,
+        "missed": 0,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 3
+      },
+      "items": [
+        {
+          "title": "Lễ khai mạc",
+          "startValue": "2026-11-17T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Lễ khai mạc diễn ra lúc 8:00 ngày 17/11/2026 tại sảnh tòa B4."
+        },
+        {
+          "title": "Chương trình giao lưu cựu sinh viên",
+          "startValue": "2026-11-18T15:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Chương trình giao lưu cựu sinh viên bắt đầu lúc 15:00 ngày 18/11/2026 tại hội trường A."
+        },
+        {
+          "title": "Chào cờ và tham quan gian trưng bày",
+          "startValue": null,
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro",
+            "nam_chua_ro"
+          ],
+          "confidence": 0.7,
+          "quote": "Chào cờ và tham quan gian trưng bày mở cửa suốt hai ngày."
+        }
+      ]
+    },
+    {
+      "caseId": "H11",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 121718,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 3,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 0.6666666666666666,
+        "matched": 2,
+        "missed": 0,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 3
+      },
+      "items": [
+        {
+          "title": "Lễ khai mạc",
+          "startValue": "2026-11-17T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Lễ khai mạc diễn ra lúc 8:00 ngày 17/11/2026 tại sảnh tòa B4."
+        },
+        {
+          "title": "Chương trình giao lưu cựu sinh viên",
+          "startValue": "2026-11-18T15:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Chương trình giao lưu cựu sinh viên bắt đầu lúc 15:00 ngày 18/11/2026 tại hội trường A."
+        },
+        {
+          "title": "Chào cờ và tham quan gian trưng bày",
+          "startValue": null,
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro",
+            "nam_chua_ro"
+          ],
+          "confidence": 0.8,
+          "quote": "Chào cờ và tham quan gian trưng bày mở cửa suốt hai ngày."
+        }
+      ]
+    },
+    {
+      "caseId": "H12",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 89225,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 2,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 2,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "items": [
+        {
+          "title": "Trình bày phương án",
+          "startValue": "2026-11-10T09:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Phần trình bày phương án diễn ra lúc 9:00 ngày 10/11/2026 tại phòng 305 nhà B4."
+        },
+        {
+          "title": "Trưng bày sản phẩm và đánh giá chéo",
+          "startValue": "2026-11-13T13:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Phần trưng bày sản phẩm và đánh giá chéo diễn ra lúc 13:30 ngày 13/11/2026 tại sảnh tầng 1."
+        }
+      ]
+    },
+    {
+      "caseId": "H12",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 99595,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 2,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 2,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "items": [
+        {
+          "title": "Trình bày phương án",
+          "startValue": "2026-11-10T09:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Phần trình bày phương án diễn ra lúc 9:00 ngày 10/11/2026 tại phòng 305 nhà B4."
+        },
+        {
+          "title": "Trưng bày sản phẩm và đánh giá chéo",
+          "startValue": "2026-11-13T13:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Phần trưng bày sản phẩm và đánh giá chéo diễn ra lúc 13:30 ngày 13/11/2026 tại sảnh tầng 1."
+        }
+      ]
+    },
+    {
+      "caseId": "H13",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 95138,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 2,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 2,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "items": [
+        {
+          "title": "Ôn tập môn Cơ sở dữ liệu",
+          "startValue": "2026-10-27T18:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Buổi ôn tập do lớp tổ chức lúc 18:00 ngày 27/10/2026 tại phòng 201 nhà B3."
+        },
+        {
+          "title": "Bài kiểm tra giữa kỳ môn Cơ sở dữ liệu",
+          "startValue": "2026-10-29T07:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Bài kiểm tra giữa kỳ diễn ra lúc 7:30 ngày 29/10/2026 tại phòng thi A1."
+        }
+      ]
+    },
+    {
+      "caseId": "H13",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 97350,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 2,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 2,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 2
+      },
+      "items": [
+        {
+          "title": "Buổi ôn tập môn Cơ sở dữ liệu",
+          "startValue": "2026-10-27T18:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Buổi ôn tập do lớp tổ chức lúc 18:00 ngày 27/10/2026 tại phòng 201 nhà B3."
+        },
+        {
+          "title": "Bài kiểm tra giữa kỳ môn Cơ sở dữ liệu",
+          "startValue": "2026-10-29T07:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Bài kiểm tra giữa kỳ diễn ra lúc 7:30 ngày 29/10/2026 tại phòng thi A1."
+        }
+      ]
+    },
+    {
+      "caseId": "H14",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 191255,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 5,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 0.8,
+        "matched": 4,
+        "missed": 0,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 5
+      },
+      "items": [
+        {
+          "title": "Ngày hội sách",
+          "startValue": null,
+          "startDate": "2026-11-19",
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Ngày hội sách của trường diễn ra ngày 19/11/2026 tại quảng trường trung tâm."
+        },
+        {
+          "title": "Gian sách mở cửa",
+          "startValue": "2026-11-19T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.9,
+          "quote": "Gian sách mở cửa từ 8:00 ngày 19/11/2026."
+        },
+        {
+          "title": "Giao lưu với tác giả",
+          "startValue": "2026-11-19T10:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.9,
+          "quote": "Buổi giao lưu với tác giả bắt đầu lúc 10:00 ngày 19/11/2026."
+        },
+        {
+          "title": "Giờ đọc sách chung",
+          "startValue": "2026-11-19T15:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.9,
+          "quote": "Giờ đọc sách chung diễn ra lúc 15:00 ngày 19/11/2026."
+        },
+        {
+          "title": "Lễ bế mạc và trao quà",
+          "startValue": "2026-11-19T17:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.9,
+          "quote": "Lễ bế mạc và trao quà diễn ra lúc 17:00 ngày 19/11/2026."
+        }
+      ]
+    },
+    {
+      "caseId": "H14",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 189704,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 5,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 0.75,
+        "precision": 0.6,
+        "matched": 3,
+        "missed": 1,
+        "extra": 2,
+        "inventedDates": 0,
+        "totalActual": 5
+      },
+      "items": [
+        {
+          "title": "Ngày hội sách của trường",
+          "startValue": null,
+          "startDate": "2026-11-19",
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Ngày hội sách của trường diễn ra ngày 19/11/2026 tại quảng trường trung tâm."
+        },
+        {
+          "title": "Gian sách mở cửa",
+          "startValue": "2026-11-19T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.9,
+          "quote": "Gian sách mở cửa từ 8:00 ngày 19/11/2026."
+        },
+        {
+          "title": "Buổi giao lưu với tác giả",
+          "startValue": "2026-11-19T10:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.9,
+          "quote": "Buổi giao lưu với tác giả bắt đầu lúc 10:00 ngày 19/11/2026."
+        },
+        {
+          "title": "Giờ đọc sách chung",
+          "startValue": "2026-11-19T15:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.9,
+          "quote": "Giờ đọc sách chung diễn ra lúc 15:00 ngày 19/11/2026."
+        },
+        {
+          "title": "Lễ bế mạc và trao quà",
+          "startValue": "2026-11-19T17:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.9,
+          "quote": "Lễ bế mạc và trao quà diễn ra lúc 17:00 ngày 19/11/2026."
+        }
+      ]
+    },
+    {
+      "caseId": "H15",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 58683,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Buổi học bù môn Mạng máy tính",
+          "startValue": "2026-10-29T07:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "nam_suy_doan"
+          ],
+          "confidence": 0.9,
+          "quote": "buổi học bù môn Mạng máy tính diễn ra lúc 7:30 ngày 29/10 tại phòng 301 nhà B3"
+        }
+      ]
+    },
+    {
+      "caseId": "H15",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 56357,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Buổi học bù môn Mạng máy tính",
+          "startValue": "2026-10-29T07:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "nam_suy_doan"
+          ],
+          "confidence": 0.9,
+          "quote": "buổi học bù môn Mạng máy tính diễn ra lúc 7:30 ngày 29/10 tại phòng 301 nhà B3"
+        }
+      ]
+    },
+    {
+      "caseId": "H16",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 57661,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Sinh hoạt chuyên đề nghiên cứu sinh",
+          "startValue": "2026-11-05T14:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "nam_suy_doan"
+          ],
+          "confidence": 0.85,
+          "quote": "Sinh hoạt chuyên đề nghiên cứu sinh diễn ra lúc 14:00 ngày 05/11 tại phòng hội thảo tầng 3."
+        }
+      ]
+    },
+    {
+      "caseId": "H16",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 57532,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Sinh hoạt chuyên đề nghiên cứu sinh",
+          "startValue": "2026-11-05T14:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "nam_suy_doan"
+          ],
+          "confidence": 0.85,
+          "quote": "Sinh hoạt chuyên đề nghiên cứu sinh diễn ra lúc 14:00 ngày 05/11 tại phòng hội thảo tầng 3."
+        }
+      ]
+    },
+    {
+      "caseId": "H17",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 55877,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Hạn nhận bài cuộc thi ảnh Góc trường xanh",
+          "startValue": "2026-11-08T20:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "nam_suy_doan"
+          ],
+          "confidence": 0.85,
+          "quote": "Cuộc thi ảnh \"Góc trường xanh\" của Đoàn trường có hạn nhận bài lúc 20:00 ngày 08/11."
+        }
+      ]
+    },
+    {
+      "caseId": "H17",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 55963,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Hạn nhận bài cuộc thi ảnh Góc trường xanh",
+          "startValue": "2026-11-08T20:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "nam_suy_doan"
+          ],
+          "confidence": 0.85,
+          "quote": "Cuộc thi ảnh \"Góc trường xanh\" của Đoàn trường có hạn nhận bài lúc 20:00 ngày 08/11."
+        }
+      ]
+    },
+    {
+      "caseId": "H18",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 58127,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Tư vấn hồ sơ thực tập",
+          "startValue": "2026-11-06T16:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "nam_suy_doan"
+          ],
+          "confidence": 0.9,
+          "quote": "Phòng công tác sinh viên mở đợt tư vấn hồ sơ thực tập lúc 16:00 ngày 06/11 tại phòng 105 nhà A1."
+        }
+      ]
+    },
+    {
+      "caseId": "H18",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 60610,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Tư vấn hồ sơ thực tập",
+          "startValue": "2026-11-06T16:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "nam_suy_doan"
+          ],
+          "confidence": 0.9,
+          "quote": "Phòng công tác sinh viên mở đợt tư vấn hồ sơ thực tập lúc 16:00 ngày 06/11 tại phòng 105 nhà A1."
+        }
+      ]
+    },
+    {
+      "caseId": "H19",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 36162,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Hạn đăng ký xét học bổng khuyến khích học tập",
+          "startValue": null,
+          "startDate": "2026-10-30",
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Hạn đăng ký xét học bổng khuyến khích học tập đợt này là ngày 30/10/2026."
+        }
+      ]
+    },
+    {
+      "caseId": "H19",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 36226,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Hạn đăng ký xét học bổng khuyến khích học tập",
+          "startValue": null,
+          "startDate": "2026-10-30",
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Hạn đăng ký xét học bổng khuyến khích học tập đợt này là ngày 30/10/2026."
+        }
+      ]
+    },
+    {
+      "caseId": "H20",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 51540,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Ngày hội việc làm chuyên ngành dữ liệu",
+          "startValue": null,
+          "startDate": "2026-12-15",
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Ngày hội việc làm chuyên ngành dữ liệu diễn ra vào ngày 15/12/2026 tại nhà văn hoá sinh viên."
+        }
+      ]
+    },
+    {
+      "caseId": "H20",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 51535,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Ngày hội việc làm chuyên ngành dữ liệu",
+          "startValue": null,
+          "startDate": "2026-12-15",
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Ngày hội việc làm chuyên ngành dữ liệu diễn ra vào ngày 15/12/2026 tại nhà văn hoá sinh viên."
+        }
+      ]
+    },
+    {
+      "caseId": "H21",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 35740,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Kết thúc đợt đăng ký học phần",
+          "startValue": null,
+          "startDate": "2026-11-06",
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Đợt đăng ký học phần đợt 2 của học kỳ này kết thúc vào ngày 06/11/2026."
+        }
+      ]
+    },
+    {
+      "caseId": "H21",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 52931,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Kết thúc đợt đăng ký học phần đợt 2",
+          "startValue": null,
+          "startDate": "2026-11-06",
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.95,
+          "quote": "Đợt đăng ký học phần đợt 2 của học kỳ này kết thúc vào ngày 06/11/2026."
+        }
+      ]
+    },
+    {
+      "caseId": "H22",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 54625,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Đêm ra mắt sân khấu sinh viên",
+          "startValue": null,
+          "startDate": "2026-11-21",
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Đêm ra mắt sân khấu sinh viên tổ chức vào ngày 21/11/2026 tại phòng đa năng."
+        }
+      ]
+    },
+    {
+      "caseId": "H22",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 40726,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Đêm ra mắt sân khấu sinh viên",
+          "startValue": null,
+          "startDate": "2026-11-21",
+          "endValue": null,
+          "uncertain": [
+            "gio_chua_ro"
+          ],
+          "confidence": 0.9,
+          "quote": "Đêm ra mắt sân khấu sinh viên tổ chức vào ngày 21/11/2026 tại phòng đa năng."
+        }
+      ]
+    },
+    {
+      "caseId": "H23",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 39259,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 0,
+        "precision": 0,
+        "matched": 0,
+        "missed": 1,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Tổng kết hoạt động phong trào của Đoàn trường",
+          "startValue": null,
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "ngay_tuong_doi",
+            "nam_chua_ro"
+          ],
+          "confidence": 0.6,
+          "quote": "Buổi tổng kết hoạt động phong trào của Đoàn trường sẽ diễn ra vào thứ Hai tuần sau lúc 16:00 tại hội trường B."
+        }
+      ]
+    },
+    {
+      "caseId": "H23",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 41098,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 1,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Tổng kết hoạt động phong trào của Đoàn trường",
+          "startValue": "2026-10-27T16:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "ngay_tuong_doi"
+          ],
+          "confidence": 0.9,
+          "quote": "Buổi tổng kết hoạt động phong trào của Đoàn trường sẽ diễn ra vào thứ Hai tuần sau lúc 16:00 tại hội trường B."
+        }
+      ]
+    },
+    {
+      "caseId": "H24",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 36581,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Gặp mentor",
+          "startValue": "2026-10-23T09:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "ngay_tuong_doi"
+          ],
+          "confidence": 0.9,
+          "quote": "buổi gặp định kỳ dời thành ngày mai lúc 9:00 tại văn phòng dự án."
+        }
+      ]
+    },
+    {
+      "caseId": "H24",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 37746,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Gặp mentor",
+          "startValue": "2026-10-23T09:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "ngay_tuong_doi"
+          ],
+          "confidence": 0.9,
+          "quote": "buổi gặp định kỳ dời thành ngày mai lúc 9:00 tại văn phòng dự án."
+        }
+      ]
+    },
+    {
+      "caseId": "H25",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 28642,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 0,
+        "precision": 0,
+        "matched": 0,
+        "missed": 1,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Hạn chốt bài viết",
+          "startValue": null,
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "ngay_tuong_doi",
+            "nam_chua_ro",
+            "gio_chua_ro"
+          ],
+          "confidence": 0.6,
+          "quote": "hạn chốt bài viết là thứ Sáu tuần sau."
+        }
+      ]
+    },
+    {
+      "caseId": "H25",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 28651,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 0,
+        "precision": 0,
+        "matched": 0,
+        "missed": 1,
+        "extra": 1,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Hạn chốt bài viết",
+          "startValue": null,
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "ngay_tuong_doi",
+            "nam_chua_ro",
+            "gio_chua_ro"
+          ],
+          "confidence": 0.6,
+          "quote": "hạn chốt bài viết là thứ Sáu tuần sau."
+        }
+      ]
+    },
+    {
+      "caseId": "H26",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 50735,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Họp chi đoàn",
+          "startValue": "2026-10-25T19:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "ngay_tuong_doi"
+          ],
+          "confidence": 0.95,
+          "quote": "cuộc họp chi đoàn diễn ra vào Chủ nhật này lúc 19:00 tại phòng truyền thống"
+        }
+      ]
+    },
+    {
+      "caseId": "H26",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 35575,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Họp chi đoàn",
+          "startValue": "2026-10-25T19:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "ngay_tuong_doi"
+          ],
+          "confidence": 0.9,
+          "quote": "cuộc họp chi đoàn diễn ra vào Chủ nhật này lúc 19:00 tại phòng truyền thống."
+        }
+      ]
+    },
+    {
+      "caseId": "H27",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 69286,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Lễ trao giải nghiên cứu khoa học sinh viên",
+          "startValue": "2026-11-12T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_suy_doan"
+          ],
+          "confidence": 0.9,
+          "quote": "lễ trao giải nghiên cứu khoa học sinh viên được tổ chức vào lúc 8:00 ngày 12/11/2026 tại hội trường A. Chương trình dự kiến kéo dài đến trưa."
+        }
+      ]
+    },
+    {
+      "caseId": "H27",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 68794,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Lễ trao giải nghiên cứu khoa học sinh viên",
+          "startValue": "2026-11-12T08:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [
+            "gio_suy_doan"
+          ],
+          "confidence": 0.9,
+          "quote": "lễ trao giải nghiên cứu khoa học sinh viên được tổ chức vào lúc 8:00 ngày 12/11/2026 tại hội trường A. Chương trình dự kiến kéo dài đến trưa."
+        }
+      ]
+    },
+    {
+      "caseId": "H28",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 58716,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Kỳ thi cuối kỳ môn Hệ phân tán",
+          "startValue": "2026-11-24T13:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "kỳ thi cuối kỳ môn Hệ phân tán được bố trí vào lúc 13:00 ngày 24/11/2026 tại phòng thi B2"
+        }
+      ]
+    },
+    {
+      "caseId": "H28",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 58726,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Kỳ thi cuối kỳ môn Hệ phân tán",
+          "startValue": "2026-11-24T13:00",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "kỳ thi cuối kỳ môn Hệ phân tán được bố trí vào lúc 13:00 ngày 24/11/2026 tại phòng thi B2"
+        }
+      ]
+    },
+    {
+      "caseId": "H29",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 62834,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Chương trình hiến máu tình nguyện",
+          "startValue": "2026-11-19T07:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Chương trình hiến máu tình nguyện do Hội sinh viên phối hợp với Viết Máu tổ chức vào thứ Năm ngày 19/11/2026, bắt đầu từ 7:30 tại sảnh nhà A1."
+        }
+      ]
+    },
+    {
+      "caseId": "H29",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 62657,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Chương trình hiến máu tình nguyện",
+          "startValue": "2026-11-19T07:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "Chương trình hiến máu tình nguyện do Hội sinh viên phối hợp với Viết Máu tổ chức vào thứ Năm ngày 19/11/2026, bắt đầu từ 7:30 tại sảnh nhà A1."
+        }
+      ]
+    },
+    {
+      "caseId": "H30",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 40707,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Trận chung kết bóng chuyền",
+          "startValue": "2026-11-22T15:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "trận chung kết bóng chuyền giữa hai đội khoa CNTT và khoa Điện được bố trí lúc 15:30 ngày 22/11/2026"
+        }
+      ]
+    },
+    {
+      "caseId": "H30",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 59167,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 1,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 1,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 1
+      },
+      "items": [
+        {
+          "title": "Trận chung kết bóng chuyền",
+          "startValue": "2026-11-22T15:30",
+          "startDate": null,
+          "endValue": null,
+          "uncertain": [],
+          "confidence": 0.95,
+          "quote": "trận chung kết bóng chuyền giữa hai đội khoa CNTT và khoa Điện được bố trí lúc 15:30 ngày 22/11/2026 tại nhà thi đấu"
+        }
+      ]
+    },
+    {
+      "caseId": "N01",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 15185,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N01",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 15169,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N02",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 15794,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N02",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 15844,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N03",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 16738,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N03",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 16726,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N04",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 13423,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N04",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 13466,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N05",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 13700,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N05",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 13693,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N06",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 16651,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N06",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 16626,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N07",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 15385,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N07",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 15406,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N08",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 16891,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N08",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 16881,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N09",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 13158,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N09",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 13109,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N10",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 13097,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N11",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 13292,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N11",
+      "run": 2,
+      "kind": "fresh",
+      "latencyMs": 13137,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    },
+    {
+      "caseId": "N12",
+      "run": 1,
+      "kind": "fresh",
+      "latencyMs": 13051,
+      "chunkCount": 1,
+      "truncated": false,
+      "totalActual": 0,
+      "duplicateCount": 0,
+      "providerCalls": 1,
+      "invalidResponses": 0,
+      "models": [
+        "chat"
+      ],
+      "metrics": {
+        "recall": 1,
+        "precision": 1,
+        "matched": 0,
+        "missed": 0,
+        "extra": 0,
+        "inventedDates": 0,
+        "totalActual": 0
+      },
+      "items": []
+    }
+  ]
+}
