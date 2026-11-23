@@ -70,6 +70,13 @@ nhưng không tiết kiệm**.
   trong khi mẫu âm vẫn báo nhầm 10/13; xác suất nén vào 0,4–0,6 (E05: 0,611 cấp câu → 0,493 cấp
   đoạn vì câu "Thông tin vé liên hệ…" pha loãng). Thiết kế cấp câu hiện tại của dịch vụ là đúng
   granularity; vấn đề nằm ở dữ liệu nhãn + hiệu chuẩn, không ở độ dài đầu vào.
+- **Đã thử trọng số hoá lớp TASK/NON_TASK** (`filter-class-weight-2026-11-23.json`: điều chỉnh
+  prior `p' = w·p/(w·p+(1−w)(1−p))` trên 335 câu/27 mẫu): trọng số là **biến đổi đơn điệu** nên
+  AUC mức tài liệu **bất biến = 0,335 với mọi w** — chỉ dời điểm hoạt động: `w_task = 0,66` →
+  14/14 dương nhưng 13/13 âm đều "có việc"; `w_task = 0,34` → 0/14 dương (screen sẽ bỏ toàn bộ
+  sự kiện thật). AUC < 0,5 nghĩa là score hiện tại tệ hơn ngẫu nhiên: câu mệnh lệnh trong mẫu âm
+  được chấm cao hơn câu lịch trình trong mẫu dương. Không hệ số trọng số nào "tách bạch" được
+  nhãn; việc cần là đổi nhãn/dữ liệu/model (phi-đơn điệu) và hiệu chuẩn.
 
 ## 6. Chênh lệch recall với lần đo 22/11 (ghi chú trung thực)
 

@@ -50,3 +50,4 @@ lưu một file JSON theo template dưới đây, kèm một file `.md` tổng h
 | `filter-threshold-sweep-2026-11-23.json` | Quét lưới 60 ngưỡng PhoBERT: không điểm nào đạt cả hai tiêu chí; nút thắt là model | PhoBERT (không LLM) | 2026-11-23 |
 | `heldout-iq4_xs-2026-11-23.json` | TASK 03 — bộ giữ kín 50 mẫu: recall L1 92,3% (36/39), precision 90,0%, 0 ngày ngoài whitelist, 0 sự kiện trên 20 mẫu âm | Qwen3.5-9B IQ4_XS | 2026-11-23 |
 | `filter-input-granularity-2026-11-23.json` | Phép thử đoạn-văn-vs-câu: cấp đoạn xấu hơn cả hai chiều (mất 3/14 dương, âm vẫn 10/13 báo nhầm) | PhoBERT (không LLM) | 2026-11-23 |
+| `filter-class-weight-2026-11-23.json` | Phép thử trọng số lớp: AUC 0,335 bất kể w (66/34 chỉ dời ngưỡng, không tách nhãn) | PhoBERT (không LLM) | 2026-11-23 |

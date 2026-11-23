@@ -1,0 +1,139 @@
+{
+  "commit": "8e48cf0 (granularity experiment); phép thử độc lập, chỉ ĐỌC trọng số PhoBERT (CPU)",
+  "date": "2026-11-23T12:59:54+07:00",
+  "hardware": "CPU — PhoBERT-base-v2 bàn giao; cùng preprocessing app.py (tach_cau + lam_sach + ViTokenizer + la_cau_xa_giao ép 0.0)",
+  "endpoint": "không qua dịch vụ",
+  "model": {
+    "filter": "PhoBERT-base-v2 TASK/NON_TASK",
+    "sampler": "n/a"
+  },
+  "promptVersion": "n/a",
+  "cases": "335 câu thuộc 27 mẫu sàng lọc (14 dương / 13 âm); điểm tài liệu = max p_task các câu (đúng cách dịch vụ gộp)",
+  "method": "AUC Mann-Whitney mức tài liệu; biến đổi trọng số prior w: p' = w·p / (w·p + (1-w)·(1-p)) với w ∈ {0.34, 0.5, 0.66} = tương đương dời ngưỡng logit",
+  "metrics": {
+    "docAUC_maxSentenceP": 0.3352,
+    "AUC_bất_kể_trọng_số": "0.3352 với mọi w (biến đổi đơn điệu không đổi thứ hạng)",
+    "w_task_0.66": "14/14 dương phát hiện NHƯNG 13/13 âm báo nhầm — mọi thứ là TASK",
+    "w_task_0.34": "0/14 dương, 0/13 âm — mọi thứ là NON_TASK (screen sẽ bỏ TOÀN BỘ sự kiện thật)",
+    "phân bố p_task": {
+      "positive": {
+        "sentences": 259,
+        "min": 0.4205,
+        "p25": 0.5002,
+        "median": 0.5002,
+        "p75": 0.5002,
+        "max": 0.6523,
+        "ge_0.5": 253
+      },
+      "negative": {
+        "sentences": 76,
+        "min": 0.0,
+        "p25": 0.4061,
+        "median": 0.4805,
+        "p75": 0.5674,
+        "max": 0.6357,
+        "ge_0.5": 34
+      }
+    },
+    "kết luận": "AUC 0.335 < 0.5: score hiện tại tệ hơn ngẫu nhiên ở mức tài liệu — câu mệnh lệnh trong mẫu âm được chấm cao hơn câu lịch trình trong mẫu dương. Không trọng số nào (66/34 hay khác) tách bạch được; cần thay đổi phi-đơn điệu: nhãn + dữ liệu + model"
+  },
+  "rawRecords": {
+    "sentenceCount": 335,
+    "docAUC_maxSentenceP": 0.3352,
+    "distributions": {
+      "positive": {
+        "sentences": 259,
+        "min": 0.4205,
+        "p25": 0.5002,
+        "median": 0.5002,
+        "p75": 0.5002,
+        "max": 0.6523,
+        "ge_0.5": 253
+      },
+      "negative": {
+        "sentences": 76,
+        "min": 0.0,
+        "p25": 0.4061,
+        "median": 0.4805,
+        "p75": 0.5674,
+        "max": 0.6357,
+        "ge_0.5": 34
+      }
+    },
+    "weights": {
+      "w_task=0.34": {
+        "AUC": 0.3352,
+        "frontier@0.5 (dương phát hiện, âm báo nhầm)": [
+          0,
+          0
+        ]
+      },
+      "w_task=0.5": {
+        "AUC": 0.3352,
+        "frontier@0.5 (dương phát hiện, âm báo nhầm)": [
+          13,
+          12
+        ]
+      },
+      "w_task=0.66": {
+        "AUC": 0.3352,
+        "frontier@0.5 (dương phát hiện, âm báo nhầm)": [
+          14,
+          13
+        ]
+      }
+    },
+    "frontier_thresholdOnRawScore": [
+      {
+        "threshold": 0.05,
+        "posDetected": 14,
+        "negFalseAlarm": 13
+      },
+      {
+        "threshold": 0.1,
+        "posDetected": 14,
+        "negFalseAlarm": 13
+      },
+      {
+        "threshold": 0.2,
+        "posDetected": 14,
+        "negFalseAlarm": 13
+      },
+      {
+        "threshold": 0.3,
+        "posDetected": 14,
+        "negFalseAlarm": 13
+      },
+      {
+        "threshold": 0.4,
+        "posDetected": 14,
+        "negFalseAlarm": 13
+      },
+      {
+        "threshold": 0.5,
+        "posDetected": 13,
+        "negFalseAlarm": 12
+      },
+      {
+        "threshold": 0.6,
+        "posDetected": 4,
+        "negFalseAlarm": 8
+      },
+      {
+        "threshold": 0.7,
+        "posDetected": 0,
+        "negFalseAlarm": 0
+      },
+      {
+        "threshold": 0.8,
+        "posDetected": 0,
+        "negFalseAlarm": 0
+      },
+      {
+        "threshold": 0.9,
+        "posDetected": 0,
+        "negFalseAlarm": 0
+      }
+    ]
+  }
+}
