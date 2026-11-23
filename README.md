@@ -35,8 +35,7 @@ Repo này chứa cả bộ tài liệu kế hoạch (gốc) và mã nguồn demo
 | 8 | **Chọn nơi chạy suy luận** | **Máy này** mặc định; **Endpoint khác** nhập base URL HTTPS + API key + model; **Kiểm tra kết nối** trước khi lưu; consent theo origin + thu hồi; **Xoá key**; quay về local vẫn giữ cấu hình remote để đổi lại |
 
 **Chưa có (đúng phạm vi demo hiện tại):** nhắc việc sự kiện (`chrome.alarms`/KS-10), Gmail/PDF/DOCX.
-**Hạn chế đã biết:** sàng lọc PhoBERT đo đầu-cuối (F3) và nghiệm thu tay P7 chưa chạy; mặc định vẫn
-`report`. Gộp nguồn tự động và sửa nhanh tại chỗ chưa làm — xem [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md). Checklist thủ công cho provider (§8) vẫn chờ chạy với endpoint thật.
+**Hạn chế đã biết:** sàng lọc PhoBERT đã đo đầu-cuối (F3/TASK 04 trên 27 tài liệu: 0 dương bị bỏ sót, 0 sự kiện mất, nhưng 0/13 mẫu âm được bỏ qua do dương tính giả ở mức tài liệu — xem [`docs/ket-qua-bo-loc.md`](docs/ket-qua-bo-loc.md)), nên mặc định vẫn giữ là `report`. Nghiệm thu tay P7 trên Chrome và checklist thủ công cho provider (§8) vẫn chờ chạy với endpoint thật. Gộp nguồn tự động và sửa nhanh tại chỗ chưa làm — xem [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md).
 Chi tiết lệch so với kế hoạch: [`docs/DEVIATIONS.md`](docs/DEVIATIONS.md).
 Bảng đối chiếu đầy đủ chức năng chính thức vs. demo: [`docs/chuc-nang-demo-vs-chinh-thuc.md`](docs/chuc-nang-demo-vs-chinh-thuc.md).
 
@@ -77,7 +76,7 @@ npm run build
 | `npm run build` | `tsc --noEmit` + `vite build` → `dist/` |
 | `npm run typecheck` | TypeScript strict, 0 lỗi |
 | `npm run lint` | ESLint (flat config) |
-| `npm test` | Vitest: 485 test / 49 file, 447 pass + 38 skip (2 harness live) — gồm core, parse, page snapshot, extraction/LLM, gold freeze + field metrics, ablation raw/hậu kiểm, baseline luật tất định, provider remote/factory/permissions, form Cài đặt, duyệt nháp, job, sàng lọc, Slice E eval, smoke test UI bằng jsdom; các harness live (`LLAMA_EVAL=1`) skip khi không có model |
+| `npm test` | Vitest: 529 test / 53 file, 461 pass + 68 skip (4 harness live) — gồm core, parse, page snapshot, extraction/LLM, gold freeze + held-out freeze + field metrics, ablation raw/hậu kiểm, baseline luật tất định, provider remote/factory/permissions, form Cài đặt, duyệt nháp, job, sàng lọc (unit + deterministic eval), Slice E eval, smoke test UI bằng jsdom; các harness live (`LLAMA_EVAL=1`, `FILTER_EVAL=1`, `FILTER_SWEEP=1`) skip khi không đặt biến |
 | `npm run icons` | Sinh lại icon PNG |
 
 ---
@@ -98,13 +97,11 @@ npm run build
 │  ├─ kiem-thu-demo.md           # Checklist kiểm thử thủ công theo KS
 │  ├─ ke-hoach-llm-trich-xuat.md # Kế hoạch lớp trích xuất LLM (Slice A–E)
 │  ├─ ke-hoach-da-provider.md    # Kế hoạch + ghi chú triển khai chọn nơi chạy suy luận (KS-14)
-│  ├─ ke-hoach-bo-loc-noi-dung.md # Kế hoạch sàng lọc PhoBERT trước LLM (Slice F: F0+F1+F2 đã làm, mặc định report)
-│  ├─ evidence/                   # Số đo cho báo cáo: ablation, baseline, provenance PhoBERT (kèm template)
-│  ├─ ban-giao-slice-d.md        # Bàn giao & phạm vi Slice D (đã nghiệm thu)
-│  ├─ kiem-tra-slice-d.md        # Bản ghi nghiệm thu Slice D
-│  ├─ ban-giao-slice-e.md        # Bàn giao & phạm vi Slice E (đo chất lượng)
-│  ├─ ket-qua-danh-gia-slice-e.md # Mẫu bảng đo chất lượng trích xuất
-│  └─ archive/                   # Biên bản/kế hoạch lịch sử, không dùng làm nguồn hiện hành
+│  ├─ ke-hoach-bo-loc-noi-dung.md # Kế hoạch sàng lọc PhoBERT trước LLM (Slice F: F0+F1+F2+F3 đã làm, mặc định report)
+│  ├─ ket-qua-bo-loc.md          # Kết quả đo đầu-cuối Off/Report/Screen + 3 thí nghiệm chẩn đoán (Slice F3)
+│  ├─ ket-qua-danh-gia-slice-e.md # Kết quả đo chất lượng trích xuất LLM (4 model, prompt v4 & v5)
+│  ├─ evidence/                   # Bằng chứng số đo cho báo cáo: ablation, held-out 50, filter F3, baseline, provenance PhoBERT
+│  └─ ban-giao-cai-thien-bao-cao.md # Trạng thái TASK 01–10 và các vị trí placeholder cần hoàn tất trong báo cáo
 ├─ extension/                    # Mã nguồn demo
 │  ├─ src/shared/                # contracts.ts (Zod), messages.ts, constants.ts
 │  ├─ src/core/                  # Thuần TS: dates, events, profiles, forms, text

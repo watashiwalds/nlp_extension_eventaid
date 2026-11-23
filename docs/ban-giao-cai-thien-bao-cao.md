@@ -1,62 +1,46 @@
-# Bàn giao phiên cải thiện báo cáo — TASK 01–10 (kế hoạch `bao-cao/ke-hoach-cai-thien-bao-cao.md`)
+# Bàn giao tiến độ hoàn thiện báo cáo — TASK 01–10
 
-> **Ngày bàn giao:** 23/11/2026. **Nhánh:** `main`.
-> **Mục đích:** phiên sau (hoặc thành viên khác) tiếp tục đúng thứ tự mà không phải dò lại.
+> **Cập nhật lần cuối:** 23/11/2026 (sau commit `5913ab3`). **Nhánh:** `main`.
+> **Báo cáo đang làm việc:** [`bao-cao/Bao_cao_NLP_FINAL_Lan2.docx`](../bao-cao/Bao_cao_NLP_FINAL_Lan2.docx) (bản gốc đối chiếu giữ tại [`bao-cao/Bao_cao_NLP_FINAL_Lan1.docx`](../bao-cao/Bao_cao_NLP_FINAL_Lan1.docx), md5 `9347b164438ef94f3596613be619f8ef`).
 
-## 1. Trạng thái các TASK
+---
 
-| TASK | Trạng thái | Commit / bằng chứng |
-|---|---|---|
-| Bước 0 (evidence + Lan2) | ✅ xong | `dbe5a33` — `docs/evidence/README.md` + template; `bao-cao/Bao_cao_NLP_FINAL_Lan2.docx` (bản copy Lan1, md5 `9347b164…`; **Lan1 giữ nguyên**) |
-| TASK 02 (gold freeze + matching spec + field metrics) | ✅ xong | `e9965e0` — `gold-freeze.test.ts` (5 test), `field-metrics.ts` + 12 unit test, spec trong 2 README. Gold chốt: **17 mẫu / 25 sự kiện**, quy ước E12 → lượt 2 chấm 23 |
-| TASK 01 (ablation Raw vs hậu kiểm) | ✅ xong, **đã chạy thật** | harness `postcheck.live.eval.test.ts` + `postcheck-report.ts` (`10ff593`); chạy trên IQ4_XS thật 374,9 s, 0 lỗi; evidence `docs/evidence/postcheck-iq4_xs-2026-11-22.json` + `postcheck-ablation.md` |
-| TASK 03 (held-out 50) | ⬜ chưa làm | — |
-| TASK 04 (Off/Report/Screen) | ⬜ chưa làm (viết được fixtures + test tất định + harness; **chạy live cần PhoBERT ở 8081**) | — |
-| TASK 05 (baseline rule-based) | ✅ xong | `82d1747` + `46f7cfa` — `rule-baseline.ts` + 10 unit test + runner luôn chạy trong `npm test`; evidence `docs/evidence/rule-baseline-2026-11-23.{json,md}` |
-| TASK 06 (provenance PhoBERT) | ✅ xong | `dbe5a33` — `docs/evidence/phobert-handover.md`; số huấn luyện = "chỉ bàn giao", nhất quán số học đã kiểm |
-| TASK 07 (screenshot) | ⬜ chưa làm — **cần Chrome thật** | — |
-| TASK 08 | ✅ xong phần code | `0e6f259` (sửa 3 test time-bomb — **CI đã xanh**), `252a3d3` (2 README + package.json + untrack `.idea`/`__pycache__`/zip + `.gitignore` thêm `.idea/`) |
-| TASK 09 (phân công) | ⬜ chỉ có bảng nháp trong `bao-cao/ban-thao-sua-bao-cao.md` — **cần nhóm xác nhận** | — |
-| TASK 10 (hình thức DOCX) | ⬜ chưa làm — **cần sửa Word trực tiếp**; bản thảo câu thay thế đã soạn | `bao-cao/ban-thao-sua-bao-cao.md` |
+## 1. Trạng thái 10 TASK trong kế hoạch (`bao-cao/ke-hoach-cai-thien-bao-cao.md`)
 
-## 2. Số đo đã có (tóm tắt)
+| TASK | Nội dung | Trạng thái | Bằng chứng / Ghi chú trong `Bao_cao_NLP_FINAL_Lan2.docx` |
+|---|---|---|---|
+| **Bước 0** | Kho bằng chứng `docs/evidence/` + bản làm việc `Lan2.docx` | ✅ **Đã hoàn thành** | [`docs/evidence/README.md`](evidence/README.md); `Lan1.docx` giữ nguyên |
+| **TASK 01** | Ablation Raw LLM vs LLM + Hậu kiểm thời gian | ✅ **Đã hoàn thành & đưa vào báo cáo** | [`docs/evidence/postcheck-ablation.md`](evidence/postcheck-ablation.md), `postcheck-iq4_xs-2026-11-22.json` → **Mục 5.3.3 & Bảng 5.3** |
+| **TASK 02** | Đóng băng Gold Set (17 mẫu / 25 sự kiện) + Quy tắc đối sánh + Field metrics | ✅ **Đã hoàn thành & đưa vào báo cáo** | `gold-freeze.test.ts`, `field-metrics.ts` → **Mục 5.3.1, Mục 5.3.2, Bảng 5.1 & Bảng 5.2** |
+| **TASK 03** | Tập kiểm thử giữ kín 50 mẫu (30 dương / 39 sự kiện + 20 âm) | ✅ **Đã hoàn thành & đưa vào báo cáo** | [`docs/evidence/heldout-iq4_xs-2026-11-23.json`](evidence/heldout-iq4_xs-2026-11-23.json), `heldout-freeze.test.ts` → **Mục 5.3.4 & Bảng 5.4** |
+| **TASK 04** | Đo đầu-cuối 3 chế độ sàng lọc PhoBERT (`off`/`report`/`screen`) + 3 thí nghiệm chẩn đoán (60 ngưỡng, cấp đoạn văn, tái trọng số lớp) | ✅ **Đã hoàn thành & đưa vào báo cáo** | [`docs/ket-qua-bo-loc.md`](ket-qua-bo-loc.md), `filter-*.json` → **Mục 5.4, Mục 5.5 & Bảng 5.6** |
+| **TASK 05** | Phương pháp cơ sở dựa trên luật tất định (Rule-based Baseline) | ✅ **Đã hoàn thành & đưa vào báo cáo** | [`docs/evidence/rule-baseline-2026-11-23.md`](evidence/rule-baseline-2026-11-23.md), `rule-baseline.ts` → **Mục 5.3.5 & Bảng 5.5** |
+| **TASK 06** | Rà soát nguồn gốc số liệu huấn luyện PhoBERT + chú thích minh bạch | ✅ **Đã hoàn thành & đưa vào báo cáo** | [`docs/evidence/phobert-handover.md`](evidence/phobert-handover.md) → **Cuối Mục 5.2** (kèm placeholder chữ đỏ nếu cần đính kèm log gốc) |
+| **TASK 07** | Chụp 3–5 ảnh màn hình giao diện tiện ích mở rộng thật (S1–S4) | ⏳ **Chưa chụp ảnh — đã gắn Placeholder chữ đỏ** | Đã đặt **2 khung placeholder chữ đỏ** tại cuối **Mục 4.3** (ảnh S1) và cuối **Mục 4.7** (ảnh S2, S3, S4) trong `Lan2.docx` |
+| **TASK 08** | Sửa test time-bomb, làm sạch repo, đồng bộ README & đoạn tái lập | ✅ **Đã hoàn thành & đưa vào báo cáo** | `529 test / 53 file` xanh (`461 pass, 68 skip`); đoạn tái lập + link GitHub đã đưa vào **Mục 5.1** |
+| **TASK 09** | Bảng phân công công việc của 2 sinh viên | ⏳ **Đã chèn Bảng 1.1 kèm Placeholder chữ đỏ chờ nhóm xác nhận** | Đã chèn **Bảng 1.1** tại **Mục 1.5** kèm dòng nhắc chữ đỏ để hai thành viên xác nhận trước khi nộp |
+| **TASK 10** | Cập nhật toàn văn báo cáo, chuẩn hoá thuật ngữ, Mục lục & Danh mục bảng | ✅ **Đã cập nhật vào `Lan2.docx` (còn rà soát các dòng chữ đỏ)** | Đã cập nhật toàn bộ Chương 1, 4, 5, 6, Mục lục và Danh mục hình vẽ/bảng biểu (Bảng 1.1, Hình 4.1, Bảng 5.1 → Bảng 5.6) |
 
-- **Ablation (IQ4_XS, prompt v5, temp 0.1, 1 lần/mẫu):** recall/precision Raw = Post-check = **88,0% / 91,7%** (trùng khớp số L1 của lần đo v5 tháng 10 → tái lập được). **0 ngày ngoài whitelist ở CẢ HAI đường.** Giá trị hậu kiểm đo được: sửa **3/24** sự kiện vi phạm hình hợp đồng (chuỗi ngày-only nằm trong `start.value` — E01/E07/E16) → `value=null` + `date` + cờ `gio_chua_ro`; **0 sự kiện bị mất**; cờ `nam_suy_doan`/`gio_suy_doan` thêm = 0. Ba mẫu thiếu: E04 (paraphrase dưới ngưỡng Jaccard), E10 (model không đề xuất ngày tuyệt đối — lỗ hổng C6 không được kích hoạt trong lần này nhưng vẫn là fact về code), E13 (model trả rỗng — biến thiên giữa lần chạy). p95 36,5 s / median 23,6 s.
-- **Baseline rule-based (Node, không model):** event-level **80,0% / 60,6%** (lower bound do title heuristic, 13 thừa / 5 thiếu); temporal-field trên cặp ghép **20/20 ngày, 17/17 giờ chính xác**; end 0/1 (tách câu đa ngày thành 2 sự kiện thay vì 1 sự kiện có end — giới hạn đã ghi).
-- **Test suite:** **485 test / 49 file — 447 pass, 38 skip (2 harness live), 0 fail.** 3 test time-bomb đã hết. Gate: `npm run typecheck && npm run lint && npm test && npm run build` đều xanh.
+---
 
-## 3. Điều kiện môi trường ghi lại được trong phiên này
+## 2. Danh sách các vị trí đánh dấu Placeholder chữ đỏ trong `Bao_cao_NLP_FINAL_Lan2.docx` cần hoàn tất
 
-- **llama-server:** do người dùng khởi động qua **llama-swap** proxy tại `127.0.0.1:8080`, alias **`chat`**, model `Qwen_Qwen3.5-9B-IQ4_XS.gguf`, ctx 8192, `-ngl 16`, KV q8_0, build `b10101-4310aa4f8`. Proxy này **yêu cầu trường `model` trong request** → harness phải truyền `LLAMA_MODEL=chat` (đã hỗ trợ sẵn). Ban đầu bật auth 401 → người dùng đã **tắt auth tạm**; nếu bật lại, dùng `LLAMA_API_KEY` (harness đã hỗ trợ, không commit key).
-- **PhoBERT 8081: KHÔNG chạy** trong phiên này. Lệnh chạy đúng (đã sửa C8 trong `extension/README.md`): `cd ml_hasevent_filter/handover_api_code && uvicorn app:app --host 127.0.0.1 --port 8081` (không cần `MODEL_DIR`).
-- **Không được thiếu khi đo:** fixture/gold đã freeze — không sửa `text`/`expected`/`allowedDates`/`mockOutput` của mẫu đã đo; nếu buộc sửa → chạy lại toàn bộ, lưu evidence riêng.
+Khi mở `bao-cao/Bao_cao_NLP_FINAL_Lan2.docx`, các mục chưa đủ thông tin hoặc cần người dùng/nhóm xác nhận đã được tô **chữ đỏ đậm (`#CC0000`)** để dễ tìm và xử lý:
 
-## 4. Việc còn lại — thứ tự đề xuất
+1. **Trang bìa (dòng Giảng viên hướng dẫn):**
+   - `[Học vị GV?]` cạnh tên giảng viên *Nguyễn Quang Trung* — xác nhận học vị chuẩn (ThS. / TS.) rồi xoá placeholder đỏ.
+2. **Mục 1.5 (Bảng 1.1 — Phân công công việc, TASK 09):**
+   - `[CẦN NHÓM XÁC NHẬN CHÍNH THỨC BẢNG PHÂN CÔNG VÀ TỈ LỆ ĐÓNG GÓP]` và đoạn ghi chú dưới Bảng 1.1 — hai thành viên xác nhận nội dung phân công (đặc biệt phần huấn luyện PhoBERT ngoài repo) rồi xoá chữ đỏ.
+3. **Cuối Mục 4.3 (TASK 07 — Ảnh chụp giao diện S1):**
+   - `[CẦN BỔ SUNG HÌNH ẢNH GIAO DIỆN (TASK 07 - S1): Ảnh chụp màn hình thẻ Quét nội dung trên Side Panel...]` — chụp từ Chrome (`extension/dist`), chèn ảnh + caption `Hình 4.2` rồi xoá chữ đỏ.
+4. **Cuối Mục 4.7 (TASK 07 — Ảnh chụp giao diện S2, S3, S4):**
+   - `[CẦN BỔ SUNG HÌNH ẢNH GIAO DIỆN (TASK 07 - S2, S3, S4): Ảnh chụp màn hình danh sách bản nháp...]` — chụp từ Chrome, chèn ảnh + caption rồi xoá chữ đỏ.
+5. **Cuối Mục 5.2 (TASK 06 — Lưu ý log huấn luyện PhoBERT):**
+   - `[LƯU Ý / CẦN BỔ SUNG NẾU GIẢNG VIÊN YÊU CẦU: Trong kho mã nguồn hiện chỉ lưu trọng số mô hình đã huấn luyện, chưa đính kèm tệp dữ liệu gốc 200 câu, nhật ký quá trình huấn luyện (training logs)...]` — nếu có file dataset/log từ Colab thì bổ sung vào `docs/evidence/`, nếu không thì chỉ cần xoá dòng nhắc chữ đỏ và giữ nguyên câu chú thích in nghiêng màu đen đứng trước nó.
 
-1. **TASK 04** (P0): viết `tests/fixtures/filter/` (14 positive ÉP `source: 'web_page'` + `sourceUrl` giả, 12–15 negative ≥ 5 câu) → `filter.eval.test.ts` (tất định, `MockContentFilter`) → `filter.live.eval.test.ts` (gate `FILTER_EVAL=1`, deps in-memory + `PhobertTaskFilter` + `LlamaCppProvider`, chạy 3 chế độ trên cùng bộ). Chạy live **cần PhoBERT 8081 + llama 8080**. Tiêu chí: 0 dương bị bỏ, 0 sự kiện mất, ≥70% bỏ qua mẫu âm; **không đổi `DEFAULT_FILTER_MODE`**. Sau đó mới sửa README FILTER_EVAL + viết `docs/ket-qua-bo-loc.md`.
-2. **TASK 03** (P0): soạn 50 held-out (hoặc rút 20–30 nếu ít thời gian — ghi rõ "bộ giữ kín quy mô nhỏ"), `HeldoutCase` không cần `mockOutput`, freeze test chống trùng dev (Jaccard < 0,8), `EVAL_SET=heldout` trong live harness. Chạy **một lần** sau khi freeze.
-3. **TASK 07** (P2): cần Chrome thật + `dist/` + dịch vụ; chụp S1–S5 theo `bao-cao/ban-thao-sua-bao-cao.md`? (xem kế hoạch TASK 07) — ảnh vào `bao-cao/hinh/`.
-4. **TASK 09** (P2): xác nhận bảng phân công với cả hai thành viên trước khi dán vào §1.5.
-5. **TASK 10** (P3): dán bản thảo `bao-cao/ban-thao-sua-bao-cao.md` vào Lan2 (các chỗ `[chờ số]` điền sau TASK 03/04), cập nhật mục lục (F9), xuất PDF.
-6. **P1.5 (tùy chọn, cần quyết định riêng):** đưa resolver "thứ n/tuần sau" vào `core/extraction/relative-date.ts` + `normalizeDateTime` — phải chạy lại eval toàn bộ và sửa §4.6 lần nữa; hiện baseline có resolver riêng nên số không phụ thuộc.
+---
 
-## 5. Lưu ý quan trọng cho phiên sau
+## 3. Việc kỹ thuật tùy chọn còn lại (ngoài báo cáo)
 
-- **`local_infer/` (untracked, mới xuất hiện ở root) là việc của người dùng — KHÔNG đụng vào.**
-- `extension/trolylichtrinh.zip` đã untrack (chứa `dist/` — build artifact). File vẫn nằm trên đĩa. Nếu là gói nộp bài cần đưa lại vào repo: `git show 252a3d3~1:extension/trolylichtrinh.zip > extension/trolylichtrinh.zip`.
-- `training_args.bin` **vẫn còn trên đĩa, chưa track** (models/ đã ignore từ trước — C2 đúng như plan rà). Cần **sanitize/xoá trước khi chia sẻ thư mục** (chứa đường dẫn Colab cá nhân; giá trị tham số không đọc được — xem `docs/evidence/phobert-handover.md`).
-- Không sửa `ml_hasevent_filter/` (ngoại lệ duy nhất đã làm: untrack `.idea`/`__pycache__` — không đụng nội dung file).
-- Sửa DOCX chỉ trên **Lan2**; Lan1 giữ nguyên để đối chiếu. md5 Lan1 gốc: `9347b164438ef94f3596613be619f8ef`.
-- Harness live đều gate bằng biến môi trường (`LLAMA_EVAL=1`, `LLAMA_MODEL=chat`, `LLAMA_API_KEY`, `FILTER_EVAL=1` tương lai) — CI không cần model.
-
-## 6. Commit của phiên (theo thứ tự)
-
-```
-e9965e0 eval (TASK 02): freeze gold set E01-E17 (25 events, E12 rescan convention) + field-level metrics
-0e6f259 tests (TASK 08.1): fix 3 time-bomb failures by removing hidden new Date()
-dbe5a33 evidence (TASK 06 + Bước 0): PhoBERT number provenance + working copy Lan2
-10ff593 eval (TASK 01): raw-vs-postcheck ablation harness + IQ4_XS evidence
-82d1747 eval (TASK 05): deterministic rule-based temporal baseline + 3-way comparison
-46f7cfa eval (TASK 05): fix strict-mode indexing and lint escapes in rule baseline
-252a3d3 docs (TASK 08): README matches code, repro evidence link, repo cleanup
-```
+- **Vệ sinh trước khi đóng gói nộp thư mục ngoài git:** Tệp `ml_hasevent_filter/handover_api_code/models/phobert_task_classifier_final/training_args.bin` (đang được `.gitignore` bỏ qua, không nằm trên git) chứa đường dẫn Colab cá nhân `/content/drive/MyDrive/...`; xoá tệp này nếu nén cả thư mục máy cục bộ gửi đi (không ảnh hưởng suy luận của `app.py`).
+- **Tùy chọn P1.5 (không bắt buộc cho báo cáo hiện tại):** Đưa bộ quy đổi ngày tương đối tất định (`"thứ n tuần sau"`, đã chạy trong `rule-baseline.ts`) vào `src/core/extraction/normalize.ts`. Hiện báo cáo đã mô tả trung thực ở Mục 4.6, Mục 6.2 và đặt làm hướng phát triển ngắn hạn ở Mục 6.3.

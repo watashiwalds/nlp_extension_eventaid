@@ -30,7 +30,9 @@ npm run typecheck
 npm run lint
 npm test
 LLAMA_EVAL=1 npx vitest run tests/eval/extraction.live.eval.test.ts \
-  --reporter=verbose --disableConsoleIntercept   # đo thật, cần llama-server
+  --reporter=verbose --disableConsoleIntercept   # đo thật dev set E01-E17, cần llama-server
+EVAL_SET=heldout LLAMA_EVAL=1 LLAMA_MODEL=chat npx vitest run tests/eval/extraction.live.eval.test.ts \
+  --reporter=verbose --disableConsoleIntercept   # đo tập giữ kín 50 mẫu (TASK 03)
 LLAMA_EVAL=1 LLAMA_MODEL=chat npx vitest run tests/eval/postcheck.live.eval.test.ts \
   --reporter=verbose --disableConsoleIntercept   # ablation raw vs hậu kiểm (TASK 01)
 ```
