@@ -35,6 +35,10 @@ declare const process: { env: Record<string, string | undefined> };
 
 const LIVE = process.env.LLAMA_EVAL === '1';
 const ENDPOINT = process.env.LLAMA_ENDPOINT ?? 'http://127.0.0.1:8080';
+/** Server có bật auth thì đặt `LLAMA_API_KEY`; không commit key vào repo. */
+const API_KEY = process.env.LLAMA_API_KEY;
+/** Proxy kiểu llama-swap cần tên model để định tuyến (`LLAMA_MODEL=chat`). */
+const MODEL = process.env.LLAMA_MODEL;
 /** `EVAL_SET=heldout` chạy bộ giữ kín 50 mẫu (TASK 03); mặc định chạy dev E01–E17. */
 const USE_HELDOUT = process.env.EVAL_SET === 'heldout';
 /**
@@ -149,7 +153,12 @@ async function runOnce(
 ): Promise<RunOutput> {
   const document = documentFor(evalCaseItem, options.text);
   const provider = new RecordingProvider(
-    new LlamaCppProvider({ endpoint: ENDPOINT, timeoutMs: 240_000 }),
+    new LlamaCppProvider({
+      endpoint: ENDPOINT,
+      timeoutMs: 240_000,
+      ...(API_KEY ? { apiKey: API_KEY } : {}),
+      ...(MODEL ? { model: MODEL } : {}),
+    }),
   );
   const started = Date.now();
 
