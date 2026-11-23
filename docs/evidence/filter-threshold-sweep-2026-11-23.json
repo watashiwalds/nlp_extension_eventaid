@@ -1,0 +1,713 @@
+{
+  "commit": "sweep harness filter.sweep.live.eval.test.ts (gate FILTER_SWEEP=1); fixtures bộ 27 mẫu đã freeze",
+  "date": "2026-11-23T11:50:20+07:00",
+  "hardware": "PhoBERT service device=cuda, 127.0.0.1:8081 (chỉ gọi /analyze, không gọi LLM)",
+  "endpoint": "http://127.0.0.1:8081",
+  "model": {
+    "filter": "PhoBERT-base-v2 TASK/NON_TASK bàn giao",
+    "sampler": "n/a"
+  },
+  "promptVersion": "n/a",
+  "cases": "Bộ sàng lọc 27 tài liệu (14 dương + 13 âm), 32 cửa sổ; quét lưới skipConfidence 0,50–0,95 × minSentencesToSkip 1–6 bằng aggregateDecision của core",
+  "metrics": {
+    "diemDatCảHaiTieuChi": 0,
+    "bestNoLossPoint": {
+      "skipConfidence": 0.5,
+      "minSentencesToSkip": 2,
+      "positivesSkipped": 0,
+      "negativesSkipped": 1
+    },
+    "ghiChu": "0/60 điểm ngưỡng đạt '0 dương bị bỏ + ≥70% âm bị bỏ'; điểm an toàn tốt nhất chỉ bỏ được 1/13 (7,7%) mẫu âm; điểm 0,50/minSentences=1 bỏ 1 mẫu DƯƠNG (E10) — bằng chứng hạ ngưỡng gây mất sự kiện thật"
+  },
+  "rawRecords": {
+    "filterEndpoint": "http://127.0.0.1:8081",
+    "caseCount": 27,
+    "negatives": 13,
+    "perWindow": [
+      {
+        "caseId": "E01",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.5848,
+            "totalSentences": 4
+          }
+        ]
+      },
+      {
+        "caseId": "E02",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.5783,
+            "totalSentences": 2
+          }
+        ]
+      },
+      {
+        "caseId": "E03",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.5338,
+            "totalSentences": 4
+          }
+        ]
+      },
+      {
+        "caseId": "E04",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6021,
+            "totalSentences": 2
+          }
+        ]
+      },
+      {
+        "caseId": "E05",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6108,
+            "totalSentences": 2
+          }
+        ]
+      },
+      {
+        "caseId": "E07",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6204,
+            "totalSentences": 2
+          }
+        ]
+      },
+      {
+        "caseId": "E08",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.5336,
+            "totalSentences": 2
+          }
+        ]
+      },
+      {
+        "caseId": "E09",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.5315,
+            "totalSentences": 1
+          }
+        ]
+      },
+      {
+        "caseId": "E10",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": false,
+            "confidence": 0.5397,
+            "totalSentences": 1
+          }
+        ]
+      },
+      {
+        "caseId": "E11",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.578,
+            "totalSentences": 4
+          }
+        ]
+      },
+      {
+        "caseId": "E12",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.5987,
+            "totalSentences": 2
+          }
+        ]
+      },
+      {
+        "caseId": "E13",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.5732,
+            "totalSentences": 3
+          }
+        ]
+      },
+      {
+        "caseId": "E14",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.57,
+            "totalSentences": 45
+          },
+          {
+            "hasTask": true,
+            "confidence": 0.5002,
+            "totalSentences": 45
+          },
+          {
+            "hasTask": true,
+            "confidence": 0.5002,
+            "totalSentences": 45
+          },
+          {
+            "hasTask": true,
+            "confidence": 0.5002,
+            "totalSentences": 45
+          },
+          {
+            "hasTask": true,
+            "confidence": 0.5002,
+            "totalSentences": 45
+          },
+          {
+            "hasTask": true,
+            "confidence": 0.5002,
+            "totalSentences": 3
+          }
+        ]
+      },
+      {
+        "caseId": "E15",
+        "kind": "positive",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6523,
+            "totalSentences": 2
+          }
+        ]
+      },
+      {
+        "caseId": "E06",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.5088,
+            "totalSentences": 3
+          }
+        ]
+      },
+      {
+        "caseId": "N01",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.5356,
+            "totalSentences": 6
+          }
+        ]
+      },
+      {
+        "caseId": "N02",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6106,
+            "totalSentences": 6
+          }
+        ]
+      },
+      {
+        "caseId": "N03",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6275,
+            "totalSentences": 6
+          }
+        ]
+      },
+      {
+        "caseId": "N04",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6052,
+            "totalSentences": 6
+          }
+        ]
+      },
+      {
+        "caseId": "N05",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.583,
+            "totalSentences": 6
+          }
+        ]
+      },
+      {
+        "caseId": "N06",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.5937,
+            "totalSentences": 6
+          }
+        ]
+      },
+      {
+        "caseId": "N07",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6357,
+            "totalSentences": 6
+          }
+        ]
+      },
+      {
+        "caseId": "N08",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": false,
+            "confidence": 0.6562,
+            "totalSentences": 6
+          }
+        ]
+      },
+      {
+        "caseId": "N09",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6329,
+            "totalSentences": 7
+          }
+        ]
+      },
+      {
+        "caseId": "N10",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6298,
+            "totalSentences": 6
+          }
+        ]
+      },
+      {
+        "caseId": "N11",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6073,
+            "totalSentences": 6
+          }
+        ]
+      },
+      {
+        "caseId": "N12",
+        "kind": "negative",
+        "windows": [
+          {
+            "hasTask": true,
+            "confidence": 0.6209,
+            "totalSentences": 6
+          }
+        ]
+      }
+    ],
+    "grid": [
+      {
+        "skipConfidence": 0.5,
+        "minSentencesToSkip": 1,
+        "positivesSkipped": 1,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.5,
+        "minSentencesToSkip": 2,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.5,
+        "minSentencesToSkip": 3,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.5,
+        "minSentencesToSkip": 4,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.5,
+        "minSentencesToSkip": 5,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.5,
+        "minSentencesToSkip": 6,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.55,
+        "minSentencesToSkip": 1,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.55,
+        "minSentencesToSkip": 2,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.55,
+        "minSentencesToSkip": 3,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.55,
+        "minSentencesToSkip": 4,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.55,
+        "minSentencesToSkip": 5,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.55,
+        "minSentencesToSkip": 6,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.6,
+        "minSentencesToSkip": 1,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.6,
+        "minSentencesToSkip": 2,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.6,
+        "minSentencesToSkip": 3,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.6,
+        "minSentencesToSkip": 4,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.6,
+        "minSentencesToSkip": 5,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.6,
+        "minSentencesToSkip": 6,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.65,
+        "minSentencesToSkip": 1,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.65,
+        "minSentencesToSkip": 2,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.65,
+        "minSentencesToSkip": 3,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.65,
+        "minSentencesToSkip": 4,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.65,
+        "minSentencesToSkip": 5,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.65,
+        "minSentencesToSkip": 6,
+        "positivesSkipped": 0,
+        "negativesSkipped": 1
+      },
+      {
+        "skipConfidence": 0.7,
+        "minSentencesToSkip": 1,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.7,
+        "minSentencesToSkip": 2,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.7,
+        "minSentencesToSkip": 3,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.7,
+        "minSentencesToSkip": 4,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.7,
+        "minSentencesToSkip": 5,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.7,
+        "minSentencesToSkip": 6,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.75,
+        "minSentencesToSkip": 1,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.75,
+        "minSentencesToSkip": 2,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.75,
+        "minSentencesToSkip": 3,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.75,
+        "minSentencesToSkip": 4,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.75,
+        "minSentencesToSkip": 5,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.75,
+        "minSentencesToSkip": 6,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.8,
+        "minSentencesToSkip": 1,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.8,
+        "minSentencesToSkip": 2,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.8,
+        "minSentencesToSkip": 3,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.8,
+        "minSentencesToSkip": 4,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.8,
+        "minSentencesToSkip": 5,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.8,
+        "minSentencesToSkip": 6,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.85,
+        "minSentencesToSkip": 1,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.85,
+        "minSentencesToSkip": 2,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.85,
+        "minSentencesToSkip": 3,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.85,
+        "minSentencesToSkip": 4,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.85,
+        "minSentencesToSkip": 5,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.85,
+        "minSentencesToSkip": 6,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.9,
+        "minSentencesToSkip": 1,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.9,
+        "minSentencesToSkip": 2,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.9,
+        "minSentencesToSkip": 3,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.9,
+        "minSentencesToSkip": 4,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.9,
+        "minSentencesToSkip": 5,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.9,
+        "minSentencesToSkip": 6,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.95,
+        "minSentencesToSkip": 1,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.95,
+        "minSentencesToSkip": 2,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.95,
+        "minSentencesToSkip": 3,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.95,
+        "minSentencesToSkip": 4,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.95,
+        "minSentencesToSkip": 5,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      },
+      {
+        "skipConfidence": 0.95,
+        "minSentencesToSkip": 6,
+        "positivesSkipped": 0,
+        "negativesSkipped": 0
+      }
+    ]
+  }
+}

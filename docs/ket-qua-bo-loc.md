@@ -57,6 +57,13 @@ nhưng không tiết kiệm**.
 - Không chỉnh ngưỡng `skipConfidence`/`minSentencesToSkip` trong lần này: ngưỡng thuộc cấu hình
   bàn giao (0,85); việc hạ ngưỡng để tăng tỉ lệ bỏ là **tune trên bộ đo**, trái nguyên tắc
   "không sửa pipeline chỉ để làm đẹp số" và cần bộ dữ liệu riêng nếu làm.
+- **Đã quét lưới ngưỡng để chốt giới hạn của model** (`filter.sweep.live.eval.test.ts`, gate
+  `FILTER_SWEEP=1`; bằng chứng `docs/evidence/filter-threshold-sweep-2026-11-23.json`): 60 điểm
+  ngưỡng (skipConfidence 0,50–0,95 × minSentences 1–6) — **không điểm nào** vừa 0 dương bị bỏ vừa
+  bỏ được ≥ 70% mẫu âm. Điểm an toàn tốt nhất (0,50 / 2 câu) chỉ bỏ được 1/13 (7,7%) mẫu âm;
+  điểm 0,50 / 1 câu bỏ thêm 1 mẫu **dương** (E10 — model chấm NON_TASK trên câu trích) → hạ
+  ngưỡng gây mất sự kiện thật. Khoảng confidence dương (0,53–0,65) và âm (0,51–0,64) chồng lấp
+  gần hoàn toàn: nút thắt là model, không phải ngưỡng.
 
 ## 6. Chênh lệch recall với lần đo 22/11 (ghi chú trung thực)
 
