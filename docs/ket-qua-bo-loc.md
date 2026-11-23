@@ -64,6 +64,12 @@ nhưng không tiết kiệm**.
   điểm 0,50 / 1 câu bỏ thêm 1 mẫu **dương** (E10 — model chấm NON_TASK trên câu trích) → hạ
   ngưỡng gây mất sự kiện thật. Khoảng confidence dương (0,53–0,65) và âm (0,51–0,64) chồng lấp
   gần hoàn toàn: nút thắt là model, không phải ngưỡng.
+- **Đã thử phương án "đưa cả đoạn văn thay vì từng câu"** (`filter-input-granularity-2026-11-23.json`:
+  nạp model trực tiếp, cùng preprocessing, CPU): cấp đoạn ở trần 256 token của PhoBERT
+  **xấu hơn cấp câu theo cả hai chiều** — mất 3/14 mẫu dương (E05, E10, E14 sẽ bị bỏ ở `screen`)
+  trong khi mẫu âm vẫn báo nhầm 10/13; xác suất nén vào 0,4–0,6 (E05: 0,611 cấp câu → 0,493 cấp
+  đoạn vì câu "Thông tin vé liên hệ…" pha loãng). Thiết kế cấp câu hiện tại của dịch vụ là đúng
+  granularity; vấn đề nằm ở dữ liệu nhãn + hiệu chuẩn, không ở độ dài đầu vào.
 
 ## 6. Chênh lệch recall với lần đo 22/11 (ghi chú trung thực)
 

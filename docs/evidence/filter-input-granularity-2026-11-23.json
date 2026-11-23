@@ -1,0 +1,366 @@
+{
+  "commit": "271b4ed (sweep harness); phép thử độc lập, chỉ ĐỌC trọng số ml_hasevent_filter (không sửa thư mục bàn giao)",
+  "date": "2026-11-23T12:45:32+07:00",
+  "hardware": "CPU (ép CUDA_VISIBLE_DEVICES='') — PhoBERT-base-v2, max_position_embeddings 258; llama không chạy song song",
+  "endpoint": "không qua dịch vụ — nạp model trực tiếp từ handover_api_code/models/phobert_task_classifier_final",
+  "model": {
+    "filter": "PhoBERT-base-v2 TASK/NON_TASK bàn giao",
+    "sampler": "n/a",
+    "note": "preprocessing y hệt app.py (lam_sach_van_ban + ViTokenizer), TASK_THRESHOLD 0.50"
+  },
+  "promptVersion": "n/a",
+  "cases": "32 cửa sổ của bộ 27 mẫu sàng lọc (cùng ranh giới cửa sổ với lần đo FILTER_SWEEP); baseline cấp câu lấy từ kết quả dịch vụ thật filter-threshold-sweep-2026-11-23.json",
+  "method": "Mỗi cửa sổ đưa vào model như MỘT đoạn văn ở 2 mức max_length 128 (mức train) và 256 (trần cứng PhoBERT); has_task cấp tài liệu = bất kỳ cửa sổ p ≥ 0.50; quét ngưỡng 0.2–0.9",
+  "metrics": {
+    "sentenceBaseline_service": {
+      "positiveDetected": 13,
+      "positiveTotal": 14,
+      "negativeFalseAlarm": 12,
+      "negativeTotal": 13
+    },
+    "paragraph_max128": {
+      "positiveDetected": 11,
+      "positiveTotal": 14,
+      "negativeFalseAlarm": 10,
+      "negativeTotal": 13
+    },
+    "paragraph_max256": {
+      "positiveDetected": 11,
+      "positiveTotal": 14,
+      "negativeFalseAlarm": 10,
+      "negativeTotal": 13
+    },
+    "kết luận": "Đoạn văn XẤU HƠN cấp câu theo cả hai chiều: mất 2-3/14 mẫu dương (E05, E10, E14 — sẽ bị bỏ ở screen), âm vẫn báo nhầm 10/13; xác suất nén vào 0.4–0.6, không ngưỡng nào tách được",
+    "dilutionVíDụ": "E05: câu sự kiện 0.611 cấp câu → 0.493 cấp đoạn (câu 2 'Thông tin vé liên hệ ban tổ chức' pha loãng); E14: toàn bộ cửa sổ < 0.5"
+  },
+  "tokenStats": {
+    "windows": 32,
+    "min": 23,
+    "median": 64,
+    "max": 256,
+    "truncatedAt128": 5,
+    "truncatedAt256": 0
+  },
+  "rawRecords": [
+    {
+      "caseId": "E01",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.5848,
+      "pPara128": 0.5741,
+      "pPara256": 0.5741,
+      "tokAt256": 45
+    },
+    {
+      "caseId": "E02",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.5783,
+      "pPara128": 0.5597,
+      "pPara256": 0.5597,
+      "tokAt256": 48
+    },
+    {
+      "caseId": "E03",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.5338,
+      "pPara128": 0.5012,
+      "pPara256": 0.5012,
+      "tokAt256": 59
+    },
+    {
+      "caseId": "E04",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6021,
+      "pPara128": 0.5456,
+      "pPara256": 0.5456,
+      "tokAt256": 40
+    },
+    {
+      "caseId": "E05",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6108,
+      "pPara128": 0.4933,
+      "pPara256": 0.4933,
+      "tokAt256": 35
+    },
+    {
+      "caseId": "E07",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6204,
+      "pPara128": 0.6016,
+      "pPara256": 0.6016,
+      "tokAt256": 24
+    },
+    {
+      "caseId": "E08",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.5336,
+      "pPara128": 0.5741,
+      "pPara256": 0.5741,
+      "tokAt256": 27
+    },
+    {
+      "caseId": "E09",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.5315,
+      "pPara128": 0.5315,
+      "pPara256": 0.5315,
+      "tokAt256": 28
+    },
+    {
+      "caseId": "E10",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": false,
+      "baseConf": 0.5397,
+      "pPara128": 0.4603,
+      "pPara256": 0.4603,
+      "tokAt256": 23
+    },
+    {
+      "caseId": "E11",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.578,
+      "pPara128": 0.5102,
+      "pPara256": 0.5102,
+      "tokAt256": 52
+    },
+    {
+      "caseId": "E12",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.5987,
+      "pPara128": 0.5864,
+      "pPara256": 0.5864,
+      "tokAt256": 37
+    },
+    {
+      "caseId": "E13",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.5732,
+      "pPara128": 0.5722,
+      "pPara256": 0.5722,
+      "tokAt256": 61
+    },
+    {
+      "caseId": "E14",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.57,
+      "pPara128": 0.4826,
+      "pPara256": 0.4836,
+      "tokAt256": 256
+    },
+    {
+      "caseId": "E14",
+      "kind": "positive",
+      "window": 1,
+      "baseHasTask": true,
+      "baseConf": 0.5002,
+      "pPara128": 0.4149,
+      "pPara256": 0.4337,
+      "tokAt256": 256
+    },
+    {
+      "caseId": "E14",
+      "kind": "positive",
+      "window": 2,
+      "baseHasTask": true,
+      "baseConf": 0.5002,
+      "pPara128": 0.4149,
+      "pPara256": 0.4337,
+      "tokAt256": 256
+    },
+    {
+      "caseId": "E14",
+      "kind": "positive",
+      "window": 3,
+      "baseHasTask": true,
+      "baseConf": 0.5002,
+      "pPara128": 0.4149,
+      "pPara256": 0.4337,
+      "tokAt256": 256
+    },
+    {
+      "caseId": "E14",
+      "kind": "positive",
+      "window": 4,
+      "baseHasTask": true,
+      "baseConf": 0.5002,
+      "pPara128": 0.4149,
+      "pPara256": 0.4337,
+      "tokAt256": 256
+    },
+    {
+      "caseId": "E14",
+      "kind": "positive",
+      "window": 5,
+      "baseHasTask": true,
+      "baseConf": 0.5002,
+      "pPara128": 0.4502,
+      "pPara256": 0.4502,
+      "tokAt256": 41
+    },
+    {
+      "caseId": "E15",
+      "kind": "positive",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6523,
+      "pPara128": 0.6205,
+      "pPara256": 0.6205,
+      "tokAt256": 33
+    },
+    {
+      "caseId": "E06",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.5088,
+      "pPara128": 0.4773,
+      "pPara256": 0.4773,
+      "tokAt256": 31
+    },
+    {
+      "caseId": "N01",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.5356,
+      "pPara128": 0.5152,
+      "pPara256": 0.5152,
+      "tokAt256": 65
+    },
+    {
+      "caseId": "N02",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6106,
+      "pPara128": 0.5067,
+      "pPara256": 0.5067,
+      "tokAt256": 64
+    },
+    {
+      "caseId": "N03",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6275,
+      "pPara128": 0.518,
+      "pPara256": 0.518,
+      "tokAt256": 72
+    },
+    {
+      "caseId": "N04",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6052,
+      "pPara128": 0.6073,
+      "pPara256": 0.6073,
+      "tokAt256": 75
+    },
+    {
+      "caseId": "N05",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.583,
+      "pPara128": 0.5497,
+      "pPara256": 0.5497,
+      "tokAt256": 70
+    },
+    {
+      "caseId": "N06",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.5937,
+      "pPara128": 0.5419,
+      "pPara256": 0.5419,
+      "tokAt256": 66
+    },
+    {
+      "caseId": "N07",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6357,
+      "pPara128": 0.552,
+      "pPara256": 0.552,
+      "tokAt256": 69
+    },
+    {
+      "caseId": "N08",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": false,
+      "baseConf": 0.6562,
+      "pPara128": 0.4158,
+      "pPara256": 0.4158,
+      "tokAt256": 78
+    },
+    {
+      "caseId": "N09",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6329,
+      "pPara128": 0.533,
+      "pPara256": 0.533,
+      "tokAt256": 77
+    },
+    {
+      "caseId": "N10",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6298,
+      "pPara128": 0.4773,
+      "pPara256": 0.4773,
+      "tokAt256": 76
+    },
+    {
+      "caseId": "N11",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6073,
+      "pPara128": 0.5168,
+      "pPara256": 0.5168,
+      "tokAt256": 72
+    },
+    {
+      "caseId": "N12",
+      "kind": "negative",
+      "window": 0,
+      "baseHasTask": true,
+      "baseConf": 0.6209,
+      "pPara128": 0.5187,
+      "pPara256": 0.5187,
+      "tokAt256": 63
+    }
+  ]
+}
