@@ -26,6 +26,8 @@ import type {
 import type { EventCandidate, NormalizedDocument } from '../../src/shared/contracts';
 import { EVAL_CASES } from '../fixtures/eval/cases';
 import type { EvalCase } from '../fixtures/eval/cases';
+import { HELDOUT_CASES } from '../fixtures/eval-heldout/cases';
+import type { HeldoutCase } from '../fixtures/eval-heldout/case-types';
 import { computeMetrics, percentile } from './metrics';
 import type { EvalMetrics } from './metrics';
 
@@ -33,6 +35,14 @@ declare const process: { env: Record<string, string | undefined> };
 
 const LIVE = process.env.LLAMA_EVAL === '1';
 const ENDPOINT = process.env.LLAMA_ENDPOINT ?? 'http://127.0.0.1:8080';
+/** `EVAL_SET=heldout` chạy bộ giữ kín 50 mẫu (TASK 03); mặc định chạy dev E01–E17. */
+const USE_HELDOUT = process.env.EVAL_SET === 'heldout';
+/**
+ * `HeldoutCase` = `EvalCase` thiếu `mockOutput`/`metrics` (chỉ chạy live nên
+ * không cần MockProvider). Hai kiểu dùng chung mọi trường harness cần.
+ */
+type LiveCase = EvalCase | HeldoutCase;
+const CASES: readonly LiveCase[] = USE_HELDOUT ? HELDOUT_CASES : EVAL_CASES;
 const SETTINGS = { chunkChars: 5_000, maxChunks: 4, maxTokens: 1_200, temperature: 0.1 };
 const CASE_TIMEOUT_MS = 15 * 60 * 1_000;
 
@@ -96,7 +106,7 @@ class RecordingProvider implements InferenceProvider {
   }
 }
 
-function documentFor(evalCaseItem: EvalCase, text = evalCaseItem.text): NormalizedDocument {
+function documentFor(evalCaseItem: LiveCase, text = evalCaseItem.text): NormalizedDocument {
   const extractionMethod: NormalizedDocument['extractionMethod'] =
     evalCaseItem.source === 'web_page'
       ? 'readability'
@@ -132,7 +142,7 @@ function summarize(candidate: EventCandidate): ItemSummary {
 }
 
 async function runOnce(
-  evalCaseItem: EvalCase,
+  evalCaseItem: LiveCase,
   run: number,
   kind: RunKind,
   options: { text?: string; existing?: DedupInput[] } = {},
@@ -201,10 +211,12 @@ describe.runIf(LIVE)('đo thật bằng llama-server', () => {
   it('kiểm tra kết nối và model đang nạp', async () => {
     const health = await new LlamaCppProvider({ endpoint: ENDPOINT }).health();
     if (!health.ok) throw new Error(`llama-server không sẵn sàng: ${health.reason}`);
-    console.log(`\n[Slice E] endpoint=${ENDPOINT} model=${health.model ?? '(không đọc được)'}`);
+    console.log(
+      `\n[Slice E] set=${USE_HELDOUT ? 'heldout (50 mẫu)' : 'dev E01–E17'} endpoint=${ENDPOINT} model=${health.model ?? '(không đọc được)'}`,
+    );
   });
 
-  describe.each(EVAL_CASES)('$id — $title', (evalCaseItem) => {
+  describe.each(CASES)('$id — $title', (evalCaseItem) => {
     it(
       'chạy 2 lần và ghi số đo',
       async () => {
@@ -329,6 +341,7 @@ describe.runIf(LIVE)('đo thật bằng llama-server', () => {
     console.log(
       JSON.stringify(
         {
+          set: USE_HELDOUT ? 'heldout' : 'dev',
           endpoint: ENDPOINT,
           models,
           results: RESULTS,
